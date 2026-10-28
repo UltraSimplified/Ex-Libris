@@ -100,10 +100,14 @@ class User extends Authenticatable
     /**
      * The issues of the magazine this writer has an article in, kept by
      * hand in the Office: most of it was printed rather than put online.
+     * Newest first, as the Office's Issues field and the writer's page
+     * list them.
      */
     public function issues(): BelongsToMany
     {
-        return $this->belongsToMany(Issue::class)->withTimestamps();
+        return $this->belongsToMany(Issue::class)
+            ->withTimestamps()
+            ->orderByDesc('issues.issue_number');
     }
 
     /**

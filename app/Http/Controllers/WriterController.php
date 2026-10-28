@@ -69,24 +69,25 @@ class WriterController extends Controller
     }
 
     /**
-     * The back issues this writer has an article in, newest first, as
-     * covers to download. The issue on sale now is left out, as the
-     * archive leaves it out; one with no PDF yet is shown but not offered.
+     * The issues this writer has an article in, newest first, as covers
+     * to download. The issue on sale now is shown but not offered, as the
+     * archive does not give it away until the next is out; nor is one
+     * with no PDF yet.
      *
      * @return list<array{id: int, issue_number: int, month_year: ?string, cover_photo: ?string, downloadable: bool}>
      */
     private function issues(User $writer): array
     {
+        $onSaleNow = Issue::query()->max('issue_number');
+
         return $writer->issues()
-            ->backIssues()
-            ->orderByDesc('issue_number')
             ->get(['issues.id', 'issue_number', 'month_year', 'cover_photo', 'pdf'])
             ->map(fn (Issue $issue): array => [
                 'id' => $issue->id,
                 'issue_number' => $issue->issue_number,
                 'month_year' => $issue->month_year,
                 'cover_photo' => $issue->cover_photo,
-                'downloadable' => $issue->downloadable,
+                'downloadable' => $issue->downloadable && $issue->issue_number !== $onSaleNow,
             ])
             ->all();
     }

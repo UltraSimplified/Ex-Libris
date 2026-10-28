@@ -189,28 +189,32 @@ function writerInPrint(): array
     return ['writer' => $writer, 'issues' => $issues];
 }
 
-test('a writer\'s page lists the back issues they have an article in, newest first', function () {
+test('a writer\'s page lists the issues they have an article in, newest first', function () {
     ['issues' => $issues] = writerInPrint();
 
     $this->get('/our-writers/john-seagrave')
         ->assertInertia(fn ($page) => $page
-            ->has('issues', 2)
-            ->where('issues.0', [
+            ->has('issues', 3)
+            ->where('issues.1', [
                 'id' => $issues[63]->id,
                 'issue_number' => 63,
                 'month_year' => 'Issue month 63',
                 'cover_photo' => $issues[63]->cover_photo,
                 'downloadable' => true,
             ])
-            ->where('issues.1.issue_number', 53)
+            ->where('issues.0.issue_number', 70)
+            ->where('issues.2.issue_number', 53)
         );
 });
 
-test('the issue on sale now is not offered, even with an article in it', function () {
+test('the issue on sale now is shown but not offered to download', function () {
     writerInPrint();
 
     $this->get('/our-writers/john-seagrave')
-        ->assertInertia(fn ($page) => $page->where('issues', fn ($issues) => collect($issues)->pluck('issue_number')->doesntContain(70)));
+        ->assertInertia(fn ($page) => $page
+            ->where('issues.0.issue_number', 70)
+            ->where('issues.0.downloadable', false)
+        );
 });
 
 test('an issue with no PDF yet is shown but not offered to download', function () {
@@ -219,9 +223,9 @@ test('an issue with no PDF yet is shown but not offered to download', function (
 
     $this->get('/our-writers/john-seagrave')
         ->assertInertia(fn ($page) => $page
-            ->where('issues.0.issue_number', 63)
-            ->where('issues.0.downloadable', false)
-            ->where('issues.1.downloadable', true)
+            ->where('issues.1.issue_number', 63)
+            ->where('issues.1.downloadable', false)
+            ->where('issues.2.downloadable', true)
         );
 });
 

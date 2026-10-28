@@ -199,9 +199,9 @@ watch(
             </div>
 
             <!--
-                Every back issue with something of theirs in it, as small
-                covers that download the issue. The one on sale now is left
-                out, as the archive leaves it out.
+                Every issue with something of theirs in it, as small covers
+                that download the issue. The one on sale now is shown but
+                not linked, as the archive does not give it away yet.
             -->
             <div
                 v-if="props.issues.length > 0"

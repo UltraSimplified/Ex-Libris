@@ -5,47 +5,55 @@ use App\Models\User;
 use App\Nova\Issue as NovaIssue;
 use App\Nova\User as NovaUser;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Testing\TestResponse;
-use Laravel\Nova\Fields\BelongsToMany;
+use Laravel\Nova\Fields\Tag;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
 /**
  * The Issues field on a user in the Office.
  */
-function officeIssuesField(User $user): BelongsToMany
+function officeIssuesField(User $user): Tag
 {
     return collect((new NovaUser($user))->fields(app(NovaRequest::class)))
-        ->first(fn ($field): bool => $field instanceof BelongsToMany && $field->attribute === 'issues');
+        ->first(fn ($field): bool => $field instanceof Tag && $field->attribute === 'issues');
 }
 
 /**
- * Attaching an issue to a user as the Office does it.
+ * Saving a user's form in the Office with these issues in its Issues field.
+ *
+ * @param  list<Issue>  $issues
  */
-function attachIssueInTheOffice(User $user, Issue $issue): TestResponse
+function saveIssuesInTheOffice(User $user, array $issues): TestResponse
 {
     return test()
         ->actingAs(User::factory()->create(['email' => 'robin@ultrasimplified.com']))
-        ->postJson("/nova-api/users/{$user->id}/attach/issues", [
-            'issues' => $issue->id,
-            'issues_trashed' => false,
-            'viaRelationship' => 'issues',
+        ->putJson("/nova-api/users/{$user->id}", [
+            'name' => $user->name,
+            'email' => $user->email ?? '',
+            'password' => '',
+            'is_writer' => $user->is_writer,
+            'is_promoter' => $user->is_promoter,
+            'is_venue_mgr' => $user->is_venue_mgr,
+            'issues' => json_encode(array_map(fn (Issue $issue): array => ['value' => $issue->id], $issues)),
         ]);
 }
 
-test('a writer\'s issues can be kept in the Office', function () {
+test('a writer\'s issues are kept on their form in the Office', function () {
     $writer = User::factory()->writer()->create();
-    $issue = Issue::factory()->create(['issue_number' => 63]);
+    [$kept, $added, $removed] = Issue::factory()->count(3)->create();
+    $writer->issues()->attach([$kept->id, $removed->id]);
 
-    expect(officeIssuesField($writer)->authorizedToSee(app(NovaRequest::class)))->toBeTrue();
+    expect(officeIssuesField($writer)->isShownOnUpdate(app(NovaRequest::class), $writer))->toBeTrue();
 
-    attachIssueInTheOffice($writer, $issue)->assertOk();
+    saveIssuesInTheOffice($writer, [$kept, $added])->assertOk();
 
-    expect($writer->issues()->pluck('issues.id')->all())->toBe([$issue->id]);
+    expect($writer->issues()->reorder('issues.id')->pluck('issues.id')->all())->toBe([$kept->id, $added->id]);
 });
 
 /**
  * Issues are for the writers alone: nobody else is offered the field, and
- * the Office will not attach one to them by asking anyway.
+ * saving their form with issues in it gives them none.
  */
 test('only a writer is given issues', function () {
     $promoter = User::factory()->create(['is_promoter' => true]);
@@ -53,16 +61,23 @@ test('only a writer is given issues', function () {
 
     expect(officeIssuesField($promoter)->authorizedToSee(app(NovaRequest::class)))->toBeFalse();
 
-    attachIssueInTheOffice($promoter, $issue)->assertUnprocessable()->assertJsonValidationErrors('issues');
+    saveIssuesInTheOffice($promoter, [$issue])->assertOk();
 
     expect($promoter->issues()->count())->toBe(0);
+});
+
+test('an issue is pictured by its cover, though it has no hero image', function () {
+    Storage::fake('do');
+    $issue = Issue::factory()->create(['cover_photo' => 'covers/63.webp', 'hero_image' => null]);
+
+    expect((new NovaIssue($issue))->resolveAvatarUrl(app(NovaRequest::class)))
+        ->toBe(Storage::disk('do')->url('covers/63.webp'));
 });
 
 test('an issue is picked by its number and month', function () {
     $issue = Issue::factory()->create(['issue_number' => 63, 'month_year' => 'March 2019']);
 
-    expect(call_user_func(officeIssuesField(User::factory()->writer()->create())->display, new NovaIssue($issue)))
-        ->toBe('Issue 63 — March 2019')
+    expect((new NovaIssue($issue))->title())->toBe('Issue 63 — March 2019')
         ->and(NovaIssue::$search)->toContain('issue_number');
 });
 
@@ -76,11 +91,9 @@ test('attaching the same issue twice keeps it once', function () {
         ->and($writer->issues()->count())->toBe(1);
 });
 
-/**
- * The Issues table belongs to a saved writer, so a new user's form has
- * nothing to ask for it - and must not trip over it.
- */
-test('a writer can still be created in the Office', function () {
+test('a writer can be created with their issues in the Office', function () {
+    $issue = Issue::factory()->create();
+
     $this->actingAs(User::factory()->create(['email' => 'robin@ultrasimplified.com']))
         ->postJson('/nova-api/users', [
             'name' => 'Nora Newcomer',
@@ -89,10 +102,14 @@ test('a writer can still be created in the Office', function () {
             'is_writer' => true,
             'is_promoter' => false,
             'is_venue_mgr' => false,
+            'issues' => json_encode([['value' => $issue->id]]),
         ])
         ->assertCreated();
 
-    expect(User::where('name', 'Nora Newcomer')->sole()->is_writer)->toBeTrue();
+    $writer = User::where('name', 'Nora Newcomer')->sole();
+
+    expect($writer->is_writer)->toBeTrue()
+        ->and($writer->issues()->pluck('issues.id')->all())->toBe([$issue->id]);
 });
 
 /**
@@ -140,9 +157,19 @@ test('a writer\'s Issues table runs newest first by number', function () {
         ->toBe([110, 63, 53]);
 });
 
+test('a writer\'s Issues field lists theirs newest first by number', function () {
+    ['writer' => $writer] = issuesOutOfOrder();
+
+    $field = collect(test()->getJson("/nova-api/users/{$writer->id}/update-fields")->assertOk()->json('fields'))
+        ->firstWhere('attribute', 'issues');
+
+    expect(collect($field['value'])->pluck('display')->all())
+        ->toBe(['Issue 110 — Month 110', 'Issue 63 — Month 63', 'Issue 53 — Month 53']);
+});
+
 /**
- * The picker leaves out what the writer already has - 63 here - and offers
- * the rest newest first.
+ * The picker offers every issue newest first, 63 too though the writer has
+ * it: the form leaves out what is already picked.
  */
 test('the issue picker offers issues newest first by number', function () {
     ['writer' => $writer, 'issues' => $issues] = issuesOutOfOrder();
@@ -150,8 +177,8 @@ test('the issue picker offers issues newest first by number', function () {
     Issue::factory()->create(['issue_number' => 7, 'month_year' => 'Month 7']);
     Issue::factory()->create(['issue_number' => 120, 'month_year' => 'Month 120']);
 
-    expect(officeIssueNumbers("/nova-api/users/{$writer->id}/attachable/issues?component=belongs-to-many-field&viaRelationship=issues&search=&first=false"))
-        ->toBe([120, 110, 53, 7]);
+    expect(officeIssueNumbers("/nova-api/users/{$writer->id}/attachable/issues?component=tag-field&viaRelationship=issues&search=&first=false"))
+        ->toBe([120, 110, 63, 53, 7]);
 });
 
 test('sorting by a column still overrides the order', function () {

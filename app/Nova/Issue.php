@@ -2,6 +2,7 @@
 
 namespace App\Nova;
 
+use Illuminate\Support\Facades\Storage;
 use Jacobfitzp\NovaCanvas\Canvas;
 use Laravel\Nova\Actions\Action;
 use Laravel\Nova\Card;
@@ -30,6 +31,27 @@ class Issue extends Resource
      * @var string
      */
     public static $title = 'month_year';
+
+    /**
+     * An issue by its number and month, as a writer's Issues field lists
+     * it, so one can be told from another at a glance.
+     */
+    public function title(): string
+    {
+        return "Issue {$this->resource->issue_number} — {$this->resource->month_year}";
+    }
+
+    /**
+     * The picture an issue is shown with in a writer's Issues field: its
+     * cover, which every issue has, rather than Nova's pick of the first
+     * image - the hero, which only the newer issues have.
+     */
+    public function resolveAvatarUrl(NovaRequest $request): ?string
+    {
+        return filled($this->resource->cover_photo)
+            ? Storage::disk('do')->url($this->resource->cover_photo)
+            : null;
+    }
 
     /**
      * The column to order issues by.

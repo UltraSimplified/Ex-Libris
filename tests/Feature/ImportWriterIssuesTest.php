@@ -35,7 +35,7 @@ function writerIssuesCommand(array $entries, string $options = '--commit'): stri
  */
 function issuesOf(User $writer): array
 {
-    return $writer->issues()->orderBy('issue_number')->pluck('issue_number')->all();
+    return $writer->issues()->reorder('issue_number')->pluck('issue_number')->all();
 }
 
 beforeEach(function () {

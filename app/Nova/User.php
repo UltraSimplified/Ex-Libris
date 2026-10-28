@@ -14,12 +14,12 @@ use Laravel\Nova\Actions\Action;
 use Laravel\Nova\Auth\PasswordValidationRules;
 use Laravel\Nova\Card;
 use Laravel\Nova\Fields\Avatar;
-use Laravel\Nova\Fields\BelongsToMany;
 use Laravel\Nova\Fields\Boolean;
 use Laravel\Nova\Fields\Field;
 use Laravel\Nova\Fields\FormData;
 use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\Password;
+use Laravel\Nova\Fields\Tag;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Filters\Filter;
 use Laravel\Nova\Http\Requests\NovaRequest;
@@ -202,14 +202,26 @@ class User extends Resource
              * The issues a writer has an article in, listed on their page
              * on the site. Kept here by hand, since most of it was printed
              * rather than put online, and offered on writers alone.
+             *
+             * Picked on the form and saved with it, since a row opens the
+             * form rather than the detail page. Saving puts the writer's
+             * issues to exactly what the field holds. The field stays on
+             * the detail page too: the picker finds it there to ask for
+             * its issues, newest first as the Office lists them.
              */
-            BelongsToMany::make('Issues', 'issues', Issue::class)
-                ->display(fn (Issue $issue): string => "Issue {$issue->issue_number} — {$issue->month_year}")
-                ->searchable()
+            Tag::make('Issues', 'issues', Issue::class)
+                ->displayAsList()
+                ->preload()
                 ->dontReorderAttachables()
+                ->hideFromIndex()
                 // A picker asks with no user loaded, so only a saved user is judged here;
                 // authorizedToAttach() keeps everybody but a writer out regardless.
-                ->canSee(fn (): bool => ! $this->resource?->exists || (bool) $this->resource->is_writer),
+                ->canSee(fn (): bool => ! $this->resource?->exists || (bool) $this->resource->is_writer)
+                ->dependsOn(['is_writer'], function (Tag $field, NovaRequest $request, FormData $formData): void {
+                    if (! $formData->boolean('is_writer')) {
+                        $field->hide();
+                    }
+                }),
         ];
     }
 

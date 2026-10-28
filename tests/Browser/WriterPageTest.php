@@ -48,6 +48,9 @@ test('a writer\'s page leads back to all the writers', function () {
         ->assertNoJavaScriptErrors();
 });
 
+/**
+ * The issue on sale now is shown first, as a cover with no link.
+ */
 test('a writer\'s back issues are covers that download the issue', function () {
     $writer = User::factory()->writer()->create(['name' => 'John Seagrave']);
     $issues = collect([53, 63, 70])->mapWithKeys(fn (int $number): array => [$number => Issue::factory()->create(['issue_number' => $number])]);
@@ -55,11 +58,12 @@ test('a writer\'s back issues are covers that download the issue', function () {
 
     visit('/our-writers/john-seagrave')
         ->assertSee('In print.')
-        ->assertCount('.writer-issues li', 2)
+        ->assertCount('.writer-issues li', 3)
         ->assertPresent('.writer-issues a[href="/download/'.$issues[63]->id.'"] img')
         ->assertPresent('.writer-issues a[href="/download/'.$issues[53]->id.'"] img')
         ->assertMissing('.writer-issues a[href="/download/'.$issues[70]->id.'"]')
-        ->assertSeeIn('.writer-issues li:first-child', 'ISSUE 63')
+        ->assertSeeIn('.writer-issues li:first-child', 'ISSUE 70')
+        ->assertMissing('.writer-issues li:first-child a')
         ->assertNoJavaScriptErrors();
 });
 
