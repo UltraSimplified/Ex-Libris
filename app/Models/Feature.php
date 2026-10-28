@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Services\Embeds\EmbedSanitiser;
 use App\Services\Images\FeatureImages;
 use App\Support\AffiliateLink;
+use App\Support\FeatureStatus;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
@@ -12,6 +13,7 @@ use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Spatie\EloquentSortable\Sortable;
 use Spatie\EloquentSortable\SortableTrait;
@@ -26,6 +28,7 @@ class Feature extends Model implements Sortable
         'published' => 'date',
         'featured' => 'boolean',
         'sort_order' => 'integer',
+        'status' => FeatureStatus::class,
     ];
 
     /**
@@ -122,6 +125,21 @@ class Feature extends Model implements Sortable
     }
 
     /**
+     * The features whoever is looking may see: every one for somebody who
+     * can use the Office, so they can read a draft where it will appear,
+     * and only the published ones for everybody else.
+     */
+    #[Scope]
+    protected function visible(Builder $query): Builder
+    {
+        if (Gate::allows('viewNova')) {
+            return $query;
+        }
+
+        return $query->where($query->qualifyColumn('status'), FeatureStatus::Published);
+    }
+
+    /**
      * The features to lead the home page with: those picked for it, in the
      * order they are put in the Office, or failing any, the newest feature
      * that is not a review (tag 5, as everywhere else on the site).
@@ -131,6 +149,7 @@ class Feature extends Model implements Sortable
     public static function leading(): EloquentCollection
     {
         $featured = static::query()
+            ->visible()
             ->where('featured', true)
             ->orderByDesc('sort_order')
             ->orderByDesc('created_at')
@@ -143,6 +162,7 @@ class Feature extends Model implements Sortable
         }
 
         return static::query()
+            ->visible()
             ->where('tag_id', '!=', 5)
             ->orderByDesc('created_at')
             ->withByline()

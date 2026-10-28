@@ -22,13 +22,18 @@ const page = usePage();
 </script>
 
 <template>
-    <div class="relative">
+    <div
+        class="relative"
+        :class="{ 'is-draft': props.feature.status === 'draft' }"
+    >
         <img
+            v-if="props.feature.cover_photo"
             :src="page.props.cdnUrl + '/' + props.feature.cover_photo"
             :alt="props.feature.cover_alt_text"
             class="rounded"
         />
         <Link
+            v-if="props.feature.tag"
             :href="tagUrl(props.feature)"
             class="relative z-10 mt-4 inline-block rounded-sm bg-tarmac px-4 py-2 text-sm font-bold text-white uppercase hover:bg-hivis hover:text-tarmac md:text-xs"
         >

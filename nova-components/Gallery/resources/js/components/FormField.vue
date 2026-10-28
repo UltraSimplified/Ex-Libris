@@ -8,7 +8,7 @@
         <template #field>
             <div class="nova-gallery" :dusk="field.attribute">
                 <label
-                    v-if="!isReadonly"
+                    v-if="!isReadonly && !isFull"
                     class="nova-gallery__drop"
                     :class="{ 'is-dragging': isDraggingFiles }"
                     @dragenter.prevent="isDraggingFiles = true"
@@ -29,9 +29,13 @@
                     >
                     <span class="nova-gallery__hint"
                         >JPEG, PNG or WebP. Each one uploads as soon as it is
-                        chosen.</span
+                        chosen.<template v-if="field.maxImages">
+                            Up to {{ field.maxImages }} photos.</template
+                        ></span
                     >
                 </label>
+
+                <p v-if="notice" class="nova-gallery__notice">{{ notice }}</p>
 
                 <p v-if="uploading" class="nova-gallery__status">
                     Uploading {{ uploadedCount + 1 }} of {{ queuedCount }}. Wait
@@ -176,7 +180,31 @@ export default {
             isDraggingFiles: false,
             movingIndex: null,
             targetIndex: null,
+            notice: null,
         };
+    },
+
+    computed: {
+        /*
+         * How many more photos the gallery has room for, counting those
+         * still uploading. Unlimited when the field sets no limit.
+         */
+        room() {
+            if (!this.field.maxImages) {
+                return Infinity;
+            }
+
+            const pending = this.uploads.filter((upload) => !upload.error);
+
+            return Math.max(
+                0,
+                this.field.maxImages - this.images.length - pending.length,
+            );
+        },
+
+        isFull() {
+            return this.room === 0;
+        },
     },
 
     beforeUnmount() {
@@ -222,11 +250,19 @@ export default {
         /*
          * Photos upload one at a time, in the order they were chosen, so the
          * gallery fills up in that order and the server takes one at a time.
+         * Only as many as there is room for are taken; the rest are left
+         * out, and the editor told so.
          */
         queue(files) {
-            const images = Array.from(files || []).filter((file) =>
+            const chosen = Array.from(files || []).filter((file) =>
                 /^image\/(jpeg|png|webp)$/.test(file.type),
             );
+            const images = chosen.slice(0, this.room);
+            const leftOut = chosen.length - images.length;
+
+            this.notice = leftOut
+                ? `A gallery holds up to ${this.field.maxImages} photos, so ${leftOut} ${leftOut === 1 ? 'was' : 'were'} left out.`
+                : null;
 
             images.forEach((file) => {
                 this.uploads.push({
@@ -319,6 +355,7 @@ export default {
 
         remove(index) {
             this.images.splice(index, 1);
+            this.notice = null;
         },
 
         move(from, to) {

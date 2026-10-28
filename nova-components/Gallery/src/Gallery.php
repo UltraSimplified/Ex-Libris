@@ -2,6 +2,7 @@
 
 namespace Ultrasimplified\Gallery;
 
+use Closure;
 use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Crypt;
@@ -56,6 +57,11 @@ class Gallery extends Field
     protected int $quality = 82;
 
     /**
+     * The most images the gallery holds, or none for no limit.
+     */
+    protected ?int $maxImages = null;
+
+    /**
      * The disk the images are stored on.
      */
     public function disk(string $disk): static
@@ -91,6 +97,23 @@ class Gallery extends Field
     public function thumbnailEdge(int $pixels): static
     {
         $this->thumbnailEdge = $pixels;
+
+        return $this;
+    }
+
+    /**
+     * Hold no more than this many images. The form stops taking photos
+     * once it is full, and a save with more is refused.
+     */
+    public function maxImages(int $count): static
+    {
+        $this->maxImages = $count;
+
+        $this->rules[] = function (string $attribute, mixed $value, Closure $fail) use ($count): void {
+            if (count(static::images($value, $this->directory)) > $count) {
+                $fail("A gallery holds up to {$count} photos.");
+            }
+        };
 
         return $this;
     }
@@ -200,6 +223,7 @@ class Gallery extends Field
             ]),
             'baseUrl' => rtrim(Storage::disk($this->disk)->url(''), '/'),
             'maxEdge' => $this->maxEdge,
+            'maxImages' => $this->maxImages,
         ]);
     }
 

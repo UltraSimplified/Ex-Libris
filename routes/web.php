@@ -51,7 +51,8 @@ Route::get('/', function () {
     $issue = Issue::orderby('created_at', 'desc')->first();
     $featured = Feature::leading();
 
-    $features = Feature::whereKeyNot($featured->modelKeys())
+    $features = Feature::visible()
+        ->whereKeyNot($featured->modelKeys())
         ->orderByDesc('created_at')
         ->withByline()
         ->with('tag')

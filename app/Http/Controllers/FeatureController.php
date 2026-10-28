@@ -31,8 +31,8 @@ class FeatureController extends Controller
     {
         return $this->featuresPage(
             'Features',
-            leading: Feature::where('tag_id', '!=', 5),
-            rest: Feature::whereNotNull('tag_id'),
+            leading: Feature::visible()->where('tag_id', '!=', 5),
+            rest: Feature::visible()->whereNotNull('tag_id'),
         );
     }
 
@@ -64,8 +64,8 @@ class FeatureController extends Controller
 
         return $this->featuresPage(
             'Features / '.$tag->tag,
-            leading: Feature::where('tag_id', $tag->id),
-            rest: Feature::where('tag_id', $tag->id),
+            leading: Feature::visible()->where('tag_id', $tag->id),
+            rest: Feature::visible()->where('tag_id', $tag->id),
         );
     }
 
@@ -112,11 +112,13 @@ class FeatureController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * A feature's page. A draft is not found, except by somebody who can
+     * use the Office.
      */
     public function show($id, $slug)
     {
-        $feature = Feature::where('id', $id)
+        $feature = Feature::visible()
+            ->whereKey($id)
             ->withByline()
             ->with(['tag', 'listing' => self::currentListing(...)])
             ->firstOrFail();

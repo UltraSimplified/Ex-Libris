@@ -430,3 +430,32 @@ body:has([data-slot='sidebar-wrapper']) [data-slot='label'] {
         font-style: normal;
     }
 }
+
+/*
+ * A draft feature, as only the Office sees it: ringed with a dashed line
+ * and labelled, wherever it appears on the site, so it is never taken for
+ * one the public can read. The ring sits outside the box, so the layout
+ * is not moved by it.
+ */
+.is-draft {
+    position: relative;
+    outline: 2px dashed var(--color-tarmac);
+    outline-offset: 0.75rem;
+    border-radius: 0.25rem;
+}
+
+.is-draft::before {
+    content: 'Draft';
+    position: absolute;
+    top: -1.5rem;
+    left: 0.5rem;
+    z-index: 20;
+    padding: 0.125rem 0.5rem;
+    background: var(--color-tarmac);
+    color: white;
+    font-family: var(--font-din);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+}

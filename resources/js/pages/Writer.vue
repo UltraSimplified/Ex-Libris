@@ -165,6 +165,7 @@ watch(
                         v-for="feature in props.features"
                         :key="feature.id"
                         class="writer-article"
+                        :class="{ 'is-draft': feature.status === 'draft' }"
                     >
                         <Link :href="articleUrl(feature)">
                             <img

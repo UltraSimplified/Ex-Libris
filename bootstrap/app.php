@@ -6,6 +6,7 @@ use App\Http\Middleware\MergeGuestBookmarks;
 use App\Http\Middleware\RequireHttps;
 use App\Http\Middleware\ServeEmbeds;
 use App\Services\Bookmarks\GuestBookmarks;
+use Bugsnag\BugsnagLaravel\OomBootstrapper;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -15,6 +16,8 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
+
+new OomBootstrapper()->bootstrap();
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(

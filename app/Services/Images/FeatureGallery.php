@@ -37,6 +37,11 @@ final class FeatureGallery
     public const THUMBNAIL_EDGE = 400;
 
     /**
+     * The most photos one Photojournal holds.
+     */
+    public const MAX_IMAGES = 20;
+
+    /**
      * Every gallery file a feature body refers to, photos and thumbnails.
      *
      * The body is read as the JSON string it is stored as, or as the

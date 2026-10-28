@@ -45,6 +45,12 @@
     color: rgba(var(--colors-gray-500), 1);
 }
 
+.nova-gallery__notice {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: rgba(var(--colors-red-500), 1);
+}
+
 .nova-gallery__status {
     font-size: 0.875rem;
     font-weight: 600;

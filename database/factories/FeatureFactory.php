@@ -5,6 +5,7 @@ namespace Database\Factories;
 use App\Models\Feature;
 use App\Models\Tag;
 use App\Models\User;
+use App\Support\FeatureStatus;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -35,6 +36,7 @@ class FeatureFactory extends Factory
     {
         return [
             'issue_number' => fake()->numberBetween(1, 60),
+            'status' => FeatureStatus::Published,
             'title' => rtrim(fake()->sentence(4), '.'),
             'subject' => fake()->words(3, true),
             'published' => fake()->dateTimeBetween('-2 years')->format('Y-m-d'),
@@ -90,6 +92,16 @@ class FeatureFactory extends Factory
     {
         return $this->state(fn (array $attributes): array => [
             'tag_id' => null,
+        ]);
+    }
+
+    /**
+     * A feature still being written, seen only by the Office.
+     */
+    public function draft(): static
+    {
+        return $this->state(fn (array $attributes): array => [
+            'status' => FeatureStatus::Draft,
         ]);
     }
 

@@ -62,6 +62,7 @@ const listing = computed(() =>
             >
                 <div class="pt-5">
                     <img
+                        v-if="props.feature.cover_photo"
                         :src="
                             page.props.cdnUrl + '/' + props.feature.cover_photo
                         "
@@ -79,8 +80,12 @@ const listing = computed(() =>
             <div
                 class="-ml-10 pt-40 pl-5 md:border-l md:border-silver md:pt-30 lg:pt-50"
             >
-                <div class="w-full md:w-[726px]">
+                <div
+                    class="w-full md:w-[726px]"
+                    :class="{ 'is-draft': props.feature.status === 'draft' }"
+                >
                     <span
+                        v-if="props.feature.tag"
                         class="pl-2 font-din text-[10px] tracking-[.25em] uppercase"
                         >{{ props.feature.tag.tag }}</span
                     >

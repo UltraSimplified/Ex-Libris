@@ -23,7 +23,7 @@ class WriterController extends Controller
      *
      * @var list<string>
      */
-    private const CARD = ['id', 'slug', 'title', 'excerpt', 'cover_photo', 'cover_alt_text', 'published', 'tag_id'];
+    private const CARD = ['id', 'slug', 'title', 'excerpt', 'cover_photo', 'cover_alt_text', 'published', 'tag_id', 'status'];
 
     /**
      * Show the writer whose name makes this slug.
@@ -57,6 +57,7 @@ class WriterController extends Controller
             'title' => $writer->name,
             'writer' => [...$this->byline($writer), 'bio' => $writer->bio],
             'features' => $writer->features()
+                ->visible()
                 ->with('tag')
                 ->orderByDesc('published')
                 ->orderByDesc('id')

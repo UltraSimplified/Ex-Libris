@@ -6,10 +6,13 @@ use App\Nova\Concerns\ShowsLayoutImages;
 use App\Rules\Embed;
 use App\Services\Images\FeatureGallery;
 use App\Services\Images\FeatureImages;
+use App\Support\FeatureStatus;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Validation\Rule;
 use Jacobfitzp\NovaCanvas\Canvas;
 use Laravel\Nova\Actions\Action;
 use Laravel\Nova\Card;
+use Laravel\Nova\Fields\Badge;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\Boolean;
 use Laravel\Nova\Fields\Date;
@@ -71,18 +74,38 @@ class Feature extends Resource
     public function fields(NovaRequest $request): array
     {
         return [
+            /*
+             * A new feature starts as a draft, and a draft saves however
+             * far it has got: only the title is needed to file it. A
+             * published feature stays published when it is edited, and can
+             * be put back to a draft. Publishing asks for everything the
+             * site shows - see afterValidation().
+             */
+            Select::make('Status')
+                ->options(FeatureStatus::options())
+                ->default(FeatureStatus::Draft->value)
+                ->resolveUsing(fn ($status) => $status instanceof FeatureStatus ? $status->value : $status)
+                ->displayUsingLabels()
+                ->rules('required', Rule::enum(FeatureStatus::class))
+                ->help('A draft is seen only by the Office, marked as a draft. Publish it once it has a subject, date, tag, both pictures and an excerpt.')
+                ->hideFromIndex(),
+            Badge::make('Status')
+                ->resolveUsing(fn ($status) => $status instanceof FeatureStatus ? $status->value : $status)
+                ->map([FeatureStatus::Draft->value => 'warning', FeatureStatus::Published->value => 'success'])
+                ->labels(FeatureStatus::options())
+                ->onlyOnIndex(),
             Text::make('Title')->hideFromIndex()->sortable()->rules('required'),
-            Text::make('Subject')->sortable()->rules('required'),
-            Date::make('Date Published', 'published')->sortable()->rules('required'),
+            Text::make('Subject')->sortable()->nullable(),
+            Date::make('Date Published', 'published')->sortable()->nullable(),
             Boolean::make('Featured')
                 ->sortable()
                 ->help('Show at the top of the home page. Feature more than one and they scroll as a carousel, in the order they are dragged into on the Features list; feature none and the newest feature goes there.'),
             Number::make('Issue number')->sortable()->nullable()->hideFromIndex(),
-            BelongsTo::make('Tag'),
+            BelongsTo::make('Tag')->nullable(),
             Select::make('Colourway')->options(['white' => 'White', 'hi-vis' => 'Hi-vis', 'slate' => 'Slate', 'key-lime' => 'Key Lime'])->default('white'),
-            ImageCropper::make('Cover photo')->croppable(640 / 397)->resize(1280, 794)->convert('webp')->disk('do')->required()->indexWidth(300)->prunable(),
+            ImageCropper::make('Cover photo')->croppable(640 / 397)->resize(1280, 794)->convert('webp')->disk('do')->indexWidth(300)->prunable(),
             Textarea::make('Alt', 'cover_alt_text'),
-            ImageCropper::make('Feature image')->croppable(748 / 794)->resize(748, 794)->convert('webp')->disk('do')->required()->indexWidth(300)->prunable()->hideFromIndex(),
+            ImageCropper::make('Feature image')->croppable(748 / 794)->resize(748, 794)->convert('webp')->disk('do')->indexWidth(300)->prunable()->hideFromIndex(),
             Textarea::make('Alt', 'feature_alt_text'),
             Flexible::make('Body')
                 ->addLayout('Text block', 'copy', [
@@ -131,7 +154,8 @@ class Feature extends Resource
                         ->path(FeatureGallery::DIRECTORY)
                         ->maxEdge(FeatureGallery::MAX_EDGE)
                         ->thumbnailEdge(FeatureGallery::THUMBNAIL_EDGE)
-                        ->help('Choose as many photos as you like at once. Wait for them all to upload before saving.'),
+                        ->maxImages(FeatureGallery::MAX_IMAGES)
+                        ->help('Choose up to '.FeatureGallery::MAX_IMAGES.' photos, as many at once as you like. Wait for them all to upload before saving.'),
                 ])
                 ->addLayout('Audio Playlist', 'playlist', [
                     Textarea::make('playlist')
@@ -140,7 +164,7 @@ class Feature extends Resource
                 ])
                 ->confirmRemove()
                 ->fullWidth(),
-            Textarea::make('Excerpt')->rules('required'),
+            Textarea::make('Excerpt')->nullable(),
             /*
              * Credited to the account that wrote it. Held to the writers
              * so the byline cannot quietly be given to a venue manager,
@@ -173,6 +197,47 @@ class Feature extends Resource
 
             $this->socialMediaPanel('the title', 'the excerpt', 'the cover photo'),
         ];
+    }
+
+    /**
+     * What a feature must have before it is published, by what each is
+     * sent as and what the editor calls it. Every one is shown on the
+     * site; a draft may go without any of them.
+     *
+     * @var array<string, string>
+     */
+    private const NEEDED_TO_PUBLISH = [
+        'subject' => 'a subject',
+        'published' => 'a date published',
+        'tag' => 'a tag',
+        'cover_photo' => 'a cover photo',
+        'feature_image' => 'a feature image',
+        'excerpt' => 'an excerpt',
+    ];
+
+    /**
+     * A feature is only published once it is complete. A picture counts
+     * if one is sent or the feature already has one, since an edit that
+     * leaves a picture alone does not send it again.
+     */
+    protected static function afterValidation(NovaRequest $request, $validator): void
+    {
+        if ($request->input('status') !== FeatureStatus::Published->value) {
+            return;
+        }
+
+        $feature = $request->resourceId ? $request->findModel() : null;
+
+        foreach (self::NEEDED_TO_PUBLISH as $attribute => $label) {
+            $isPicture = in_array($attribute, ['cover_photo', 'feature_image'], true);
+
+            $isGiven = filled($request->input($attribute))
+                || ($isPicture && ($request->hasFile($attribute) || filled($feature?->{$attribute})));
+
+            if (! $isGiven) {
+                $validator->errors()->add($attribute, "Add {$label} to publish this feature, or save it as a draft.");
+            }
+        }
     }
 
     /**

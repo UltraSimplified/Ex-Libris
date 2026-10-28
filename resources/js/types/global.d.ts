@@ -326,8 +326,10 @@ interface Article {
     id: number;
     issue_number: number;
     title: string;
-    subject: string;
-    published: string;
+    subject: string | null;
+    published: string | null;
+    /** A draft is only sent to the Office, and marked as one. */
+    status: 'draft' | 'published';
     /** Picked for the top of the home page. */
     featured: boolean;
     slug: string;

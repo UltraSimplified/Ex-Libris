@@ -7,6 +7,7 @@ use App\Services\Images\FeatureGallery;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Ultrasimplified\Gallery\Gallery;
 use Whitecube\NovaFlexibleContent\Flexible;
@@ -185,6 +186,44 @@ test('a photojournal saved through nova keeps its photos in order with their cap
         ->and($layouts[0]['layout'])->toBe('gallery')
         ->and($layouts[0]['attributes']['images'])->toBe([[...$second, 'caption' => 'Gaz Williams'], $first]);
 });
+
+/**
+ * Two Photojournals of twenty photos each, saved together: each keeps its
+ * own photos, and none of either is deleted.
+ */
+test('two photojournals saved through nova keep twenty photos each', function () {
+    $first = collect(range(1, 20))->map(fn (int $n): array => storedPhotojournalImage(sprintf('cFirst%09d', $n)))->all();
+    $second = collect(range(1, 20))->map(fn (int $n): array => storedPhotojournalImage(sprintf('cSecnd%09d', $n)))->all();
+    $feature = Feature::factory()->create(['body' => featureBodyWithPhotojournal([])]);
+
+    saveFeatureBodyThroughNova($feature, [
+        ['layout' => 'gallery', 'key' => 'cGallery0000001', 'attributes' => ['images' => json_encode($first)]],
+        ['layout' => 'gallery', 'key' => 'cGallery0000002', 'attributes' => ['images' => json_encode($second)]],
+    ]);
+
+    $layouts = json_decode($feature->fresh()->body, true);
+
+    expect($layouts)->toHaveCount(2)
+        ->and($layouts[0]['attributes']['images'])->toBe($first)
+        ->and($layouts[1]['attributes']['images'])->toBe($second);
+
+    Storage::disk(FeatureGallery::DISK)->assertExists(collect([...$first, ...$second])->flatMap(fn (array $image): array => [$image['image'], $image['thumb']])->all());
+});
+
+test('a photojournal holds up to twenty photos', function (int $count, bool $passes) {
+    $images = collect(range(1, $count))->map(fn (int $n): array => storedPhotojournalImage(sprintf('cPhoto%09d', $n)))->all();
+    $field = novaPhotojournalField();
+
+    $validator = Validator::make(
+        [$field->attribute => json_encode($images)],
+        $field->getRules(app(NovaRequest::class)),
+    );
+
+    expect($validator->passes())->toBe($passes);
+})->with([
+    'twenty' => [20, true],
+    'twenty-one' => [21, false],
+]);
 
 test('removing a photojournal through nova deletes its photos from the disk', function () {
     $images = [storedPhotojournalImage('cOne00000000001'), storedPhotojournalImage('cTwo00000000001')];

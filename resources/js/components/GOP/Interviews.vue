@@ -107,12 +107,14 @@ function trackScrolled(): void {
                 >
                     <div
                         class="relative min-[1160px]:flex min-[1160px]:items-start min-[1160px]:gap-8"
+                        :class="{ 'is-draft': article.status === 'draft' }"
                     >
                         <!-- Image column: matched to the columns below -->
                         <div
                             class="min-[1160px]:w-[calc((100%-4rem)/2)] min-[1160px]:shrink-0"
                         >
                             <img
+                                v-if="article.cover_photo"
                                 :src="
                                     page.props.cdnUrl +
                                     '/' +
@@ -127,6 +129,7 @@ function trackScrolled(): void {
                         <!-- Text takes the rest -->
                         <div class="min-w-0 min-[1160px]:flex-1">
                             <Link
+                                v-if="article.tag"
                                 :href="tagUrl(article)"
                                 class="relative z-10 mt-4 inline-block rounded-sm bg-tarmac px-4 py-2 text-sm font-bold text-white uppercase hover:bg-hivis hover:text-tarmac min-[1160px]:mt-0 md:text-xs"
                             >
