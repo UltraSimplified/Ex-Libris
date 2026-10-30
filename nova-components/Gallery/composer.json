@@ -1,0 +1,31 @@
+{
+    "name": "ultrasimplified/gallery",
+    "description": "A Laravel Nova field for a gallery of images, uploaded several at a time.",
+    "keywords": [
+        "laravel",
+        "nova"
+    ],
+    "license": "MIT",
+    "require": {
+        "php": "^8.2",
+        "illuminate/support": "^11.0|^12.0|^13.0",
+        "intervention/image-laravel": "^4.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Ultrasimplified\\Gallery\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Ultrasimplified\\Gallery\\FieldServiceProvider"
+            ]
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

@@ -1,0 +1,429 @@
+/*
+ * Gig widgets, as framed on other people's sites.
+ *
+ * Inlined into each widget page by resources/views/embed/layout.blade.php,
+ * so it is plain CSS: no build step, nothing for the host site to block.
+ * Colours come only from the --gop-* properties the layout sets from the
+ * owner's brand, so every density is painted by any venue's colours.
+ */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    background: var(--gop-bg, #fff);
+}
+
+.gop-widget {
+    font-family: var(--gop-font);
+    font-size: 15px;
+    line-height: 1.4;
+    color: var(--gop-text);
+    background: var(--gop-bg);
+    padding: 4px;
+    -webkit-font-smoothing: antialiased;
+}
+
+.gop-widget a {
+    color: inherit;
+}
+
+.gop-thumb,
+.gop-card-image {
+    text-decoration: none;
+}
+
+.gop-widget a:focus-visible {
+    outline: 3px solid var(--gop-brand);
+    outline-offset: 2px;
+}
+
+.gop-widget img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.gop-events {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.gop-title {
+    margin: 0;
+    font-weight: 700;
+    text-decoration: none;
+    overflow-wrap: anywhere;
+}
+
+.gop-title a {
+    text-decoration: none;
+}
+
+.gop-title:hover,
+.gop-title a:hover {
+    text-decoration: underline;
+}
+
+.gop-when,
+.gop-meta,
+.gop-price {
+    margin: 0;
+    color: var(--gop-muted);
+    font-size: 0.87em;
+}
+
+.gop-price {
+    color: var(--gop-text);
+    font-weight: 600;
+}
+
+.gop-dash {
+    color: var(--gop-brand);
+    font-weight: 700;
+    padding: 0 0.15em;
+}
+
+/* --- Buttons ------------------------------------------------------- */
+
+.gop-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5em 0.9em;
+    border-radius: 2px;
+    background: var(--gop-brand);
+    color: var(--gop-on-brand) !important;
+    font-size: 0.75em;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: filter 0.15s;
+}
+
+.gop-button:hover {
+    filter: brightness(1.12);
+}
+
+.gop-button.is-quiet {
+    background: transparent;
+    color: var(--gop-text) !important;
+    box-shadow: inset 0 0 0 1px var(--gop-line);
+}
+
+.gop-button.is-sold-out {
+    background: var(--gop-line);
+    color: var(--gop-muted) !important;
+    cursor: default;
+}
+
+/* --- Compact: one line each ---------------------------------------- */
+
+.density-compact .gop-event {
+    display: grid;
+    grid-template-columns: 7.5em 1fr auto;
+    align-items: center;
+    gap: 0.75em;
+    padding: 0.6em 0.25em;
+    border-bottom: 1px solid var(--gop-line);
+}
+
+.density-compact .gop-date {
+    color: var(--gop-muted);
+    font-size: 0.87em;
+    font-variant-numeric: tabular-nums;
+}
+
+.density-compact .gop-date-label {
+    text-transform: uppercase;
+    font-size: 0.8em;
+    letter-spacing: 0.04em;
+}
+
+.density-compact .gop-main {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+/* --- Concise: a small picture beside the words --------------------- */
+
+.density-concise .gop-event {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 0.9em;
+    padding: 0.7em 0;
+    border-bottom: 1px solid var(--gop-line);
+}
+
+.density-concise .gop-thumb {
+    display: block;
+    width: 96px;
+    aspect-ratio: 548 / 462;
+    overflow: hidden;
+    background: var(--gop-brand);
+}
+
+.density-concise .gop-thumb-date,
+.gop-card-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--gop-on-brand);
+    font-weight: 700;
+    line-height: 1.05;
+    text-transform: uppercase;
+}
+
+.density-concise .gop-thumb-date {
+    font-size: 1.6em;
+}
+
+.density-concise .gop-thumb-date small {
+    font-size: 0.45em;
+    letter-spacing: 0.08em;
+}
+
+.density-concise .gop-main {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1em;
+    min-width: 0;
+}
+
+.density-concise .gop-title {
+    font-size: 1.05em;
+}
+
+/* --- Detailed: cards ----------------------------------------------- */
+
+.density-detailed .gop-events {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 24px;
+}
+
+.gop-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--gop-bg);
+    box-shadow: 0 1px 4px rgb(0 0 0 / 0.12);
+}
+
+.gop-card-image {
+    position: relative;
+    display: block;
+    aspect-ratio: 548 / 462;
+    background: var(--gop-brand);
+    border-bottom: 4px solid var(--gop-accent);
+}
+
+.gop-card-placeholder {
+    font-size: 1.1em;
+    letter-spacing: 0.08em;
+}
+
+.gop-card-placeholder strong {
+    font-size: 3em;
+    letter-spacing: 0;
+}
+
+.gop-badges {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    display: flex;
+}
+
+.gop-badge {
+    padding: 0.35em 0.8em;
+    background: var(--gop-accent);
+    color: var(--gop-on-accent);
+    font-size: 0.7em;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.gop-badge.is-sold-out {
+    background: var(--gop-accent-2);
+    color: var(--gop-on-accent-2);
+}
+
+.gop-card-body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 0.45em;
+    padding: 1em 1.1em 1.1em;
+}
+
+.gop-card-body .gop-when {
+    font-size: 0.95em;
+}
+
+.gop-card-body .gop-title {
+    font-size: 1.25em;
+    line-height: 1.25;
+}
+
+.gop-card-foot {
+    margin-top: auto;
+    padding-top: 1em;
+}
+
+/* --- Large: posters with the words laid over ------------------------ */
+
+.density-large .gop-events {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+}
+
+.gop-poster {
+    position: relative;
+    display: block;
+    aspect-ratio: 1;
+    overflow: hidden;
+    background: var(--gop-brand);
+    text-decoration: none;
+}
+
+.gop-poster img {
+    transition: transform 0.4s;
+}
+
+.gop-poster:hover img {
+    transform: scale(1.03);
+}
+
+.gop-poster-placeholder {
+    display: block;
+    height: 100%;
+}
+
+.gop-poster-labels {
+    position: absolute;
+    left: 6px;
+    bottom: 6px;
+    right: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+}
+
+.gop-poster-title,
+.gop-poster-date {
+    padding: 0.25em 0.5em;
+    font-weight: 800;
+    text-transform: uppercase;
+    line-height: 1.15;
+}
+
+.gop-poster-title {
+    background: var(--gop-brand);
+    color: var(--gop-on-brand);
+    font-size: 1.05em;
+    letter-spacing: 0.02em;
+}
+
+.gop-poster-date {
+    background: var(--gop-text);
+    color: var(--gop-bg);
+    font-size: 0.72em;
+    letter-spacing: 0.05em;
+}
+
+.is-sold-out .gop-poster img {
+    filter: grayscale(1);
+    opacity: 0.7;
+}
+
+/* --- Around the events ---------------------------------------------- */
+
+.gop-empty,
+.gop-more {
+    margin: 1em 0 0;
+    text-align: center;
+}
+
+.gop-empty {
+    padding: 2em 1em;
+    color: var(--gop-muted);
+}
+
+.gop-empty a,
+.gop-more a {
+    color: var(--gop-text);
+    font-weight: 600;
+}
+
+.gop-more a {
+    display: inline-block;
+    padding: 0.5em 1em;
+    box-shadow: inset 0 0 0 1px var(--gop-line);
+    text-decoration: none;
+}
+
+.gop-credit {
+    margin: 1em 0 0;
+    text-align: right;
+    font-size: 0.72em;
+    color: var(--gop-muted);
+}
+
+.gop-credit a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.gop-credit a:hover {
+    text-decoration: underline;
+}
+
+/* --- Narrow frames -------------------------------------------------- */
+
+@media (max-width: 420px) {
+    .density-compact .gop-event {
+        grid-template-columns: 1fr auto;
+    }
+
+    .density-compact .gop-date {
+        grid-column: 1 / -1;
+        margin-bottom: -0.4em;
+    }
+
+    .density-concise .gop-event {
+        grid-template-columns: auto 1fr;
+    }
+
+    .density-concise .gop-button {
+        grid-column: 2;
+        justify-self: start;
+    }
+
+    .density-concise .gop-thumb {
+        width: 72px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .gop-widget * {
+        transition: none !important;
+    }
+}

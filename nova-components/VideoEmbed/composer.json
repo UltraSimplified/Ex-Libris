@@ -1,0 +1,30 @@
+{
+    "name": "ultrasimplified/video-embed",
+    "description": "A Laravel Nova textarea for a YouTube or Vimeo embed code, with a live preview of the video.",
+    "keywords": [
+        "laravel",
+        "nova"
+    ],
+    "license": "MIT",
+    "require": {
+        "php": "^8.2",
+        "illuminate/support": "^11.0|^12.0|^13.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Ultrasimplified\\VideoEmbed\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Ultrasimplified\\VideoEmbed\\FieldServiceProvider"
+            ]
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

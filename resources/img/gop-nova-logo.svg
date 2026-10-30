@@ -1,0 +1,16 @@
+<svg class="gop-lockup" viewBox="0 0 48 43" xmlns="http://www.w3.org/2000/svg">
+  <!--
+    The Good on Paper mark, in place of Nova's spiral and wordmark. Nova
+    inlines this file rather than linking it, so the Typekit face loaded by
+    the admin stylesheet applies to the type, and currentColor carries it
+    between light and dark.
+
+    Scaled and shifted from the 2917px original so its block of type, rather
+    than the square that type sits in, is what fills the box.
+  -->
+  <g class="gop-logo" transform="translate(-1.76 -5.96) scale(0.018718)">
+    <text x="307.737" y="1066.148" font-size="742.207" stroke-width="28.86">GOOD</text>
+    <text x="307.737" y="1725.888" font-size="742.207" stroke-width="28.86">ON</text>
+    <text x="307.737" y="2385.627" font-size="742.207" stroke-width="28.86">P<tspan x="732.279" y="2385.627">A</tspan>PER</text>
+  </g>
+</svg>

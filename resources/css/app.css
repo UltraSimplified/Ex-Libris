@@ -1,0 +1,432 @@
+@import url('https://use.typekit.net/owb2ffh.css');
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@source '../../node_modules/vue-tailwind-datepicker';
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+
+/* Match .dark itself as well as descendants (lets you put dark: on <html>) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ---------------------------------------------------------------
+   1. Raw, theme-switchable values live on :root / .dark
+   --------------------------------------------------------------- */
+:root {
+    color-scheme: light;
+
+    /* Semantic tokens */
+    --surface: #ffffff;
+    --surface-raised: #f5f5f5;
+    --ink: #212121; /* slate */
+    --ink-muted: #818181; /* tyre */
+    --line: #e1e1e1; /* silver */
+    --accent-brand: #fced3c; /* hivis */
+
+    /* Datepicker — light values (as you have now) */
+    --color-vtd-primary-100: #f1f1f1;
+    --color-vtd-primary-400: #404040;
+    --color-vtd-primary-500: #000000;
+    --color-vtd-primary-600: #171717;
+    /* ...rest of your light vtd scale... */
+
+    /* --- shadcn bridge: light --- */
+    --background: var(--surface); /* #ffffff */
+    --foreground: var(--ink); /* #212121 */
+
+    --card: var(--surface);
+    --card-foreground: var(--ink);
+    --popover: var(--surface);
+    --popover-foreground: var(--ink);
+
+    --primary: var(--ink); /* #212121 slate */
+    --primary-foreground: var(--surface);
+    --secondary: var(--surface-raised); /* #f5f5f5 */
+    --secondary-foreground: var(--ink);
+
+    --muted: var(--surface-raised);
+    --muted-foreground: var(--ink-muted); /* #818181 */
+    --accent: var(--surface-raised); /* hover states — see note A */
+    --accent-foreground: var(--ink);
+
+    --destructive: #dc2626;
+    --destructive-foreground: #ffffff;
+
+    --border: var(--line); /* #e1e1e1 */
+    --input: var(--line);
+    --ring: var(--ink);
+
+    /* sidebar — recessed backdrop, content card sits on top (inset variant) */
+    --sidebar: var(--surface-raised); /* #f5f5f5 */
+    --sidebar-foreground: var(--ink);
+    --sidebar-border: var(--line);
+    --sidebar-accent: var(--accent-brand); /* #fced3c hivis — see note B */
+    --sidebar-accent-foreground: var(--ink);
+    --sidebar-primary: var(--ink);
+    --sidebar-primary-foreground: var(--surface);
+    --sidebar-ring: var(--ink);
+}
+
+.dark {
+    color-scheme: dark;
+
+    --surface: #212121;
+    --surface-raised: #343434; /* tarmac */
+    --ink: #e1e1e1;
+    --ink-muted: #a3a3a3;
+    --line: #404040;
+
+    /* Datepicker — moved here from the prefers-color-scheme block */
+    --color-vtd-primary-300: #fdf3a0;
+    --color-vtd-primary-400: #fced3c;
+    --color-vtd-primary-500: #fced3c;
+    --color-vtd-primary-600: #e0d235;
+    --color-vtd-primary-700: #c4b82e;
+    --color-vtd-secondary-600: #6e6526;
+    --color-vtd-secondary-700: #57501f;
+    --color-vtd-secondary-800: #212121;
+
+    --color-tyre: #e1e1e1;
+    --color-slate: #d0d0d0;
+    --color-gravel: #212121;
+    --color-silver: #818181;
+
+    --background: var(--surface); /* #212121 */
+    --foreground: var(--ink); /* #e1e1e1 */
+
+    --card: var(--surface-raised); /* #343434 tarmac */
+    --card-foreground: var(--ink);
+    --popover: var(--surface-raised);
+    --popover-foreground: var(--ink);
+
+    --primary: var(--ink);
+    --primary-foreground: var(--surface);
+    --secondary: var(--surface-raised);
+    --secondary-foreground: var(--ink);
+
+    --muted: var(--surface-raised);
+    --muted-foreground: var(--ink-muted); /* #a3a3a3 */
+    --accent: var(--surface-raised);
+    --accent-foreground: var(--ink);
+
+    --destructive: #ef4444;
+    --destructive-foreground: #ffffff;
+
+    --border: var(--line); /* #404040 */
+    --input: var(--line);
+    --ring: var(--accent-brand); /* hivis focus ring */
+
+    --sidebar: #171717; /* darker than surface */
+    --sidebar-foreground: var(--ink);
+    --sidebar-border: var(--line);
+    --sidebar-accent: var(--accent-brand);
+    --sidebar-accent-foreground: #212121; /* dark text on yellow */
+    --sidebar-primary: var(--accent-brand);
+    --sidebar-primary-foreground: #212121;
+    --sidebar-ring: var(--accent-brand);
+}
+
+/* Goblin mode: the dark theme with everything pulled into green. It is set
+   alongside .dark, and only inside the dashboard and settings (see
+   useAppearance.ts), so only the palette is restated here; the brand yellow
+   becomes the lime already in the theme, and the greys, black and white that
+   components reach for directly follow. */
+.goblin {
+    --surface: #0b1f13;
+    --surface-raised: #143322;
+    --ink: #c8f5d6;
+    --ink-muted: #6fae85;
+    --line: #1f4a30;
+    --accent-brand: #6bfa93;
+
+    --color-vtd-primary-300: #b8fccd;
+    --color-vtd-primary-400: #6bfa93;
+    --color-vtd-primary-500: #6bfa93;
+    --color-vtd-primary-600: #4fd978;
+    --color-vtd-primary-700: #3bb361;
+    --color-vtd-secondary-600: #266e3d;
+    --color-vtd-secondary-700: #1f5732;
+    --color-vtd-secondary-800: #0b1f13;
+
+    --color-hivis: #6bfa93;
+    --color-tarmac: #143322;
+    --color-tyre: #c8f5d6;
+    --color-slate: #a9dcbb;
+    --color-gravel: #0b1f13;
+    --color-silver: #6fae85;
+
+    --color-black: #03130a;
+    --color-white: #eafff1;
+    --color-gray-100: #dcf5e4;
+    --color-gray-200: #bbe6c9;
+    --color-gray-300: #96cea8;
+    --color-gray-400: #6caa81;
+    --color-gray-500: #4c825f;
+    --color-gray-600: #8cc9a1;
+    --color-neutral-100: #dcf5e4;
+    --color-neutral-200: #bbe6c9;
+    --color-neutral-300: #96cea8;
+    --color-neutral-400: #6caa81;
+    --color-neutral-500: #4c825f;
+    --color-neutral-600: #3a6a4c;
+    --color-neutral-700: #22472f;
+    --color-neutral-800: #143322;
+    --color-neutral-900: #0b1f13;
+    --color-zinc-900: #0b1f13;
+
+    --sidebar: #06150b;
+    --sidebar-accent-foreground: #06150b;
+    --sidebar-primary-foreground: #06150b;
+}
+
+.goblin .bg-vtd-primary-500.text-white,
+.goblin .bg-vtd-primary-500.text-white:hover {
+    color: #06150b;
+}
+
+/* This was nested inside :root in the media query — give it its own rule */
+.dark .bg-vtd-primary-500.text-white,
+.dark .bg-vtd-primary-500.text-white:hover {
+    color: #212121;
+}
+
+/* ---------------------------------------------------------------
+   2. Expose semantic tokens as Tailwind utilities via @theme inline
+   --------------------------------------------------------------- */
+@theme inline {
+    --color-surface: var(--surface);
+    --color-surface-raised: var(--surface-raised);
+    --color-ink: var(--ink);
+    --color-ink-muted: var(--ink-muted);
+    --color-line: var(--line);
+
+    /* shadcn bridge */
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --color-sidebar: var(--sidebar);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-ring: var(--sidebar-ring);
+}
+
+/* ---------------------------------------------------------------
+   3. Static brand values stay in @theme as before
+   --------------------------------------------------------------- */
+@theme {
+    --color-hivis: #fced3c;
+    --color-key-lime: #6bfa93;
+    --color-tarmac: #343434;
+    --color-tyre: #818181;
+    --color-slate: #212121;
+    --color-gravel: #d0d0d0;
+    --color-silver: #e1e1e1;
+    --font-haas: 'neue-haas-grotesk-display', sans-serif;
+    --font-din: 'din-2014', sans-serif;
+}
+
+/* The date picker's palette, at the picker's own defaults, so that the
+   site's Tailwind makes the picker's colour utilities itself. The picker
+   brings a build of its own, but that keys its dark: variants on the
+   operating system and sits behind this sheet (see ListingsIndex.vue);
+   made here, they follow .dark like the rest of the site. The :root and
+   .dark blocks above re-colour it. */
+@theme {
+    --color-vtd-primary-50: var(--color-sky-50);
+    --color-vtd-primary-100: var(--color-sky-100);
+    --color-vtd-primary-300: var(--color-sky-300);
+    --color-vtd-primary-400: var(--color-sky-400);
+    --color-vtd-primary-500: var(--color-sky-500);
+    --color-vtd-primary-600: var(--color-sky-600);
+    --color-vtd-primary-700: var(--color-sky-700);
+    --color-vtd-secondary-50: var(--color-gray-50);
+    --color-vtd-secondary-100: var(--color-gray-100);
+    --color-vtd-secondary-200: var(--color-gray-200);
+    --color-vtd-secondary-300: var(--color-gray-300);
+    --color-vtd-secondary-400: var(--color-gray-400);
+    --color-vtd-secondary-500: var(--color-gray-500);
+    --color-vtd-secondary-600: var(--color-gray-600);
+    --color-vtd-secondary-700: var(--color-gray-700);
+    --color-vtd-secondary-800: var(--color-gray-800);
+    --color-vtd-secondary-900: var(--color-gray-900);
+}
+
+body {
+    background: var(--surface);
+    color: var(--ink);
+    font-family: 'neue-haas-grotesk-display', 'Helvetica Neue', sans-serif;
+}
+
+/* ---------------------------------------------------------------
+   4. Editable body copy
+
+   Tailwind's preflight strips headings, lists and links back to plain
+   text, which is right for components built out of utility classes and
+   wrong for HTML written in Nova: an editor has no way to reach these
+   tags, so an <h3> came out looking exactly like the paragraph above it.
+
+   .rich-text marks a container of editor HTML, which the layouts put on
+   every field an editor writes into, so pages and feature articles read
+   the same. The handle matters: matching .feature-body instead would
+   also catch the component headings alongside it, whose utility classes
+   a bare descendant selector outranks.
+   --------------------------------------------------------------- */
+:is(.page-body, .rich-text) :is(h1, h2, h3, h4, h5, h6) {
+    font-weight: 700;
+    line-height: 1.2;
+    margin-block: 1.75rem 0.5rem;
+}
+
+:is(.page-body, .rich-text) :is(h1, h2, h3, h4, h5, h6):first-child {
+    margin-block-start: 0;
+}
+
+:is(.page-body, .rich-text) h1 {
+    font-size: 1.875rem;
+}
+:is(.page-body, .rich-text) h2 {
+    font-size: 1.5rem;
+}
+:is(.page-body, .rich-text) h3 {
+    font-size: 1.25rem;
+}
+:is(.page-body, .rich-text) :is(h4, h5, h6) {
+    font-size: 1.125rem;
+}
+
+:is(.page-body, .rich-text) p {
+    margin-block-end: 1rem;
+}
+
+:is(.page-body, .rich-text) :is(ul, ol) {
+    margin-block-end: 1rem;
+    padding-inline-start: 1.5rem;
+}
+
+:is(.page-body, .rich-text) ul {
+    list-style: disc;
+}
+:is(.page-body, .rich-text) ol {
+    list-style: decimal;
+}
+
+:is(.page-body, .rich-text) li {
+    margin-block-end: 0.25rem;
+}
+
+:is(.page-body, .rich-text) a {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+:is(.page-body, .rich-text) blockquote {
+    border-inline-start: 3px solid var(--line);
+    margin-block-end: 1rem;
+    padding-inline-start: 1rem;
+}
+
+:is(.page-body, .rich-text) hr {
+    border-color: var(--line);
+    margin-block: 1.75rem;
+}
+
+/*
+ * Editors lay a picture beside its text with a table, as the Advertise
+ * page does. Unpadded, the cells butt up against each other, so they are
+ * spaced as the image layouts are: 2rem across, and read from the top.
+ */
+:is(.page-body, .rich-text) :is(th, td) {
+    padding-block-end: 1.25rem;
+    padding-inline-end: 2rem;
+    text-align: start;
+    vertical-align: top;
+}
+
+:is(.page-body, .rich-text) :is(th, td):last-child {
+    padding-inline-end: 0;
+}
+
+/* ---------------------------------------------------------------
+   5. The dashboard is square
+
+   Hung off the sidebar wrapper, which only the signed-in dashboard
+   renders, so the magazine keeps its own rounding. Sat on body rather
+   than the wrapper itself so it also reaches the dialogs and sheets
+   that portal out of the shell.
+   --------------------------------------------------------------- */
+body:has([data-slot='sidebar-wrapper']) *,
+body:has([data-slot='sidebar-wrapper']) *::before,
+body:has([data-slot='sidebar-wrapper']) *::after {
+    border-radius: 0;
+}
+
+/* Only the things you press and the pictures keep a hint of one. */
+body:has([data-slot='sidebar-wrapper'])
+    :is(button, [role='button'], [data-slot='button'], img, video, canvas) {
+    border-radius: 3px;
+}
+
+/*
+ * Except the round-by-design: pills and avatars. `rounded-full` is a single
+ * class, which the reset above out-specifies, so it needs saying again -
+ * and last, to settle the tie on specificity with the 3px rule. The avatar
+ * slots are named as well because some of them ask for `rounded-lg`, which
+ * would leave the same face round in the header and square in the sidebar.
+ */
+body:has([data-slot='sidebar-wrapper'])
+    :is(
+        .rounded-full,
+        [data-slot='avatar'],
+        [data-slot='avatar-image'],
+        [data-slot='avatar-fallback']
+    ) {
+    border-radius: 9999px;
+}
+
+/*
+ * Field headings are set in capitals too, to match the nav and the page
+ * titles. Scoped like the rules above rather than put on the Label
+ * component itself, which the sign-in and registration screens share and
+ * which are not part of the dashboard.
+ *
+ * Only the Label component, never a bare <label>: those wrap the
+ * checkboxes, and their text is a whole sentence.
+ */
+body:has([data-slot='sidebar-wrapper']) [data-slot='label'] {
+    text-transform: uppercase;
+}
+
+/*
+ * The magazine sets nothing in italics. Emphasis that arrives in a
+ * feature's own text, and the elements a browser slants by default,
+ * are drawn upright like everything else.
+ */
+@layer base {
+    em,
+    i,
+    cite,
+    address,
+    dfn,
+    var {
+        font-style: normal;
+    }
+}

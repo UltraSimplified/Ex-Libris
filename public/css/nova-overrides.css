@@ -1,0 +1,346 @@
+/* The Neue Haas Grotesk Display face the brand mark is set in. */
+@import url('https://use.typekit.net/owb2ffh.css');
+
+/* Centre block-level images inside centre-aligned index cells */
+td p.text-center img {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Promote the listings export out of the unlabelled "..." menu.
+   Nova has no API for lifting a standalone action onto the index toolbar, so
+   the dropdown trigger is relabelled and given a button's weight instead.
+   Scoped to the listings index, where that menu holds the export alone. */
+[dusk="listings-index-component"] [dusk="index-standalone-action-dropdown"] {
+    gap: 0.375rem;
+    border-color: rgb(var(--colors-primary-500));
+    color: rgb(var(--colors-primary-500));
+}
+
+[dusk="listings-index-component"] [dusk="index-standalone-action-dropdown"]:hover:not(:disabled) {
+    background-color: rgb(var(--colors-primary-500) / 0.1);
+}
+
+[dusk="listings-index-component"] [dusk="index-standalone-action-dropdown"]::after {
+    content: "Export";
+}
+
+/* Let field flyouts escape the panel they sit in.
+   Nova's form and detail panels are clipped to their own rounded corners, so
+   a colour picker or a Flexible layout menu opening near the bottom edge is
+   cut off rather than overlapping the next panel. Clipping is lifted only
+   while such a flyout is in the DOM, which is only while it is open, so the
+   corners still clip their rows the rest of the time. */
+.overflow-hidden:has(.nc-picker),
+.overflow-hidden:has(.max-h-search) {
+    overflow: visible;
+}
+
+/* Text colours for the office dashboard cards.
+   Declared here rather than as Tailwind classes because Nova's stylesheet is
+   compiled from Nova's own source: dark:text-gray-200 happens to exist in it,
+   dark:text-gray-300 does not, and a missing variant fails silently by
+   leaving the light colour on a dark panel. */
+.gop-heading {
+    color: rgb(51, 65, 85);
+}
+
+.gop-strong {
+    color: rgb(30, 41, 59);
+}
+
+.gop-muted {
+    color: rgb(100, 116, 139);
+}
+
+.dark .gop-heading,
+.dark .gop-strong {
+    color: rgb(226, 232, 240);
+}
+
+.dark .gop-muted {
+    color: rgb(148, 163, 184);
+}
+
+/* Nova sizes the sidebar logo with h-6. The mark is three stacked words
+   rather than a single glyph, so it needs the room to be legible and sets
+   its own height; this rule loads after Nova's and wins on order. */
+.gop-lockup {
+    height: 2.5rem;
+}
+
+/* The Good on Paper mark in the Nova sidebar.
+   Colours follow the sidebar rather than being fixed, so the mark inverts
+   in dark mode the way Nova's own wordmark did. */
+.gop-logo {
+    font-family: 'neue-haas-grotesk-display', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-weight: 500;
+    fill: rgb(71, 85, 105);
+    stroke: rgb(71, 85, 105);
+}
+
+.dark .gop-logo {
+    fill: #fff;
+    stroke: #fff;
+}
+
+
+/* The preview behind the eye on the listings and features indexes.
+   Sized wide enough to read a page in
+   without it being a column, short enough to leave the close button on
+   screen. */
+.gop-preview-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    background: rgba(0, 0, 0, 0.55);
+}
+
+.gop-preview-panel {
+    display: flex;
+    flex-direction: column;
+    width: min(1000px, 100%);
+    height: 90vh;
+    overflow: hidden;
+}
+
+.gop-preview-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+}
+
+.gop-preview-frame {
+    flex: 1;
+    width: 100%;
+    border: 0;
+}
+
+/* Row controls: the pencil and the eye.
+   A row click opens the form now, so the pencil repeated it, and the eye
+   went to a read-only detail page that showed the same fields the form
+   does. Nova builds these into its table row and offers no hook to leave
+   them out, so they are hidden here rather than by forking its build.
+
+   Three are deliberately left alone: the eye on a listing and on a
+   feature, which now frame the public page (office-preview.js), and the
+   pivot pencil on a many-to-many row, which edits the attachment itself -
+   something no row click reaches. */
+[dusk$='-edit-button'],
+[dusk$='-view-button']:not([href*='/resources/listings/']):not([href*='/resources/features/']) {
+    display: none;
+}
+
+/* Goblin mode.
+   Dark mode with every colour pulled into green. It rides on Nova's own
+   dark class (public/js/goblin-mode.js sets both), so everything dark mode
+   already styles stays styled and only the palette changes. Nova draws all
+   of its colour from these variables, so redefining them here recolours the
+   whole panel without touching a component. The html prefix lifts this
+   above Nova's :root declarations. Red and amber are left alone: a delete
+   button or a warning that stops reading as one is worse than an
+   off-theme one. */
+html.goblin {
+    --colors-gray-50: 240, 253, 244;
+    --colors-gray-100: 220, 245, 228;
+    --colors-gray-200: 187, 230, 201;
+    --colors-gray-300: 150, 206, 168;
+    --colors-gray-400: 108, 170, 129;
+    --colors-gray-500: 76, 130, 95;
+    --colors-gray-600: 52, 98, 69;
+    --colors-gray-700: 34, 70, 48;
+    --colors-gray-800: 20, 46, 31;
+    --colors-gray-900: 10, 28, 18;
+    --colors-gray-950: 4, 16, 9;
+
+    --colors-primary-50: 240, 253, 244;
+    --colors-primary-100: 220, 252, 231;
+    --colors-primary-200: 187, 247, 208;
+    --colors-primary-300: 134, 239, 172;
+    --colors-primary-400: 74, 222, 128;
+    --colors-primary-500: 34, 197, 94;
+    --colors-primary-600: 22, 163, 74;
+    --colors-primary-700: 21, 128, 61;
+    --colors-primary-800: 22, 101, 52;
+    --colors-primary-900: 20, 83, 45;
+    --colors-primary-950: 5, 46, 22;
+}
+
+/* Every other hue follows the primary ramp. */
+html.goblin {
+    --colors-blue-50: var(--colors-primary-50);
+    --colors-blue-100: var(--colors-primary-100);
+    --colors-blue-200: var(--colors-primary-200);
+    --colors-blue-300: var(--colors-primary-300);
+    --colors-blue-400: var(--colors-primary-400);
+    --colors-blue-500: var(--colors-primary-500);
+    --colors-blue-600: var(--colors-primary-600);
+    --colors-blue-700: var(--colors-primary-700);
+    --colors-blue-800: var(--colors-primary-800);
+    --colors-blue-900: var(--colors-primary-900);
+    --colors-blue-950: var(--colors-primary-950);
+
+    --colors-sky-50: var(--colors-primary-50);
+    --colors-sky-100: var(--colors-primary-100);
+    --colors-sky-200: var(--colors-primary-200);
+    --colors-sky-300: var(--colors-primary-300);
+    --colors-sky-400: var(--colors-primary-400);
+    --colors-sky-500: var(--colors-primary-500);
+    --colors-sky-600: var(--colors-primary-600);
+    --colors-sky-700: var(--colors-primary-700);
+    --colors-sky-800: var(--colors-primary-800);
+    --colors-sky-900: var(--colors-primary-900);
+    --colors-sky-950: var(--colors-primary-950);
+
+    --colors-indigo-50: var(--colors-primary-50);
+    --colors-indigo-100: var(--colors-primary-100);
+    --colors-indigo-200: var(--colors-primary-200);
+    --colors-indigo-300: var(--colors-primary-300);
+    --colors-indigo-400: var(--colors-primary-400);
+    --colors-indigo-500: var(--colors-primary-500);
+    --colors-indigo-600: var(--colors-primary-600);
+    --colors-indigo-700: var(--colors-primary-700);
+    --colors-indigo-800: var(--colors-primary-800);
+    --colors-indigo-900: var(--colors-primary-900);
+    --colors-indigo-950: var(--colors-primary-950);
+
+    --colors-violet-500: var(--colors-primary-500);
+    --colors-purple-500: var(--colors-primary-500);
+    --colors-cyan-500: var(--colors-primary-500);
+    --colors-teal-500: var(--colors-primary-500);
+}
+
+html.goblin .gop-heading,
+html.goblin .gop-strong {
+    color: rgb(var(--colors-gray-100));
+}
+
+html.goblin .gop-muted {
+    color: rgb(var(--colors-gray-400));
+}
+
+html.goblin .gop-logo {
+    fill: rgb(var(--colors-primary-400));
+    stroke: rgb(var(--colors-primary-400));
+}
+
+/* The theme menu's button shows the leaf, not Nova's moon, while goblin is
+   on. Nova owns the icon inside, so it is hidden and the leaf drawn in its
+   place. The button is tagged by public/js/goblin-mode.js. */
+html.goblin [data-goblin-trigger] svg {
+    display: none;
+}
+
+html.goblin [data-goblin-trigger]::before {
+    content: '';
+    display: block;
+    width: 1.5rem;
+    height: 1.5rem;
+    background: currentColor;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M13.5 2.5c-5.5 0-9 2.2-9 6.2 0 .8.2 1.5.5 2.1L2.5 13.3l.9.9 2.5-2.5c.6.3 1.3.5 2.1.5 4 0 6.2-3.5 6.2-9.2l-.7-.5z'/%3E%3C/svg%3E") center / 1.25rem no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M13.5 2.5c-5.5 0-9 2.2-9 6.2 0 .8.2 1.5.5 2.1L2.5 13.3l.9.9 2.5-2.5c.6.3 1.3.5 2.1.5 4 0 6.2-3.5 6.2-9.2l-.7-.5z'/%3E%3C/svg%3E") center / 1.25rem no-repeat;
+}
+
+/* The adverts card turns through every live advert: a round arrow either
+   side of a dot apiece, and a quick fade between creatives. */
+.gop-carousel-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+.gop-carousel-turn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border: 1px solid rgb(203, 213, 225);
+    border-radius: 9999px;
+    color: rgb(71, 85, 105);
+    font-size: 1.1rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.gop-carousel-turn:hover {
+    border-color: rgba(var(--colors-primary-500), 1);
+    color: rgba(var(--colors-primary-500), 1);
+}
+
+.gop-carousel-dots {
+    display: flex;
+    gap: 0.375rem;
+}
+
+.gop-carousel-dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 9999px;
+    background: rgb(148, 163, 184);
+    opacity: 0.4;
+    cursor: pointer;
+}
+
+.gop-carousel-dot[aria-current='true'] {
+    background: rgba(var(--colors-primary-500), 1);
+    opacity: 1;
+}
+
+.dark .gop-carousel-turn {
+    border-color: rgb(71, 85, 105);
+    color: rgb(203, 213, 225);
+}
+
+.gop-fade-enter-active,
+.gop-fade-leave-active {
+    transition: opacity 0.2s ease;
+}
+
+.gop-fade-enter-from,
+.gop-fade-leave-to {
+    opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .gop-fade-enter-active,
+    .gop-fade-leave-active {
+        transition: none;
+    }
+}
+
+/* Download report: the Adverts card, right of its carousel controls, and an
+   advert's own page. A small primary button in Nova's colours. */
+.gop-report-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    height: 1.75rem;
+    margin-left: auto;
+    padding: 0 0.65rem;
+    border-radius: 0.25rem;
+    background: rgba(var(--colors-primary-500), 1);
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.gop-report-button:hover {
+    background: rgba(var(--colors-primary-400), 1);
+    color: #fff;
+}
+
+.dark .gop-report-button,
+.dark .gop-report-button:hover {
+    color: rgb(17, 24, 39);
+}
