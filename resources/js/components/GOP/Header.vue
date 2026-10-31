@@ -479,7 +479,7 @@ onUnmounted(() => {
                     <Link
                         href="/"
                         class="pl-5 font-haas text-xl/4 font-bold text-black hover:text-gray-600 md:text-2xl/5 dark:text-white"
-                        >GOOD<br />ON<br />STAGING
+                        >GOOD<br />ON<br />PAPER
                     </Link>
                     <!--
                         The ways in for signed-in accounts: the Office for

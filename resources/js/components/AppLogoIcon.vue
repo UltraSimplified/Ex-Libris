@@ -46,7 +46,7 @@ defineProps<Props>();
         >
             <text x="0" y="10.4">GOOD</text>
             <text x="0" y="20.8">ON</text>
-            <text x="0" y="31.2">STAGING</text>
+            <text x="0" y="31.2">PAPER</text>
         </g>
     </svg>
 </template>
