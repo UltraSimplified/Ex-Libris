@@ -148,6 +148,7 @@ class ListingController extends Controller
             'nextWeek' => false,
             'venue' => null,
             'promoter' => $promoter->append('website_link'),
+            'meta' => SiteMeta::promoter($promoter)->toArray(),
         ]);
     }
 

@@ -91,5 +91,8 @@
     </head>
     <body class="font-sans antialiased">
         @inertia
+
+        <x-laravel-cookie-guard></x-laravel-cookie-guard>
+        <x-laravel-cookie-guard-scripts></x-laravel-cookie-guard-scripts>
     </body>
 </html>

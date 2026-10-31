@@ -3,14 +3,16 @@
 namespace App\Support;
 
 use App\Models\Issue;
+use App\Models\Promoter;
 use App\Models\Venue;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 /**
  * What the site's own pages - the home page, the listings, the magazine's
- * indexes, a venue - tell Facebook, X, WhatsApp and search engines about
- * themselves, where they have no record of their own to speak for them.
+ * indexes, a venue, a promoter - tell Facebook, X, WhatsApp and search
+ * engines about themselves, where they have no record of their own to
+ * speak for them.
  *
  * A page that sends no meta at all is given the site's: its title, the
  * description below, and the latest issue's cover, so no link to the site
@@ -122,6 +124,40 @@ class SiteMeta
                     'latitude' => $venue->latitude,
                     'longitude' => $venue->longitude,
                 ] : null,
+            ]),
+        );
+    }
+
+    /**
+     * A promoter's page of listings: its banner, or its logo where it has
+     * no banner, what it says about itself, and an Organization record.
+     */
+    public static function promoter(Promoter $promoter): PageMeta
+    {
+        $about = (string) Str::of((string) $promoter->about)->squish();
+        $description = $about !== ''
+            ? Str::limit($about, 200)
+            : "What's on from {$promoter->name}, listed by Good on Paper.";
+
+        $picture = collect([$promoter->banner, $promoter->logo])->first(fn (?string $path): bool => filled($path));
+        $image = $picture !== null ? Storage::disk('do')->url($picture) : null;
+        $url = url()->current();
+
+        return new PageMeta(
+            title: $promoter->name,
+            description: $description,
+            image: $image ?? self::defaultImage(),
+            url: $url,
+            type: 'website',
+            jsonLd: array_filter([
+                '@context' => 'https://schema.org',
+                '@type' => 'Organization',
+                'name' => $promoter->name,
+                'description' => $description,
+                'url' => $url,
+                'image' => $image,
+                'logo' => filled($promoter->logo) ? Storage::disk('do')->url($promoter->logo) : null,
+                'sameAs' => filled($promoter->website) ? $promoter->website : null,
             ]),
         );
     }

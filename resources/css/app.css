@@ -459,3 +459,30 @@ body:has([data-slot='sidebar-wrapper']) [data-slot='label'] {
     letter-spacing: 0.2em;
     text-transform: uppercase;
 }
+
+/*
+ * The cookie banner (scify/laravel-cookie-guard, added in app.blade.php)
+ * in our own colours rather than its blues and greens. Its stylesheet loads
+ * after this one, so the html prefix is what lets these settings win. Each
+ * colour comes from the theme, so the banner follows the appearance chosen.
+ */
+html #scify-cookies-consent-wrapper {
+    --scify-cookies-primary-color: var(--ink);
+    --scify-cookies-primary-hover-color: var(--accent-brand);
+    --scify-cookies-link-color: var(--ink);
+    --scify-cookies-link-hover-color: var(--ink-muted);
+    --scify-cookies-text-color: var(--ink);
+    --scify-cookies-btn-text-color: var(--ink);
+    --scify-cookies-btn-border-color: var(--ink);
+    --scify-cookies-btn-hover-text-color: #212121;
+    --scify-cookies-btn-hover-border-color: var(--ink);
+    --scify-cookies-accordion-btn-text-color: var(--ink);
+    --scify-cookies-accordion-btn-collapsed-text-color: var(--ink);
+    --scify-cookies-always-active-message-color: var(--ink);
+    --scify-cookies-name-text-color: var(--ink-muted);
+
+    /* The notice once a choice is saved: pale grey, edged in charcoal. */
+    --scify-cookies-success-message-bg-color: var(--surface-raised);
+    --scify-cookies-success-message-text-color: var(--ink);
+    --scify-cookies-success-message-border-color: var(--ink);
+}

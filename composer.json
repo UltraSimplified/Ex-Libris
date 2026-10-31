@@ -28,6 +28,7 @@
         "nesbot/carbon": "*",
         "outl1ne/nova-color-field": "^3.0",
         "outl1ne/nova-sortable": "^4.0",
+        "scify/laravel-cookie-guard": "^5.1",
         "tightenco/ziggy": "*",
         "ultrasimplified/gallery": "@dev",
         "ultrasimplified/nova5-image-cropper": "^3.0.1",

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "86e04369dc1f930595a6a742963734f4",
+    "content-hash": "30c43e7b14b2edd484ff0ab2e25886e4",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -6369,6 +6369,84 @@
                 "source": "https://github.com/MyIntervals/PHP-CSS-Parser/tree/v9.5.0"
             },
             "time": "2026-09-20T15:02:00+00:00"
+        },
+        {
+            "name": "scify/laravel-cookie-guard",
+            "version": "v5.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/scify/laravel-cookie-guard.git",
+                "reference": "f534ce38f4c4b83865cb7b628bb0555184b45dcb"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/scify/laravel-cookie-guard/zipball/f534ce38f4c4b83865cb7b628bb0555184b45dcb",
+                "reference": "f534ce38f4c4b83865cb7b628bb0555184b45dcb",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/contracts": "^12.0|^13.0",
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "driftingly/rector-laravel": "^2.1",
+                "larastan/larastan": "^3.3",
+                "laravel/pint": "^1.21",
+                "nunomaduro/collision": "^8.8",
+                "orchestra/testbench": "^10.0|^11.0",
+                "pestphp/pest": "^3.8|^4.0",
+                "pestphp/pest-plugin-laravel": "^3.1|^4.0",
+                "phpstan/extension-installer": "^1.1",
+                "phpstan/phpstan-deprecation-rules": "^2.0",
+                "phpstan/phpstan-phpunit": "^2.0",
+                "phpunit/phpunit": "^11.5|^12.0",
+                "rector/rector": "^2.5",
+                "spatie/laravel-ray": "^1.40"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "aliases": {
+                        "LaravelCookiesConsent": "SciFY\\LaravelCookiesConsent\\Facades\\LaravelCookiesConsent"
+                    },
+                    "providers": [
+                        "SciFY\\LaravelCookiesConsent\\LaravelCookiesConsentServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "SciFY\\LaravelCookiesConsent\\": "src",
+                    "SciFY\\LaravelCookiesConsent\\Database\\Factories\\": "database/factories"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Paul Isaris",
+                    "email": "paul@scify.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "A Laravel package that provides a Cookies consent floating window and publishes the Cookies for the different consent categories",
+            "homepage": "https://github.com/scify/laravel-cookie-guard",
+            "keywords": [
+                "cookies",
+                "gdpr",
+                "laravel",
+                "laravel cookies",
+                "laravel gdpr",
+                "laravel-cookie-guard",
+                "scify"
+            ],
+            "support": {
+                "issues": "https://github.com/scify/laravel-cookie-guard/issues",
+                "source": "https://github.com/scify/laravel-cookie-guard/tree/v5.1.0"
+            },
+            "time": "2026-09-12T06:31:54+00:00"
         },
         {
             "name": "spatie/eloquent-sortable",

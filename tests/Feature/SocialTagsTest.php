@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Issue;
+use App\Models\Promoter;
 use App\Models\Venue;
 use App\Support\SiteMeta;
 use Illuminate\Support\Facades\Storage;
@@ -77,4 +78,26 @@ test('a venue with no description is described by where it is', function () {
     $html = $this->get(route('Venue', [$venue->id, 'this-house']))->getContent();
 
     expect(socialTag($html, 'property', 'og:description'))->toBe("What's on at This House, 1 Long Street, Dursley, listed by Good on Paper.");
+});
+
+test('a promoter\'s page shares its banner and what it says about itself', function () {
+    $promoter = Promoter::factory()->create(['name' => 'Stroud Folk', 'about' => "Folk nights\nin Stroud."]);
+    $promoter->forceFill(['banner' => 'promoters/banner.webp', 'logo' => 'promoters/logo.webp'])->save();
+
+    $html = $this->get(route('Promoter', [$promoter->id, 'stroud-folk']))->assertOk()->getContent();
+
+    expect(socialTag($html, 'property', 'og:title'))->toBe('Stroud Folk')
+        ->and(socialTag($html, 'property', 'og:description'))->toBe('Folk nights in Stroud.')
+        ->and(socialTag($html, 'property', 'og:image'))->toBe(Storage::disk('do')->url('promoters/banner.webp'))
+        ->and($html)->toContain('"@type":"Organization"');
+});
+
+test('a promoter with no banner shares its logo, and with no about is described by name', function () {
+    $promoter = Promoter::factory()->create(['name' => 'Stroud Folk', 'about' => null]);
+    $promoter->forceFill(['logo' => 'promoters/logo.webp'])->save();
+
+    $html = $this->get(route('Promoter', [$promoter->id, 'stroud-folk']))->getContent();
+
+    expect(socialTag($html, 'property', 'og:image'))->toBe(Storage::disk('do')->url('promoters/logo.webp'))
+        ->and(socialTag($html, 'property', 'og:description'))->toBe("What's on from Stroud Folk, listed by Good on Paper.");
 });

@@ -28,5 +28,6 @@ const inMagazineSection = computed(() =>
         <slot />
         <Footer :feature-layout="featureLayout" />
         <BackToTop />
+
     </div>
 </template>

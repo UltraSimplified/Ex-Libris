@@ -28,6 +28,20 @@ const reader = computed(
 /** Prefetched pages were drawn for the account, so they go with it. */
 const signOut = () => router.flushAll();
 
+/**
+ * Brings back the cookie banner from the page shell (app.blade.php), so a
+ * visitor can change their mind. It is left alone if it is already showing.
+ */
+const openCookieConsent = () => {
+    const banner = document.getElementById('scify-cookies-consent');
+    const toggle = (window as Window & { toggleCookieBanner?: () => void })
+        .toggleCookieBanner;
+
+    if (banner && banner.style.display !== 'block' && toggle) {
+        toggle();
+    }
+};
+
 const currentYear = computed(() => new Date().getFullYear());
 
 const word = computed(() => {
@@ -135,6 +149,17 @@ const word = computed(() => {
                                     class="text-black hover:text-gray-600 dark:text-white dark:hover:text-gray-400"
                                 >
                                     <Link href="/terms/">Terms.</Link>
+                                </li>
+                                <li
+                                    class="text-black hover:text-gray-600 dark:text-white dark:hover:text-gray-400"
+                                >
+                                    <button
+                                        type="button"
+                                        class="cursor-pointer text-left"
+                                        @click="openCookieConsent"
+                                    >
+                                        Cookie consent.
+                                    </button>
                                 </li>
                             </ul>
                         </div>
