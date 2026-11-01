@@ -11,7 +11,7 @@ use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Lenses\Lens;
 
 /**
- * @extends resource<\App\Models\Tag>
+ * @extends \App\Nova\Resource<\App\Models\Tag>
  */
 class Tag extends Resource
 {

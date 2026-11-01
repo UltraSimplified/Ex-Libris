@@ -26,7 +26,7 @@ use Ultrasimplified\ImageCropper\ImageCropper;
 use Whitecube\NovaFlexibleContent\Flexible;
 
 /**
- * @extends resource<\App\Models\Listing>
+ * @extends \App\Nova\Resource<\App\Models\Listing>
  */
 class Listing extends Resource
 {

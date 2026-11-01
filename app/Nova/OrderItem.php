@@ -13,7 +13,7 @@ use Laravel\Nova\Http\Requests\NovaRequest;
 /**
  * One line of an order, as it was bought. Never edited.
  *
- * @extends resource<OrderItemModel>
+ * @extends \App\Nova\Resource<OrderItemModel>
  */
 class OrderItem extends Resource
 {

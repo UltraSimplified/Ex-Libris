@@ -39,7 +39,7 @@ use Laravel\Nova\Panel;
  * office's actions, never typed in: only the notes and the tracking number
  * are edited here.
  *
- * @extends resource<OrderModel>
+ * @extends \App\Nova\Resource<OrderModel>
  */
 class Order extends Resource
 {

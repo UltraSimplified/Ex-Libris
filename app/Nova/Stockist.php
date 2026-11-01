@@ -12,7 +12,7 @@ use Laravel\Nova\Lenses\Lens;
 use Ultrasimplified\ImageCropper\ImageCropper;
 
 /**
- * @extends resource<\App\Models\Stockist>
+ * @extends \App\Nova\Resource<\App\Models\Stockist>
  */
 class Stockist extends Resource
 {

@@ -14,7 +14,7 @@ use Ultrasimplified\ImageCropper\ImageCropper;
  * One of a product's pictures after the main one. Reached from its
  * product, never from the menu.
  *
- * @extends resource<ProductImageModel>
+ * @extends \App\Nova\Resource<ProductImageModel>
  */
 class ProductImage extends Resource
 {

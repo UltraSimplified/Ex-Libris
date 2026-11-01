@@ -17,7 +17,7 @@ use Outl1ne\NovaColorField\Color;
 use Ultrasimplified\ImageCropper\ImageCropper;
 
 /**
- * @extends resource<\App\Models\Promoter>
+ * @extends \App\Nova\Resource<\App\Models\Promoter>
  */
 class Promoter extends Resource
 {

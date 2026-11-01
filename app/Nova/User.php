@@ -28,7 +28,7 @@ use Laravel\Nova\Panel;
 use Laravel\Nova\ResourceTool;
 
 /**
- * @extends resource<\App\Models\User>
+ * @extends \App\Nova\Resource<\App\Models\User>
  */
 class User extends Resource
 {

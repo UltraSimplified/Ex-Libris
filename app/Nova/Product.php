@@ -28,7 +28,7 @@ use Ultrasimplified\ImageCropper\ImageCropper;
  * prices and stock are set on its variants instead, and these two fields
  * step aside.
  *
- * @extends resource<ProductModel>
+ * @extends \App\Nova\Resource<ProductModel>
  */
 class Product extends Resource
 {

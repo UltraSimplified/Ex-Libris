@@ -10,7 +10,7 @@ use Laravel\Nova\Http\Requests\NovaRequest;
 
 // App\Nova\AdvertEvent — read-only, exists so the HasMany renders nicely
 /**
- * @extends resource<\App\Models\AdvertEvent>
+ * @extends \App\Nova\Resource<\App\Models\AdvertEvent>
  */
 class AdvertEvent extends Resource
 {

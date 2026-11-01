@@ -13,66 +13,6 @@ parameters:
 			path: app/Console/Commands/ImportWriterIssues.php
 
 		-
-			message: '#^Parameter \$asset of method App\\Http\\Controllers\\AssetController\:\:destroy\(\) has invalid type App\\Models\\Asset\.$#'
-			identifier: class.notFound
-			count: 1
-			path: app/Http/Controllers/AssetController.php
-
-		-
-			message: '#^Parameter \$asset of method App\\Http\\Controllers\\AssetController\:\:edit\(\) has invalid type App\\Models\\Asset\.$#'
-			identifier: class.notFound
-			count: 1
-			path: app/Http/Controllers/AssetController.php
-
-		-
-			message: '#^Parameter \$asset of method App\\Http\\Controllers\\AssetController\:\:show\(\) has invalid type App\\Models\\Asset\.$#'
-			identifier: class.notFound
-			count: 1
-			path: app/Http/Controllers/AssetController.php
-
-		-
-			message: '#^Parameter \$asset of method App\\Http\\Controllers\\AssetController\:\:update\(\) has invalid type App\\Models\\Asset\.$#'
-			identifier: class.notFound
-			count: 1
-			path: app/Http/Controllers/AssetController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$image\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/BasketController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/BasketController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$shopCategory\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/BasketController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$slug\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/BasketController.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<int,App\\Support\\Shop\\BasketLine\>\:\:map\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: app/Http/Controllers/BasketController.php
-
-		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Relations\\BelongsToMany\:\:current\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Http/Controllers/Dashboard/BookmarkController.php
-
-		-
 			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Builder\:\:current\(\)\.$#'
 			identifier: method.notFound
 			count: 1
@@ -82,12 +22,6 @@ parameters:
 			message: '#^Access to an undefined property App\\Models\\Venue\:\:\$user_id\.$#'
 			identifier: property.notFound
 			count: 1
-			path: app/Http/Controllers/Dashboard/ListingController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
-			identifier: property.notFound
-			count: 2
 			path: app/Http/Controllers/Dashboard/ListingController.php
 
 		-
@@ -103,40 +37,10 @@ parameters:
 			path: app/Http/Controllers/Dashboard/ListingController.php
 
 		-
-			message: '#^Relation ''category'' is not found in App\\Models\\Listing model\.$#'
-			identifier: larastan.relationExistence
-			count: 1
-			path: app/Http/Controllers/Dashboard/ListingController.php
-
-		-
-			message: '#^Relation ''promoter'' is not found in App\\Models\\Listing model\.$#'
-			identifier: larastan.relationExistence
-			count: 1
-			path: app/Http/Controllers/Dashboard/ListingController.php
-
-		-
-			message: '#^Relation ''venue'' is not found in App\\Models\\Listing model\.$#'
-			identifier: larastan.relationExistence
-			count: 1
-			path: app/Http/Controllers/Dashboard/ListingController.php
-
-		-
 			message: '#^Access to an undefined property App\\Models\\Order\:\:\$item_count\.$#'
 			identifier: property.notFound
 			count: 1
 			path: app/Http/Controllers/Dashboard/OrderController.php
-
-		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Relations\\HasMany\:\:paidFor\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Http/Controllers/Dashboard/OrderController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Dashboard/WidgetController.php
 
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
@@ -151,28 +55,10 @@ parameters:
 			path: app/Http/Controllers/Dashboard/WidgetController.php
 
 		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\{value\: lowercase\-string&non\-falsy\-string, label\: non\-falsy\-string\}, Closure\(App\\Models\\Promoter\)\: array\{value\: lowercase\-string&non\-falsy\-string, label\: non\-falsy\-string\} given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Http/Controllers/Dashboard/WidgetController.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\{value\: lowercase\-string&non\-falsy\-string, label\: non\-falsy\-string\}, Closure\(App\\Models\\Venue\)\: array\{value\: lowercase\-string&non\-falsy\-string, label\: non\-falsy\-string\} given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Http/Controllers/Dashboard/WidgetController.php
-
-		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
 			identifier: property.notFound
 			count: 1
 			path: app/Http/Controllers/EmbedController.php
-
-		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\:\:current\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Http/Controllers/FeatureController.php
 
 		-
 			message: '#^Called ''slice'' on Laravel collection, but could have been retrieved as a query\.$#'
@@ -187,100 +73,10 @@ parameters:
 			path: app/Http/Controllers/IssueController.php
 
 		-
-			message: '#^Relation ''category'' is not found in App\\Models\\Listing model\.$#'
-			identifier: larastan.relationExistence
-			count: 12
-			path: app/Http/Controllers/ListingController.php
-
-		-
-			message: '#^Relation ''promoter'' is not found in App\\Models\\Listing model\.$#'
-			identifier: larastan.relationExistence
-			count: 12
-			path: app/Http/Controllers/ListingController.php
-
-		-
-			message: '#^Relation ''venue'' is not found in App\\Models\\Listing model\.$#'
-			identifier: larastan.relationExistence
-			count: 12
-			path: app/Http/Controllers/ListingController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$amount\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/ShopController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/ShopController.php
-
-		-
 			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Builder\:\:onSale\(\)\.$#'
 			identifier: method.notFound
 			count: 1
 			path: app/Http/Controllers/ShopController.php
-
-		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:struckPrice\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Http/Controllers/ShopController.php
-
-		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Relations\\HasMany\:\:onSale\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Http/Controllers/ShopController.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\{id\: int\<0, max\>, colour\: string\|null, colour_hex\: string\|null, size\: string\|null, name\: string, price\: int, struck_price\: int\|null, in_stock\: bool\}, Closure\(App\\Models\\ProductVariant\)\: array\{id\: int\<0, max\>, colour\: string\|null, colour_hex\: string\|null, size\: string\|null, name\: string, price\: int, struck_price\: int\|null, in_stock\: bool\} given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Http/Controllers/ShopController.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\{id\: int\<0, max\>, path\: string, colour\: string\|null, alt_text\: string\|null\}, Closure\(App\\Models\\ProductImage\)\: array\{id\: int\<0, max\>, path\: string, colour\: string\|null, alt_text\: string\|null\} given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Http/Controllers/ShopController.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:max\(\) expects \(callable\(Illuminate\\Database\\Eloquent\\Model\)\: int\)\|string\|null, Closure\(App\\Models\\ProductVariant\)\: int given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Http/Controllers/ShopController.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:min\(\) expects \(callable\(Illuminate\\Database\\Eloquent\\Model\)\: int\)\|string\|null, Closure\(App\\Models\\ProductVariant\)\: int given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Http/Controllers/ShopController.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:sortBy\(\) expects array\<array\{string, ''asc''\|''desc''\|SortDirection\}\|\(callable\(Illuminate\\Database\\Eloquent\\Model, Illuminate\\Database\\Eloquent\\Model\)\: mixed\)\|\(callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: mixed\)\|string\>\|\(callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: mixed\)\|int\|string, Closure\(App\\Models\\ProductVariant\)\: int given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Http/Controllers/ShopController.php
-
-		-
-			message: '#^Access to an undefined property App\\Models\\Listing\:\:\$venue\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/WidgetClickController.php
-
-		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Relations\\HasMany\:\:visible\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Http/Controllers/WriterController.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\{id\: int\<0, max\>, issue_number\: int\|null, month_year\: string\|null, cover_photo\: string\|null, downloadable\: bool\}, Closure\(App\\Models\\Issue\)\: array\{id\: int\<0, max\>, issue_number\: int\|null, month_year\: string\|null, cover_photo\: string\|null, downloadable\: bool\} given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Http/Controllers/WriterController.php
 
 		-
 			message: '#^Access to an undefined property App\\Models\\User\:\:\$is_writer\.$#'
@@ -295,14 +91,14 @@ parameters:
 			path: app/Http/Middleware/HandleInertiaRequests.php
 
 		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>\:\:onSale\(\)\.$#'
-			identifier: method.notFound
+			message: '#^Parameter \#1 \$relation of method App\\Http\\Middleware\\HandleInertiaRequests\:\:named\(\) expects Illuminate\\Database\\Eloquent\\Relations\\HasMany\<Illuminate\\Database\\Eloquent\\Model, App\\Models\\User\>\|null, Illuminate\\Database\\Eloquent\\Relations\\HasMany\<App\\Models\\Promoter, App\\Models\\User\>\|null given\.$#'
+			identifier: argument.type
 			count: 1
 			path: app/Http/Middleware/HandleInertiaRequests.php
 
 		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Relations\\HasMany\:\:paidFor\(\)\.$#'
-			identifier: method.notFound
+			message: '#^Parameter \#1 \$relation of method App\\Http\\Middleware\\HandleInertiaRequests\:\:named\(\) expects Illuminate\\Database\\Eloquent\\Relations\\HasMany\<Illuminate\\Database\\Eloquent\\Model, App\\Models\\User\>\|null, Illuminate\\Database\\Eloquent\\Relations\\HasMany\<App\\Models\\Venue, App\\Models\\User\>\|null given\.$#'
+			identifier: argument.type
 			count: 1
 			path: app/Http/Middleware/HandleInertiaRequests.php
 
@@ -311,18 +107,6 @@ parameters:
 			identifier: return.type
 			count: 1
 			path: app/Http/Requests/Dashboard/ListingRequest.php
-
-		-
-			message: '#^Access to an undefined property App\\Models\\Listing\:\:\$user\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Listeners/NotifyOfficeOfNewListing.php
-
-		-
-			message: '#^Relation ''user'' is not found in App\\Models\\Listing model\.$#'
-			identifier: larastan.relationExistence
-			count: 1
-			path: app/Listeners/NotifyOfficeOfNewListing.php
 
 		-
 			message: '#^Access to an undefined property Illuminate\\Contracts\\Auth\\Authenticatable\:\:\$email\.$#'
@@ -385,28 +169,10 @@ parameters:
 			path: app/Models/Feature.php
 
 		-
-			message: '#^Parameter \#1 \$writer of static method App\\Models\\Feature\:\:addressByline\(\) expects App\\Models\\User, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Models/Feature.php
-
-		-
-			message: '#^Access to an undefined property App\\Models\\Listing\:\:\$venue\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Models/Listing.php
-
-		-
 			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Builder\:\:runningBetween\(\)\.$#'
 			identifier: method.notFound
 			count: 1
 			path: app/Models/Listing.php
-
-		-
-			message: '#^Parameter \#1 \$key of method Illuminate\\Support\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:every\(\) expects \(callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: bool\)\|Illuminate\\Database\\Eloquent\\Model\|string, Closure\(App\\Models\\ProductVariant\)\: bool given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Models/Product.php
 
 		-
 			message: '#^Access to an undefined property App\\Models\\Tag\:\:\$slug\.$#'
@@ -445,12 +211,6 @@ parameters:
 			path: app/Models/User.php
 
 		-
-			message: '#^Method App\\Models\\User\:\:postalAddress\(\) should return App\\Models\\Address\|null but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Models/User.php
-
-		-
 			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:brand\(\)\.$#'
 			identifier: method.notFound
 			count: 1
@@ -469,36 +229,6 @@ parameters:
 			path: app/Nova/Actions/ExportListings.php
 
 		-
-			message: '#^Access to an undefined property App\\Nova\\Advert\:\:\$link\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Nova/Advert.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$slot\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Nova/Advert.php
-
-		-
-			message: '#^Call to an undefined method App\\Nova\\Advert\:\:events\(\)\.$#'
-			identifier: method.notFound
-			count: 2
-			path: app/Nova/Advert.php
-
-		-
-			message: '#^Parameter \#1 \$advert of method App\\Services\\Adverts\\AdvertReport\:\:downloadUrl\(\) expects App\\Models\\Advert, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Nova/Advert.php
-
-		-
-			message: '#^Parameter \#1 \$advert of method App\\Services\\Adverts\\AdvertReport\:\:filename\(\) expects App\\Models\\Advert, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Nova/Advert.php
-
-		-
 			message: '#^Access to an undefined property App\\Models\\Feature\:\:\$total\.$#'
 			identifier: property.notFound
 			count: 1
@@ -507,12 +237,6 @@ parameters:
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
 			identifier: property.notFound
-			count: 1
-			path: app/Nova/Cards/Leaderboard.php
-
-		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Builder\:\:current\(\)\.$#'
-			identifier: method.notFound
 			count: 1
 			path: app/Nova/Cards/Leaderboard.php
 
@@ -553,25 +277,7 @@ parameters:
 			path: app/Nova/Fields/ActiveWriterToggle.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$cover_photo\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Nova/Issue.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$issue_number\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Nova/Issue.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$month_year\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Nova/Issue.php
-
-		-
-			message: '#^PHPDoc type array of property App\\Nova\\Issue\:\:\$indexDefaultOrder is not covariant with PHPDoc type array\<string, string\> of overridden property App\\Nova\\Resource\:\:\$indexDefaultOrder\.$#'
+			message: '#^PHPDoc type array of property App\\Nova\\Issue\:\:\$indexDefaultOrder is not covariant with PHPDoc type array\<string, string\> of overridden property App\\Nova\\Resource\<App\\Models\\Issue\>\:\:\$indexDefaultOrder\.$#'
 			identifier: property.phpDocType
 			count: 1
 			path: app/Nova/Issue.php
@@ -583,58 +289,10 @@ parameters:
 			path: app/Nova/Lenses/OrdersForCollection.php
 
 		-
-			message: '#^Access to an undefined property App\\Nova\\Listing\:\:\$start_date\.$#'
-			identifier: property.notFound
+			message: '#^Using nullsafe method call on non\-nullable type Carbon\\CarbonImmutable\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
 			count: 1
 			path: app/Nova/Listing.php
-
-		-
-			message: '#^Access to an undefined property App\\Nova\\Listing\:\:\$venue\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Nova/Listing.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$slug\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Nova/Listing.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$billing_address\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Nova/Order.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$fulfilment\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Nova/Order.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$receipt_url\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Nova/Order.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$shipping_address\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Nova/Order.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$status\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Nova/Order.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$stripe_payment_intent_id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Nova/Order.php
 
 		-
 			message: '#^Method App\\Nova\\Page\:\:fields\(\) should return array\<int, Laravel\\Nova\\Fields\\Field\> but returns array\<int, mixed\>\.$#'
@@ -643,25 +301,13 @@ parameters:
 			path: app/Nova/Page.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$price\.$#'
+			message: '#^Access to an undefined property App\\Models\\Product\:\:\$variants_max_price\.$#'
 			identifier: property.notFound
 			count: 1
 			path: app/Nova/Product.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$variants\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Nova/Product.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$variants_max_price\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Nova/Product.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$variants_min_price\.$#'
+			message: '#^Access to an undefined property App\\Models\\Product\:\:\$variants_min_price\.$#'
 			identifier: property.notFound
 			count: 1
 			path: app/Nova/Product.php
@@ -679,22 +325,10 @@ parameters:
 			path: app/Nova/Product.php
 
 		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:displayName\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Nova/ProductVariant.php
-
-		-
-			message: '#^Method App\\Nova\\Resource\:\:scoutQuery\(\) has invalid return type Laravel\\Scout\\Builder\.$#'
-			identifier: class.notFound
-			count: 2
-			path: app/Nova/Resource.php
-
-		-
-			message: '#^Parameter \$query of method App\\Nova\\Resource\:\:scoutQuery\(\) has invalid type Laravel\\Scout\\Builder\.$#'
-			identifier: class.notFound
-			count: 1
-			path: app/Nova/Resource.php
+			message: '#^Access to an undefined property App\\Models\\User\:\:\$is_writer\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Nova/User.php
 
 		-
 			message: '#^Access to an undefined property App\\Nova\\User\:\:\$is_writer\.$#'
@@ -703,38 +337,8 @@ parameters:
 			path: app/Nova/User.php
 
 		-
-			message: '#^Access to an undefined property App\\Nova\\User\:\:\$name\.$#'
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
 			identifier: property.notFound
-			count: 2
-			path: app/Nova/User.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$is_writer\.$#'
-			identifier: property.notFound
-			count: 3
-			path: app/Nova/User.php
-
-		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:listings\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Nova/Venue.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$key\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Nova/Widget.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$owner\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Nova/Widget.php
-
-		-
-			message: '#^Parameter \#1 \$widget of static method App\\Support\\Widgets\\WidgetSnippets\:\:for\(\) expects App\\Models\\Widget, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
-			identifier: argument.type
 			count: 1
 			path: app/Nova/Widget.php
 
@@ -781,38 +385,8 @@ parameters:
 			path: app/Services/Adverts/AdvertRotation.php
 
 		-
-			message: '#^Call to an undefined method Intervention\\Image\\Interfaces\\ColorInterface\:\:blue\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Services/Images/ListingThumbnail.php
-
-		-
-			message: '#^Call to an undefined method Intervention\\Image\\Interfaces\\ColorInterface\:\:green\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Services/Images/ListingThumbnail.php
-
-		-
-			message: '#^Call to an undefined method Intervention\\Image\\Interfaces\\ColorInterface\:\:red\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Services/Images/ListingThumbnail.php
-
-		-
 			message: '#^Expression on left side of \?\? is not nullable\.$#'
 			identifier: nullCoalesce.expr
-			count: 1
-			path: app/Services/Listings/ListingCsvExport.php
-
-		-
-			message: '#^Relation ''category'' is not found in App\\Models\\Listing model\.$#'
-			identifier: larastan.relationExistence
-			count: 1
-			path: app/Services/Listings/ListingCsvExport.php
-
-		-
-			message: '#^Relation ''venue'' is not found in App\\Models\\Listing model\.$#'
-			identifier: larastan.relationExistence
 			count: 1
 			path: app/Services/Listings/ListingCsvExport.php
 
@@ -841,130 +415,16 @@ parameters:
 			path: app/Services/Listings/ListingLineUp.php
 
 		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>\:\:onSale\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Services/Shop/Basket.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Services/Shop/Checkout.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$postageBand\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Services/Shop/Checkout.php
-
-		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:imageUrl\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Services/Shop/Checkout.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<int,App\\Support\\Shop\\BasketLine\>\:\:map\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 2
-			path: app/Services/Shop/Checkout.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$product_variant_id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Services/Shop/OrderPayments.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$quantity\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Services/Shop/OrderPayments.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:each\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: mixed, Closure\(App\\Models\\OrderItem\)\: void given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Services/Shop/OrderPayments.php
-
-		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Relations\\HasMany\:\:withTrashed\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Services/Shop/VariantGrid.php
-
-		-
-			message: '#^Access to an undefined property App\\Models\\Listing\:\:\$category\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Services/Widgets/WidgetFeed.php
-
-		-
-			message: '#^Access to an undefined property App\\Models\\Listing\:\:\$venue\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Services/Widgets/WidgetFeed.php
-
-		-
-			message: '#^Relation ''category'' is not found in App\\Models\\Listing model\.$#'
-			identifier: larastan.relationExistence
-			count: 1
-			path: app/Services/Widgets/WidgetFeed.php
-
-		-
-			message: '#^Relation ''venue'' is not found in App\\Models\\Listing model\.$#'
-			identifier: larastan.relationExistence
-			count: 1
-			path: app/Services/Widgets/WidgetFeed.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Support/FeatureMeta.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Support/FeatureMeta.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$tag\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Support/FeatureMeta.php
-
-		-
 			message: '#^Ternary operator condition is always true\.$#'
 			identifier: ternary.alwaysTrue
 			count: 1
 			path: app/Support/ListingDates.php
 
 		-
-			message: '#^Access to an undefined property App\\Models\\Listing\:\:\$venue\.$#'
-			identifier: property.notFound
-			count: 3
-			path: app/Support/ListingMeta.php
-
-		-
 			message: '#^Using nullsafe method call on non\-nullable type Carbon\\CarbonImmutable\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
 			count: 1
 			path: app/Support/ListingMeta.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$postageBand\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Support/Shop/BasketLine.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\{id\: int\<0, max\>, product\: string, variant\: string, quantity\: int\<0, max\>, subtotal\: int\}, Closure\(App\\Models\\OrderItem\)\: array\{id\: int\<0, max\>, product\: string, variant\: string, quantity\: int\<0, max\>, subtotal\: int\} given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Support/Shop/OrderSummary.php
 
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
@@ -977,33 +437,3 @@ parameters:
 			identifier: nullsafe.neverNull
 			count: 1
 			path: database/factories/WidgetFactory.php
-
-		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Schema\\ColumnDefinition\:\:sortable\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: database/migrations/2026_02_22_111005_create_pages_table.php
-
-		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Schema\\ColumnDefinition\:\:sortable\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: database/migrations/2026_02_27_004443_create_articles_table.php
-
-		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Schema\\ColumnDefinition\:\:sortable\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: database/migrations/2026_03_08_171913_create_features_table.php
-
-		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Schema\\ColumnDefinition\:\:sortable\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: database/migrations/2026_03_08_230338_add_subject_to_features.php
-
-		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Schema\\ColumnDefinition\:\:hideOnIndex\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: database/migrations/2026_07_31_135014_create_promoters_table.php

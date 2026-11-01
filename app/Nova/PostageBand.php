@@ -15,7 +15,7 @@ use Laravel\Nova\Http\Requests\NovaRequest;
  * their names and prices: a fifth band, or one fewer, would leave products
  * with nowhere to post from.
  *
- * @extends resource<\App\Models\PostageBand>
+ * @extends \App\Nova\Resource<\App\Models\PostageBand>
  */
 class PostageBand extends Resource
 {

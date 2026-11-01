@@ -16,7 +16,7 @@ use Outl1ne\NovaColorField\Color;
  * One colour and size of a product, with its price and stock. Reached from
  * its product, never from the menu.
  *
- * @extends resource<ProductVariantModel>
+ * @extends \App\Nova\Resource<ProductVariantModel>
  */
 class ProductVariant extends Resource
 {

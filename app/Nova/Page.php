@@ -17,7 +17,7 @@ use Ultrasimplified\ImageCropper\ImageCropper;
 use Whitecube\NovaFlexibleContent\Flexible;
 
 /**
- * @extends resource<\App\Models\Page>
+ * @extends \App\Nova\Resource<\App\Models\Page>
  */
 class Page extends Resource
 {

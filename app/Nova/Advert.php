@@ -24,7 +24,7 @@ use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Panel;
 
 /**
- * @extends resource<\App\Models\Advert>
+ * @extends \App\Nova\Resource<\App\Models\Advert>
  */
 class Advert extends Resource
 {

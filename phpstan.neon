@@ -1,7 +1,6 @@
 includes:
     - vendor/larastan/larastan/extension.neon
-    # Once you've generated a baseline, uncomment:
-    # - phpstan-baseline.neon
+    - phpstan-baseline.neon
 
 parameters:
     level: 5

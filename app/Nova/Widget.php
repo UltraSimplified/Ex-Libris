@@ -27,7 +27,7 @@ use Laravel\Nova\Lenses\Lens;
  * including one nobody has claimed yet, as a reason to claim it. The
  * finer settings and the live preview are on the dashboard.
  *
- * @extends resource<\App\Models\Widget>
+ * @extends \App\Nova\Resource<\App\Models\Widget>
  */
 class Widget extends Resource
 {
