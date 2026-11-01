@@ -479,10 +479,92 @@ html #scify-cookies-consent-wrapper {
     --scify-cookies-accordion-btn-text-color: var(--ink);
     --scify-cookies-accordion-btn-collapsed-text-color: var(--ink);
     --scify-cookies-always-active-message-color: var(--ink);
-    --scify-cookies-name-text-color: var(--ink-muted);
+    /* #818181 lands at 3.9:1 on the white banner; this clears AA at 4.6:1. */
+    --scify-cookies-name-text-color: #757575;
 
     /* The notice once a choice is saved: pale grey, edged in charcoal. */
     --scify-cookies-success-message-bg-color: var(--surface-raised);
     --scify-cookies-success-message-text-color: var(--ink);
     --scify-cookies-success-message-border-color: var(--ink);
+}
+
+/*
+ * The choices arrive as full-width grid columns with nothing between them, so
+ * they meet edge to edge. Space them apart and hold each to one width, which
+ * keeps them matched whether they stack or sit three across on a wide screen.
+ */
+html #scify-cookies-consent-wrapper .scify-cookies-consent-banner .row {
+    row-gap: 0.75rem;
+}
+
+/* Three across, the package zeroes the outer gutters only, so the middle
+ * column is the narrower one. An even gutter makes the three match. */
+html #scify-cookies-consent-wrapper .scify-cookies-consent-banner .button-col {
+    /* The package sets pl-0 and pr-0 with !important, so this must match it. */
+    padding-inline: 0.375rem !important;
+}
+
+html #scify-cookies-consent-wrapper .scify-cookies-consent-banner .button-col .btn {
+    display: block;
+    max-width: 16rem;
+    margin-inline: auto;
+}
+
+/*
+ * Stacked, the package drops the borders where the buttons used to meet, so
+ * that touching edges would not draw a double line. Ours no longer meet, so
+ * the top and bottom of the column were left open. Put those edges back.
+ */
+@media (width <= 991px) {
+    html
+        #scify-cookies-consent-wrapper
+        .scify-cookies-consent-banner
+        .cookie-actions
+        .btn {
+        border-block: var(--scify-cookies-btn-border-width) solid
+            var(--scify-cookies-btn-border-color) !important;
+    }
+}
+
+/*
+ * The colours above follow the theme, but the banner's own surfaces are not
+ * among them, so in the dark they keep the package's white panel and the
+ * theme's pale ink lands on it at about 1.3:1. Point the surfaces at the
+ * dark ones the rest of the site uses, which brings the same ink to 9.5:1.
+ */
+html.dark #scify-cookies-consent-wrapper {
+    --scify-cookies-bg-color: var(--surface-raised);
+    --scify-cookies-border-color: var(--line);
+
+    /* Customise: its headers sit with the banner, the panels step back. */
+    --scify-cookies-accordion-btn-bg-color: var(--surface-raised);
+    --scify-cookies-accordion-btn-collapsed-bg-color: var(--surface-raised);
+    --scify-cookies-accordion-item-border-color: var(--line);
+    --scify-cookies-accordion-border-color: var(--line);
+    --scify-cookies-check-input-border-color: var(--ink-muted);
+
+    /* On the dark panels the theme's muted ink is clear enough at 6.4:1. */
+    --scify-cookies-name-text-color: var(--ink-muted);
+
+    /* Hover fills the button with ink, as the light theme does in reverse. */
+    --scify-cookies-btn-hover-bg-color: var(--ink);
+}
+
+/*
+ * These surfaces are painted with literal whites rather than the variables
+ * above, so the settings cannot reach them and the pale ink stays on white.
+ * The list is the per-cookie detail behind Read more, inside each category.
+ */
+html.dark #scify-cookies-consent-wrapper .accordion,
+html.dark #scify-cookies-consent-wrapper .accordion .accordion-item,
+html.dark
+    #scify-cookies-consent-wrapper
+    .scify-cookies-consent-banner
+    .list-group
+    .list-group-item {
+    background-color: var(--surface);
+}
+
+html.dark #scify-cookies-consent-wrapper .accordion .accordion-header {
+    background-color: var(--surface-raised);
 }
