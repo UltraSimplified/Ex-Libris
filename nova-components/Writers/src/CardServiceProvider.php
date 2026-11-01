@@ -33,8 +33,8 @@ class CardServiceProvider extends ServiceProvider
         }
 
         Route::middleware(['nova'])
-                ->prefix('nova-vendor/writers')
-                ->group(__DIR__.'/../routes/api.php');
+            ->prefix('nova-vendor/writers')
+            ->group(__DIR__.'/../routes/api.php');
     }
 
     /**

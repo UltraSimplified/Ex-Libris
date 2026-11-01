@@ -25,6 +25,9 @@ use Laravel\Nova\URL;
 use Ultrasimplified\ImageCropper\ImageCropper;
 use Whitecube\NovaFlexibleContent\Flexible;
 
+/**
+ * @extends resource<\App\Models\Listing>
+ */
 class Listing extends Resource
 {
     use ShowsLayoutImages;

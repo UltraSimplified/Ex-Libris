@@ -68,13 +68,18 @@ class User extends Authenticatable
         'remember_token',
     ];
 
-    public function listings()
+    /**
+     * @return HasMany<Listing, $this>
+     */
+    public function listings(): HasMany
     {
         return $this->hasMany(Listing::class);
     }
 
     /**
      * The promoters this account manages.
+     *
+     * @return HasMany<Promoter, $this>
      */
     public function promoters(): HasMany
     {
@@ -83,6 +88,8 @@ class User extends Authenticatable
 
     /**
      * The venues this account manages.
+     *
+     * @return HasMany<Venue, $this>
      */
     public function venues(): HasMany
     {
@@ -91,6 +98,8 @@ class User extends Authenticatable
 
     /**
      * What this account has written for the magazine.
+     *
+     * @return HasMany<Feature, $this>
      */
     public function features(): HasMany
     {
@@ -102,6 +111,8 @@ class User extends Authenticatable
      * hand in the Office: most of it was printed rather than put online.
      * Newest first, as the Office's Issues field and the writer's page
      * list them.
+     *
+     * @return BelongsToMany<Issue, $this>
      */
     public function issues(): BelongsToMany
     {
@@ -160,6 +171,8 @@ class User extends Authenticatable
 
     /**
      * Every address on this account.
+     *
+     * @return HasMany<Address, $this>
      */
     public function addresses(): HasMany
     {
@@ -168,6 +181,8 @@ class User extends Authenticatable
 
     /**
      * Where this account is billed.
+     *
+     * @return HasOne<Address, $this>
      */
     public function billingAddress(): HasOne
     {
@@ -177,6 +192,8 @@ class User extends Authenticatable
     /**
      * Where the post goes, when that is somewhere other than the billing
      * address. Absent means the two are the same.
+     *
+     * @return HasOne<Address, $this>
      */
     public function deliveryAddress(): HasOne
     {
@@ -193,6 +210,8 @@ class User extends Authenticatable
 
     /**
      * Everything this account has ordered from the shop, paid for or not.
+     *
+     * @return HasMany<Order, $this>
      */
     public function orders(): HasMany
     {
@@ -201,6 +220,8 @@ class User extends Authenticatable
 
     /**
      * The events this account has saved to come back to.
+     *
+     * @return BelongsToMany<Listing, $this>
      */
     public function bookmarks(): BelongsToMany
     {

@@ -111,6 +111,8 @@ class Order extends Model
 
     /**
      * The account that placed it, if it was not placed as a guest.
+     *
+     * @return BelongsTo<User, $this>
      */
     public function user(): BelongsTo
     {
@@ -119,6 +121,8 @@ class Order extends Model
 
     /**
      * What was bought.
+     *
+     * @return HasMany<OrderItem, $this>
      */
     public function items(): HasMany
     {

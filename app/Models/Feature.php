@@ -53,12 +53,17 @@ class Feature extends Model implements Sortable
      * Who wrote it. Features were credited to a writer record, which was
      * a name and a photograph rather than an account; they are credited
      * to the account itself now, and writer() is what is left of that.
+     *
+     * @return BelongsTo<User, $this>
      */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * @return BelongsTo<Tag, $this>
+     */
     public function tag(): BelongsTo
     {
         return $this->belongsTo(Tag::class);
@@ -67,6 +72,8 @@ class Feature extends Model implements Sortable
     /**
      * The event the feature is about, shown at the foot of it as a row
      * from the listings, so a reader can go straight on to the listing.
+     *
+     * @return BelongsTo<Listing, $this>
      */
     public function listing(): BelongsTo
     {

@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
@@ -136,7 +137,10 @@ class Listing extends Model
         });
     }
 
-    public function venue()
+    /**
+     * @return BelongsTo<Venue, $this>
+     */
+    public function venue(): BelongsTo
     {
         return $this->belongsTo(Venue::class)->withDefault([
             'id' => 0,
@@ -166,23 +170,34 @@ class Listing extends Model
         });
     }
 
-    public function category()
+    /**
+     * @return BelongsTo<Category, $this>
+     */
+    public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
     }
 
-    public function promoter()
+    /**
+     * @return BelongsTo<Promoter, $this>
+     */
+    public function promoter(): BelongsTo
     {
         return $this->belongsTo(Promoter::class);
     }
 
-    public function user()
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
     /**
      * The people who have saved this event.
+     *
+     * @return BelongsToMany<User, $this>
      */
     public function bookmarkedBy(): BelongsToMany
     {

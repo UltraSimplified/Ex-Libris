@@ -35,6 +35,9 @@ class WidgetDailyStat extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<Widget, $this>
+     */
     public function widget(): BelongsTo
     {
         return $this->belongsTo(Widget::class);

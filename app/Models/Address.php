@@ -44,6 +44,8 @@ class Address extends Model
 
     /**
      * The account this address belongs to.
+     *
+     * @return BelongsTo<User, $this>
      */
     public function user(): BelongsTo
     {

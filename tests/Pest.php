@@ -19,6 +19,14 @@ pest()->extend(TestCase::class)
     ->in('Feature', 'Browser');
 
 /*
+| The cookie banner opens as a modal, which stops anything behind it being clicked.
+| CookieConsentTest switches it back on to test the banner itself.
+*/
+pest()->beforeEach(function () {
+    config(['cookies_consent.enabled' => false]);
+})->in('Browser');
+
+/*
 |--------------------------------------------------------------------------
 | Expectations
 |--------------------------------------------------------------------------

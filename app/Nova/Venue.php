@@ -22,6 +22,9 @@ use Laravel\Nova\Lenses\Lens;
 use Outl1ne\NovaColorField\Color;
 use Ultrasimplified\ImageCropper\ImageCropper;
 
+/**
+ * @extends resource<\App\Models\Venue>
+ */
 class Venue extends Resource
 {
     /**

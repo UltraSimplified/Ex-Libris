@@ -62,6 +62,8 @@ class Promoter extends Model
 
     /**
      * The account that manages this promoter, if anyone does.
+     *
+     * @return BelongsTo<User, $this>
      */
     public function user(): BelongsTo
     {
@@ -70,6 +72,8 @@ class Promoter extends Model
 
     /**
      * The events this promoter has put on.
+     *
+     * @return HasMany<Listing, $this>
      */
     public function listings(): HasMany
     {
@@ -78,6 +82,8 @@ class Promoter extends Model
 
     /**
      * The gig widgets showing this promoter's events on other websites.
+     *
+     * @return MorphMany<Widget, $this>
      */
     public function widgets(): MorphMany
     {

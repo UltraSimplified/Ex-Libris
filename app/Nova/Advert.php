@@ -23,6 +23,9 @@ use Laravel\Nova\Fields\URL;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Panel;
 
+/**
+ * @extends resource<\App\Models\Advert>
+ */
 class Advert extends Resource
 {
     public static $model = \App\Models\Advert::class;

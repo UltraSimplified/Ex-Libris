@@ -9,6 +9,9 @@ use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
 // App\Nova\AdvertEvent — read-only, exists so the HasMany renders nicely
+/**
+ * @extends resource<\App\Models\AdvertEvent>
+ */
 class AdvertEvent extends Resource
 {
     public static $model = \App\Models\AdvertEvent::class;

@@ -14,6 +14,8 @@ use Laravel\Nova\Http\Requests\NovaRequest;
  * The four postage bands. A migration makes them and the Office only sets
  * their names and prices: a fifth band, or one fewer, would leave products
  * with nowhere to post from.
+ *
+ * @extends resource<\App\Models\PostageBand>
  */
 class PostageBand extends Resource
 {

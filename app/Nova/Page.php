@@ -16,6 +16,9 @@ use Laravel\Nova\Lenses\Lens;
 use Ultrasimplified\ImageCropper\ImageCropper;
 use Whitecube\NovaFlexibleContent\Flexible;
 
+/**
+ * @extends resource<\App\Models\Page>
+ */
 class Page extends Resource
 {
     /**

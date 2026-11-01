@@ -62,6 +62,7 @@ abstract class Leaderboard extends Card
 
     protected function constrain(Builder $query): Builder
     {
+        /** @var Builder<Listing> $query */
         return $query->current();
     }
 

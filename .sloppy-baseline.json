@@ -1,0 +1,209 @@
+{
+    "schema": 1,
+    "tool": "sloppy",
+    "generated_at": "2026-11-01T14:38:35+00:00",
+    "score": 94,
+    "total": 25,
+    "entries": [
+        {
+            "id": "962fc397f706ffb7",
+            "rule": "SL101",
+            "file": "app/Console/Commands/ImportListings.php",
+            "fingerprint": "ImportListings::handle",
+            "count": 1,
+            "message": "ImportListings::handle() spans 97 lines with 46 statements, cyclomatic complexity 15, nesting depth 3 and 26 calls to 5 distinct collaborators."
+        },
+        {
+            "id": "dc41b493abe4c140",
+            "rule": "SL102",
+            "file": "app/Console/Commands/ImportListings.php",
+            "fingerprint": "ImportListings",
+            "count": 1,
+            "message": "ImportListings spans 397 lines with 13 methods (1 public), 114 statements and talks to 30 distinct collaborators."
+        },
+        {
+            "id": "2aa406b30f29a80b",
+            "rule": "SL102",
+            "file": "app/Http/Controllers/Dashboard/ListingController.php",
+            "fingerprint": "ListingController",
+            "count": 1,
+            "message": "ListingController spans 322 lines with 14 methods (8 public), 73 statements, 3 injected dependencies and talks to 41 distinct collaborators."
+        },
+        {
+            "id": "e32bbce790df46d4",
+            "rule": "SL102",
+            "file": "app/Http/Controllers/ListingController.php",
+            "fingerprint": "ListingController",
+            "count": 1,
+            "message": "ListingController spans 369 lines with 19 methods (19 public), 41 statements and talks to 56 distinct collaborators."
+        },
+        {
+            "id": "fae0abd6c6677b09",
+            "rule": "SL102",
+            "file": "app/Services/Adverts/AdvertReport.php",
+            "fingerprint": "AdvertReport",
+            "count": 1,
+            "message": "AdvertReport spans 304 lines with 12 methods (4 public), 63 statements and talks to 67 distinct collaborators."
+        },
+        {
+            "id": "71f0203e2bb3a4b9",
+            "rule": "SL107",
+            "file": "app/Services/Adverts/AdvertReport.php",
+            "fingerprint": "AdvertReport::creative:Throwable",
+            "count": 1,
+            "message": "AdvertReport::creative() catches Throwable and returns without recording the failure."
+        },
+        {
+            "id": "f748e839323c28d6",
+            "rule": "SL114",
+            "file": "app/Http/Controllers/EmbedController.php",
+            "fingerprint": "EmbedController::show:!$widget->active && !$preview ? view('embed.inactive')->render() : ($preview ? $this->render($widget, $preview) : $this->cache->remember($widget, 'page', fn(): string => $this->render($widget, false)))",
+            "count": 1,
+            "message": "EmbedController::show() nests a ternary in the false branch of another ternary."
+        },
+        {
+            "id": "251b6cf9f05f3dec",
+            "rule": "SL203",
+            "file": "app/Services/Images/ListingThumbnail.php",
+            "fingerprint": "ListingThumbnail::sampleEdgeColor:$color->blue",
+            "count": 1,
+            "message": "ListingThumbnail::sampleEdgeColor() reads $color->blue inside a loop over a collection with no visible eager loading."
+        },
+        {
+            "id": "6e74bd2c92e7f261",
+            "rule": "SL203",
+            "file": "app/Services/Images/ListingThumbnail.php",
+            "fingerprint": "ListingThumbnail::sampleEdgeColor:$color->green",
+            "count": 1,
+            "message": "ListingThumbnail::sampleEdgeColor() reads $color->green inside a loop over a collection with no visible eager loading."
+        },
+        {
+            "id": "a1b72b14827d6f3d",
+            "rule": "SL203",
+            "file": "app/Services/Images/ListingThumbnail.php",
+            "fingerprint": "ListingThumbnail::sampleEdgeColor:$color->red",
+            "count": 1,
+            "message": "ListingThumbnail::sampleEdgeColor() reads $color->red inside a loop over a collection with no visible eager loading."
+        },
+        {
+            "id": "b699951cddc82e20",
+            "rule": "SL204",
+            "file": "app/Console/Commands/ImportListings.php",
+            "fingerprint": "ImportListings::handle:Listing.create",
+            "count": 1,
+            "message": "ImportListings::handle() writes to Listing inside a loop (create())."
+        },
+        {
+            "id": "ddb627f2b3b17318",
+            "rule": "SL204",
+            "file": "app/Console/Commands/ImportWriterIssues.php",
+            "fingerprint": "ImportWriterIssues::find:User.query.where.get",
+            "count": 1,
+            "message": "ImportWriterIssues::find() queries User inside a loop (query()->where()->get())."
+        },
+        {
+            "id": "9b3b0abd66d44ee6",
+            "rule": "SL204",
+            "file": "app/Services/Shop/OrderPayments.php",
+            "fingerprint": "OrderPayments::takeStock:ProductVariant.withTrashed.lockForUpdate.find",
+            "count": 1,
+            "message": "OrderPayments::takeStock() queries ProductVariant inside a loop (withTrashed()->lockForUpdate()->find())."
+        },
+        {
+            "id": "f47575065bd5eba2",
+            "rule": "SL205",
+            "file": "app/Console/Commands/ImportListings.php",
+            "fingerprint": "ImportListings::alreadyPresent:Listing::whereDate->get->contains",
+            "count": 1,
+            "message": "ImportListings::alreadyPresent() loads all the matching Listing rows with Listing::whereDate()->get() and then filters them in PHP with ->contains()."
+        },
+        {
+            "id": "c4015a73e451ae97",
+            "rule": "SL205",
+            "file": "app/Http/Controllers/ShopController.php",
+            "fingerprint": "ShopController::index:ShopCategory::query->published->ordered->withCount->get->filter",
+            "count": 1,
+            "message": "ShopController::index() loads all the matching ShopCategory rows with ShopCategory::query()->published()->ordered()->withCount()->get() and then filters them in PHP with ->filter()."
+        },
+        {
+            "id": "8a7a8bc500d6225a",
+            "rule": "SL212",
+            "file": "routes/web.php",
+            "fingerprint": "GET /",
+            "count": 1,
+            "message": "The closure for GET / queries the database."
+        },
+        {
+            "id": "c7e35f3a4a3fd5a5",
+            "rule": "SL217",
+            "file": "database/migrations/0001_01_01_000000_create_users_table.php",
+            "fingerprint": "user_id",
+            "count": 1,
+            "message": "user_id is created with foreignId() but never constrained to the table it refers to."
+        },
+        {
+            "id": "589a77e01fc9aae6",
+            "rule": "SL217",
+            "file": "database/migrations/2026_02_27_005409_add_writer_to_articles_table.php",
+            "fingerprint": "writer_id",
+            "count": 1,
+            "message": "writer_id is created with foreignId() but never constrained to the table it refers to."
+        },
+        {
+            "id": "25664587abf8062a",
+            "rule": "SL217",
+            "file": "database/migrations/2026_03_06_063518_add_tag_to_articles.php",
+            "fingerprint": "tag_id",
+            "count": 1,
+            "message": "tag_id is created with foreignId() but never constrained to the table it refers to."
+        },
+        {
+            "id": "d2fd48f285ae886a",
+            "rule": "SL217",
+            "file": "database/migrations/2026_03_08_171913_create_features_table.php",
+            "fingerprint": "tag_id",
+            "count": 1,
+            "message": "tag_id is created with foreignId() but never constrained to the table it refers to."
+        },
+        {
+            "id": "860cd5e8d08a6a51",
+            "rule": "SL217",
+            "file": "database/migrations/2026_03_08_171913_create_features_table.php",
+            "fingerprint": "writer_id",
+            "count": 1,
+            "message": "writer_id is created with foreignId() but never constrained to the table it refers to."
+        },
+        {
+            "id": "8260fddaa525b8c5",
+            "rule": "SL217",
+            "file": "database/migrations/2026_09_03_235834_link_writers_to_users.php",
+            "fingerprint": "user_id",
+            "count": 1,
+            "message": "user_id is created with foreignId() but never constrained to the table it refers to."
+        },
+        {
+            "id": "d79c9122dd8e2d3c",
+            "rule": "SL217",
+            "file": "database/migrations/2026_09_03_235834_link_writers_to_users.php",
+            "fingerprint": "writer_id",
+            "count": 1,
+            "message": "writer_id is created with foreignId() but never constrained to the table it refers to."
+        },
+        {
+            "id": "94f200eed126d9b7",
+            "rule": "SL217",
+            "file": "database/migrations/2026_09_04_153817_create_subscriptions_table.php",
+            "fingerprint": "user_id",
+            "count": 1,
+            "message": "user_id is created with foreignId() but never constrained to the table it refers to."
+        },
+        {
+            "id": "f6595c901b325b0e",
+            "rule": "SL217",
+            "file": "database/migrations/2026_09_04_153818_create_subscription_items_table.php",
+            "fingerprint": "subscription_id",
+            "count": 1,
+            "message": "subscription_id is created with foreignId() but never constrained to the table it refers to."
+        }
+    ]
+}

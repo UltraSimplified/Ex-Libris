@@ -38,6 +38,8 @@ use Laravel\Nova\Panel;
  * Orders from the shop. Made by checkout and moved on by Stripe and the
  * office's actions, never typed in: only the notes and the tracking number
  * are edited here.
+ *
+ * @extends resource<OrderModel>
  */
 class Order extends Resource
 {

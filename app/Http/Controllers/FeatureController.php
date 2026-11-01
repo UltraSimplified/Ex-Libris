@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Feature;
+use App\Models\Listing;
 use App\Models\Tag;
 use App\Support\FeatureMeta;
 use Illuminate\Database\Eloquent\Builder;
@@ -105,6 +106,8 @@ class FeatureController extends Controller
      * under way, with the venue and category its row shows, as on the
      * listings pages. Once it has finished the feature reads as if it had
      * none, though the link stays in the Office.
+     *
+     * @param  BelongsTo<Listing, Feature>  $listing
      */
     private static function currentListing(BelongsTo $listing): void
     {

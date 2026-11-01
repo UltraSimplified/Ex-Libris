@@ -11,6 +11,8 @@ use Laravel\Nova\Http\Requests\NovaRequest;
 
 /**
  * The shop's one row of settings, edited and never made or removed.
+ *
+ * @extends resource<\App\Models\ShopSettings>
  */
 class ShopSettings extends Resource
 {

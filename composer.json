@@ -39,15 +39,18 @@
     "require-dev": {
         "brianium/paratest": "^7.19",
         "fakerphp/faker": "^1.23",
+        "heyosseus/sloppy": "^1.8",
+        "larastan/larastan": "^3.13",
         "laravel/boost": "^2.2",
         "laravel/pail": "^1.2.2",
-        "laravel/pint": "^1.24",
+        "laravel/pint": "^1.32",
         "laravel/sail": "^1.41",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.6",
         "pestphp/pest": "^4.4",
         "pestphp/pest-plugin-browser": "^4.3",
-        "pestphp/pest-plugin-laravel": "^4.0"
+        "pestphp/pest-plugin-laravel": "^4.0",
+        "rector/rector": "^2.8"
     },
     "autoload": {
         "psr-4": {
@@ -89,6 +92,9 @@
             "@php artisan config:clear --ansi",
             "@test:lint",
             "@php artisan test"
+        ],
+        "test:browser": [
+            "@php artisan test tests/Browser --compact"
         ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",

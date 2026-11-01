@@ -27,6 +27,9 @@ use Laravel\Nova\Lenses\Lens;
 use Laravel\Nova\Panel;
 use Laravel\Nova\ResourceTool;
 
+/**
+ * @extends resource<\App\Models\User>
+ */
 class User extends Resource
 {
     use PasswordValidationRules;

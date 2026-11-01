@@ -21,6 +21,9 @@ class Advert extends Model
      */
     use SoftDeletes;
 
+    /**
+     * @return HasMany<AdvertEvent, $this>
+     */
     public function events(): HasMany
     {
         return $this->hasMany(AdvertEvent::class);

@@ -9,7 +9,7 @@ use App\Models\Listing;
 const SUBSCRIBE_BLOCK = <<<'JS'
     (() => {
         const form = document.getElementById('mc-embedded-subscribe-form');
-        const panel = form.closest('.w-80');
+        const panel = form.closest('.bg-white');
         const style = (element, property) => getComputedStyle(element)[property];
 
         return [

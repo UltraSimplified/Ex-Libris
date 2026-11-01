@@ -92,6 +92,8 @@ class Widget extends Model
 
     /**
      * The venue or promoter whose events it shows.
+     *
+     * @return MorphTo<Model, $this>
      */
     public function owner(): MorphTo
     {
@@ -100,6 +102,8 @@ class Widget extends Model
 
     /**
      * Who made it.
+     *
+     * @return BelongsTo<User, $this>
      */
     public function user(): BelongsTo
     {
@@ -108,6 +112,8 @@ class Widget extends Model
 
     /**
      * Its views and clicks, a row a day.
+     *
+     * @return HasMany<WidgetDailyStat, $this>
      */
     public function dailyStats(): HasMany
     {

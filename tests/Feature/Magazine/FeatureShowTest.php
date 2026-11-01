@@ -154,7 +154,9 @@ test('the subscribe block stacks until there is room to sit side by side', funct
     $subscribe = file_get_contents(resource_path('js/components/GOP/Subscribe.vue'));
 
     expect($subscribe)
-        ->toContain('flex max-w-full flex-col lg:flex-row')
+        ->toContain('flex-col')
+        ->toContain('lg:flex-row')
+        ->toContain('lg:w-80')
         ->toContain('lg:hidden')
         ->toContain('lg:block')
         ->not->toContain('md:flex-row');
@@ -167,16 +169,19 @@ test('the subscribe block stacks until there is room to sit side by side', funct
  * is positioned against the window rather than the page, so it went off
  * the edge with it.
  *
- * Both cap at the width they are given now, and the block keeps the page's
- * 20px left gutter. At lg it has none on the right: the row needs 800px of
- * the 830 the column has, and 20 either side would push it over.
+ * Both take the width they are given now, and the block centres in what
+ * is left until it reaches the 480px the cover keeps once the row forms,
+ * so the two layouts meet at the same size. It holds the page's 20px left
+ * gutter, and at lg none on the right: the row needs 800px of the 830 the
+ * column has, and 20 either side would push it over.
  */
 test('the subscribe block gives way on a narrow screen', function () {
     $subscribe = file_get_contents(resource_path('js/components/GOP/Subscribe.vue'));
 
     expect($subscribe)
-        ->toContain('w-80 max-w-full lg:hidden')
-        ->toContain('w-80 max-w-full bg-white p-6')
+        ->toContain('w-full max-w-120')
+        ->toContain('w-full lg:hidden')
+        ->toContain('w-full bg-white p-6')
         ->toContain('px-5 py-10')
         ->toContain('lg:pr-0')
         ->not->toContain('max-w-100');

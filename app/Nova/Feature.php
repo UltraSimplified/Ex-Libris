@@ -35,6 +35,8 @@ use Whitecube\NovaFlexibleContent\Flexible;
 /**
  * Features are dragged into order on the index, newest at the top to begin
  * with. The featured ones lead the home page in that order.
+ *
+ * @extends resource<\App\Models\Feature>
  */
 class Feature extends Resource
 {

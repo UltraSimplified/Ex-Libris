@@ -103,6 +103,8 @@ class Venue extends Model
 
     /**
      * The account that manages this venue, if anyone does.
+     *
+     * @return BelongsTo<User, $this>
      */
     public function user(): BelongsTo
     {
@@ -111,6 +113,8 @@ class Venue extends Model
 
     /**
      * The events taking place here.
+     *
+     * @return HasMany<Listing, $this>
      */
     public function listings(): HasMany
     {
@@ -119,6 +123,8 @@ class Venue extends Model
 
     /**
      * The gig widgets showing this venue's events on other websites.
+     *
+     * @return MorphMany<Widget, $this>
      */
     public function widgets(): MorphMany
     {

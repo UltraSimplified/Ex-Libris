@@ -8,9 +8,13 @@ use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Panel;
 use Laravel\Nova\Resource as NovaResource;
-use Laravel\Scout\Builder as ScoutBuilder;
 use Ultrasimplified\ImageCropper\ImageCropper;
 
+/**
+ * @template TModel of \Illuminate\Database\Eloquent\Model
+ *
+ * @extends NovaResource<TModel>
+ */
 abstract class Resource extends NovaResource
 {
     /**
@@ -84,14 +88,6 @@ abstract class Resource extends NovaResource
      * Build an "index" query for the given resource.
      */
     public static function indexQuery(NovaRequest $request, Builder $query): Builder
-    {
-        return $query;
-    }
-
-    /**
-     * Build a Scout search query for the given resource.
-     */
-    public static function scoutQuery(NovaRequest $request, ScoutBuilder $query): ScoutBuilder
     {
         return $query;
     }

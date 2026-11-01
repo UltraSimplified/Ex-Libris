@@ -10,6 +10,9 @@ use Laravel\Nova\Filters\Filter;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Lenses\Lens;
 
+/**
+ * @extends resource<\App\Models\Category>
+ */
 class Category extends Resource
 {
     /**

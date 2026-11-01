@@ -42,6 +42,8 @@ class PostageBand extends Model
 
     /**
      * The products posted in this band.
+     *
+     * @return HasMany<Product, $this>
      */
     public function products(): HasMany
     {

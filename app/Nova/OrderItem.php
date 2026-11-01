@@ -12,6 +12,8 @@ use Laravel\Nova\Http\Requests\NovaRequest;
 
 /**
  * One line of an order, as it was bought. Never edited.
+ *
+ * @extends resource<OrderItemModel>
  */
 class OrderItem extends Resource
 {

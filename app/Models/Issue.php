@@ -40,6 +40,8 @@ class Issue extends Model
 
     /**
      * The writers with an article in this issue.
+     *
+     * @return BelongsToMany<User, $this>
      */
     public function writers(): BelongsToMany
     {

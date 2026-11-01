@@ -63,6 +63,8 @@ class ProductVariant extends Model
 
     /**
      * The product this is a colour and size of.
+     *
+     * @return BelongsTo<Product, $this>
      */
     public function product(): BelongsTo
     {

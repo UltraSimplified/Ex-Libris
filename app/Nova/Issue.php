@@ -16,6 +16,9 @@ use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Lenses\Lens;
 use Ultrasimplified\ImageCropper\ImageCropper;
 
+/**
+ * @extends resource<\App\Models\Issue>
+ */
 class Issue extends Resource
 {
     /**

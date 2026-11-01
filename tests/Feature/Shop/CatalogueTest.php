@@ -120,4 +120,3 @@ test('a variant is on sale only while its sale price is below its price', functi
     'sale price the same' => [5000, false, 5000],
     'sale price above' => [6000, false, 5000],
 ]);
-

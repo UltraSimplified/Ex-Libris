@@ -92,7 +92,9 @@
     <body class="font-sans antialiased">
         @inertia
 
-        <x-laravel-cookie-guard></x-laravel-cookie-guard>
-        <x-laravel-cookie-guard-scripts></x-laravel-cookie-guard-scripts>
+        @if (config('cookies_consent.enabled', true))
+            <x-laravel-cookie-guard></x-laravel-cookie-guard>
+            <x-laravel-cookie-guard-scripts></x-laravel-cookie-guard-scripts>
+        @endif
     </body>
 </html>

@@ -44,6 +44,8 @@ class ShopCategory extends Model
 
     /**
      * Everything on this shelf, whether on sale or not.
+     *
+     * @return HasMany<Product, $this>
      */
     public function products(): HasMany
     {

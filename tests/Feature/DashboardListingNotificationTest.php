@@ -54,14 +54,19 @@ test('the office is told of a listing added from a dashboard', function () {
     }
 });
 
-test('the office is told when a listing is waiting for their approval', function () {
-    $this->actingAs(User::factory()->create(['name' => 'Sam Smith']))
-        ->post(route('dashboard.listings.store'), listingPayload(['title' => 'School Fete']));
+/**
+ * Listings are no longer held back for the office to approve. An account it
+ * has not linked to a promoter or venue is turned away, so there is nothing
+ * to tell anybody about.
+ */
+test('the office hears nothing from an account it has not linked', function () {
+    $this->actingAs(User::factory()->create())
+        ->post(route('dashboard.listings.store'), listingPayload(['title' => 'School Fete']))
+        ->assertForbidden();
 
-    foreach (officeToldOf() as $notification) {
-        expect($notification['message'])->toBe('New event created by Sam Smith: School Fete (awaiting approval)')
-            ->and($notification['type'])->toBe('warning');
-    }
+    expect(Listing::query()->where('title', 'School Fete')->exists())->toBeFalse();
+
+    Notification::assertNothingSent();
 });
 
 test('the office is told of a duplicated listing', function () {

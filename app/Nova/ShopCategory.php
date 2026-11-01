@@ -15,6 +15,8 @@ use Ultrasimplified\ImageCropper\ImageCropper;
 
 /**
  * A shelf in the shop. Hidden from the public until published.
+ *
+ * @extends resource<\App\Models\ShopCategory>
  */
 class ShopCategory extends Resource
 {

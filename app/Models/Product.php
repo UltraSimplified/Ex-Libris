@@ -58,6 +58,8 @@ class Product extends Model
 
     /**
      * The shelf this is on.
+     *
+     * @return BelongsTo<ShopCategory, $this>
      */
     public function shopCategory(): BelongsTo
     {
@@ -66,6 +68,8 @@ class Product extends Model
 
     /**
      * What it costs to post one.
+     *
+     * @return BelongsTo<PostageBand, $this>
      */
     public function postageBand(): BelongsTo
     {
@@ -74,6 +78,8 @@ class Product extends Model
 
     /**
      * The colours and sizes it comes in, in the order the office set.
+     *
+     * @return HasMany<ProductVariant, $this>
      */
     public function variants(): HasMany
     {
@@ -82,6 +88,8 @@ class Product extends Model
 
     /**
      * The pictures after the main one.
+     *
+     * @return HasMany<ProductImage, $this>
      */
     public function images(): HasMany
     {

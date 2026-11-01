@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 return [
     /**
+     * Whether pages carry the banner at all. The banner opens as a modal, so the
+     * browser tests switch it off to reach the page behind it.
+     */
+    'enabled' => true,
+    /**
      * This prefix will be applied when setting and getting all cookies.
      * If not set, the cookies will not be prefixed.
      * If set, a good strategy is to also add a trailing underscore "_", that will be added between the field value, and each cookie.

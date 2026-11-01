@@ -13,24 +13,20 @@ beforeEach(function () {
 /**
  * Choose photos in a Photojournal on the form, all at once, as picking
  * several in the file dialog does. attach() only offers the browser a path
- * on this machine, which it refuses, so each photo is drawn in the page and
- * handed to the picker, which is told it changed.
+ * on this machine, which it refuses, so each photo is handed to the picker
+ * from the page, which is told it changed. Each is the same single pixel, as
+ * nothing here looks at the photo, and drawing them on a canvas instead can
+ * hold the page up for many seconds.
  */
 function choosePhotosScript(int $gallery, int $count, string $prefix): string
 {
     return <<<JS
-        (async () => {
+        (() => {
+            const pixel = Uint8Array.from(atob('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='), (character) => character.charCodeAt(0));
             const transfer = new DataTransfer();
 
             for (let n = 1; n <= {$count}; n++) {
-                const canvas = document.createElement('canvas');
-                canvas.width = 800;
-                canvas.height = 600;
-                const context = canvas.getContext('2d');
-                context.fillStyle = `hsl(\${n * 30}, 70%, 50%)`;
-                context.fillRect(0, 0, 800, 600);
-                const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg'));
-                transfer.items.add(new File([blob], `{$prefix}-\${n}.jpg`, { type: 'image/jpeg' }));
+                transfer.items.add(new File([pixel], `{$prefix}-\${n}.png`, { type: 'image/png' }));
             }
 
             const input = document.querySelectorAll('.nova-gallery')[{$gallery}].querySelector('.nova-gallery__input');
@@ -77,7 +73,7 @@ function stubGalleryUploadsScript(): string
                         width: 800, height: 600, alt: null, caption: null,
                     },
                     status: 200, statusText: 'OK', headers: {}, config,
-                }), 200));
+                }), 50));
 
                 return config;
             }
@@ -112,13 +108,14 @@ test('two photojournals filled one after the other keep their own photos', funct
     $page->script(stubGalleryUploadsScript());
     $page->script(choosePhotosScript(0, 20, 'first'));
 
-    $page->wait(6)
+    $page->assertMissing('.nova-gallery__item.is-uploading')
+        ->assertScript(photojournalsOnTheForm(), '[20]')
         ->click('[dusk="toggle-layouts-dropdown-or-add-default"]')
         ->click('[dusk="add-gallery"]');
 
     $page->script(choosePhotosScript(1, 20, 'second'));
 
-    $page->wait(6)
+    $page->assertMissing('.nova-gallery__item.is-uploading')
         ->assertScript(photojournalsOnTheForm(), '[20,20]')
         ->assertScript(<<<'JS'
             new Set([...document.querySelectorAll('.nova-gallery__item:not(.is-uploading) img')].map((image) => image.src)).size
@@ -140,7 +137,7 @@ test('a photojournal takes no more than twenty photos', function () {
     $page->script(stubGalleryUploadsScript());
     $page->script(choosePhotosScript(0, 25, 'many'));
 
-    $page->wait(6)
+    $page->assertMissing('.nova-gallery__item.is-uploading')
         ->assertScript(photojournalsOnTheForm(), '[20]')
         ->assertSee('A gallery holds up to 20 photos, so 5 were left out.')
         ->assertMissing('.nova-gallery__input')

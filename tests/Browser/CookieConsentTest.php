@@ -1,5 +1,9 @@
 <?php
 
+beforeEach(function () {
+    config(['cookies_consent.enabled' => true]);
+});
+
 /*
  * A first visit opens the cookie banner, and accepting everything saves the
  * choice and puts the banner away.

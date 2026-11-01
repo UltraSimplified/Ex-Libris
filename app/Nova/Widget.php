@@ -26,6 +26,8 @@ use Laravel\Nova\Lenses\Lens;
  * Gig widgets in the Office, where staff can make one for any venue -
  * including one nobody has claimed yet, as a reason to claim it. The
  * finer settings and the live preview are on the dashboard.
+ *
+ * @extends resource<\App\Models\Widget>
  */
 class Widget extends Resource
 {

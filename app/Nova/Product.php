@@ -27,6 +27,8 @@ use Ultrasimplified\ImageCropper\ImageCropper;
  * t-shirt comes in colours and sizes, so once it has any of those its
  * prices and stock are set on its variants instead, and these two fields
  * step aside.
+ *
+ * @extends resource<ProductModel>
  */
 class Product extends Resource
 {

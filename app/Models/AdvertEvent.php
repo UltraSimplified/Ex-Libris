@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AdvertEvent extends Model
 {
@@ -50,8 +51,10 @@ class AdvertEvent extends Model
 
     /**
      * The advert, archived or not: an archived advert's events are kept.
+     *
+     * @return BelongsTo<Advert, $this>
      */
-    public function advert()
+    public function advert(): BelongsTo
     {
         return $this->belongsTo(Advert::class)->withTrashed();
     }

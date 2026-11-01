@@ -38,6 +38,8 @@ class ProductImage extends Model
 
     /**
      * The product this is a picture of.
+     *
+     * @return BelongsTo<Product, $this>
      */
     public function product(): BelongsTo
     {

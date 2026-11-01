@@ -43,6 +43,8 @@ class OrderItem extends Model
 
     /**
      * The order this is a line of.
+     *
+     * @return BelongsTo<Order, $this>
      */
     public function order(): BelongsTo
     {
@@ -51,6 +53,8 @@ class OrderItem extends Model
 
     /**
      * What was bought, while it still exists - withdrawn ones included.
+     *
+     * @return BelongsTo<ProductVariant, $this>
      */
     public function variant(): BelongsTo
     {
