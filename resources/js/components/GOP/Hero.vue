@@ -21,7 +21,7 @@ const page = usePage();
             />
         </div>
         <div
-            class="w-fit border-silver bg-white p-15 pb-10 text-black md:border-l md:pl-30 dark:bg-surface dark:text-white"
+            class="w-fit border-silver bg-white p-15 pb-10 text-black md:pl-30 dark:bg-surface dark:text-white"
         >
             <h1
                 class="text-center font-haas text-6xl font-semibold md:text-left"
