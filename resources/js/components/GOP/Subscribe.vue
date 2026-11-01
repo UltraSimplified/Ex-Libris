@@ -4,7 +4,7 @@
     <div
         class="bg-[url('@/../img/rectangle.png')] bg-cover bg-center px-5 py-10 md:w-full md:border-l md:border-silver lg:pr-0"
     >
-        <div class="flex justify-start">
+        <div class="flex justify-center lg:justify-start">
             <!--
                 Side by side the cover and the form come to a fixed 800px -
                 480 of artwork and 320 of form, neither of which gives. The
@@ -17,24 +17,37 @@
                 sits above the form, which is what the phone layout has
                 always done.
 
-                Stacked, the two are still 320px of fixed width apiece and
-                gave nothing back, so anything narrower than that - a small
-                phone, a split screen, a zoomed-in page - was pushed wider
-                than the window. The hamburger is positioned against the
-                window, so it went with it. They cap at the width they are
-                given now.
+                Stacked, the pair used to hold 320px however wide the page
+                grew, so by lg they stood against the left edge with 455px
+                of empty paper beside them. They now take the width they
+                are given and centre in what is left, stopping at 480px -
+                the width the cover keeps side by side, so the block edges
+                up to the size it holds once the row forms.
+
+                The upright cover is drawn at 371px, so until a larger one
+                is cut it is stretched to meet that 480. Replacing it at
+                960 wide, in its own proportions, is all that is wanted.
+
+                Taking the width given also keeps them inside a narrow
+                window - a small phone, a split screen, a zoomed-in page -
+                which the fixed 320 did not: the block pushed past the edge,
+                and the hamburger, positioned against the window, with it.
 
                 The block sits against the page's 20px left gutter. At lg
                 it keeps that gutter but none on the right: 20 and 800 fit
                 the 830px column, where 20 either side would not.
             -->
-            <div class="flex max-w-full flex-col lg:flex-row">
-                <img src="@/../img/egg.png" class="w-80 max-w-full lg:hidden" />
+            <div
+                class="flex w-full max-w-120 flex-col lg:w-auto lg:max-w-full lg:flex-row"
+            >
+                <img src="@/../img/egg.png" class="w-full lg:hidden" />
                 <img
                     src="@/../img/egg-wide.png"
                     class="hidden w-140 max-w-120 lg:block"
                 />
-                <div class="w-80 max-w-full bg-white p-6 dark:bg-surface">
+                <div
+                    class="w-full bg-white p-6 lg:w-80 lg:shrink-0 dark:bg-surface"
+                >
                     <div
                         class="font-haas text-xl/4 font-bold text-black hover:text-gray-600 md:text-2xl/5 lg:pr-15 dark:text-white"
                     >
