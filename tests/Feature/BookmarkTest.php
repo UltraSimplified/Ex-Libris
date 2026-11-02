@@ -130,19 +130,11 @@ test('a guest with nothing saved finds the bookmarked events page empty', functi
         );
 });
 
-test('the dashboard shows the saved events', function () {
-    $user = User::factory()->create();
-    $listing = Listing::factory()->create(['start_date' => today()->addDay()]);
-    $user->bookmarks()->attach($listing);
-
-    $this->actingAs($user)
-        ->get(route('dashboard.bookmarks.index'))
-        ->assertOk()
-        ->assertInertia(fn ($page) => $page
-            ->component('dashboard/bookmarks/Index')
-            ->has('listings', 1)
-            ->where('listings.0.id', $listing->id)
-        );
+test('the old bookmarks page sends an account to the panel on the Dashboard', function () {
+    $this->actingAs(User::factory()->create())
+        ->get('/dashboard/bookmarks')
+        ->assertMovedPermanently()
+        ->assertRedirect('/dashboard#bookmarked-listings');
 });
 
 test('the prune command only reports until it is told to commit', function () {

@@ -225,7 +225,9 @@ class User extends Authenticatable
      */
     public function bookmarks(): BelongsToMany
     {
-        return $this->belongsToMany(Listing::class, 'bookmarks')->withTimestamps();
+        return $this->belongsToMany(Listing::class, 'bookmarks')
+            ->withPivot('attending')
+            ->withTimestamps();
     }
 
     /**
@@ -252,6 +254,18 @@ class User extends Authenticatable
     public function hasDashboard(): bool
     {
         return collect(self::ROLES)->contains(fn (string $role): bool => $this->hasRole($role));
+    }
+
+    /**
+     * Whether this account has anything to see on the Dashboard: what it
+     * runs, or events it has saved that are still to come.
+     *
+     * Deliberately not part of hasDashboard(), which says who staff may
+     * switch to: saving an event should not open an account to that.
+     */
+    public function canOpenDashboard(): bool
+    {
+        return $this->hasDashboard() || $this->bookmarks()->current()->exists();
     }
 
     /**

@@ -62,7 +62,7 @@ useAdImpression(
             v-if="props.advert.mobile_image"
             :href="clickUrl('mobile')"
             target="_blank"
-            rel="sponsored noopener"
+            rel="sponsored nofollow noopener"
         >
             <img
                 ref="mobileImg"
@@ -75,7 +75,7 @@ useAdImpression(
             v-if="props.advert.desktop_image"
             :href="clickUrl('desktop')"
             target="_blank"
-            rel="sponsored noopener"
+            rel="sponsored nofollow noopener"
         >
             <img
                 ref="desktopImg"

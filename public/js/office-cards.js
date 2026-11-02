@@ -79,6 +79,62 @@ Nova.booting((app) => {
             text
         )
 
+    /** A line through the day's figures, drawn to fill whatever width it's given. */
+    const sparkline = (days, description) => {
+        const width = 700
+        const height = 64
+        const inset = 4
+        const highest = Math.max(1, ...days.map((day) => day.visits))
+        const points = days.map((day, position) => [
+            (position / (days.length - 1)) * width,
+            height - inset - (day.visits / highest) * (height - inset * 2),
+        ])
+        const line = points.map(([x, y]) => `${x},${y}`).join(' ')
+
+        // Positioned out of the flow, as an svg in it holds the page open at its viewBox width on a phone.
+        return h('div', { style: { flex: '1', minWidth: '0', height: `${height}px`, position: 'relative' } }, [
+            h('svg', {
+                viewBox: `0 0 ${width} ${height}`,
+                preserveAspectRatio: 'none',
+                role: 'img',
+                'aria-label': description,
+                style: {
+                    position: 'absolute',
+                    inset: '0',
+                    width: '100%',
+                    height: '100%',
+                    color: 'rgb(var(--colors-primary-500))',
+                },
+            }, [
+                h('polygon', { points: `0,${height} ${line} ${width},${height}`, fill: 'currentColor', opacity: '0.12' }),
+                h('polyline', {
+                    points: line,
+                    fill: 'none',
+                    stroke: 'currentColor',
+                    'stroke-width': 2,
+                    'stroke-linejoin': 'round',
+                    'stroke-linecap': 'round',
+                    'vector-effect': 'non-scaling-stroke',
+                }),
+            ]),
+        ])
+    }
+
+    app.component('gop-site-visits', {
+        props: ['card'],
+        render() {
+            const { heading, label, days, total } = this.card
+            const description = days.map((day) => `${day.day}: ${day.visits}`).join(', ')
+
+            return panel(heading, [
+                h('div', { style: { display: 'flex', alignItems: 'center', gap: '1.5rem' } }, [
+                    sparkline(days, description),
+                    h('div', { style: { flexShrink: '0' } }, [bigNumber(total, label)]),
+                ]),
+            ])
+        },
+    })
+
     app.component('gop-features-by-category', {
         props: ['card'],
 

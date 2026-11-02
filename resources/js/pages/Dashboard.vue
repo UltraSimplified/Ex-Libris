@@ -8,6 +8,8 @@ import WidgetController from '@/actions/App/Http/Controllers/Dashboard/WidgetCon
 import { dashboard } from '@/routes';
 import { edit as editProfile } from '@/routes/profile';
 import { type BreadcrumbItem, type User } from '@/types';
+import type { BookmarkedListing } from '@/types/global';
+import BookmarkedListings from '../components/GOP/BookmarkedListings.vue';
 import UserAvatar from '../components/UserAvatar.vue';
 import AppLayout from '../layouts/AppLayout.vue';
 
@@ -28,6 +30,7 @@ const props = defineProps<{
     account: { name: string; email: string };
     venues: Managed[];
     promoters: Managed[];
+    bookmarkedListings: BookmarkedListing[];
 }>();
 
 const page = usePage();
@@ -210,6 +213,11 @@ const eventsListedLabel = (count: number): string =>
                         </Link>
                     </div>
                 </section>
+
+                <BookmarkedListings
+                    v-if="bookmarkedListings.length"
+                    :listings="bookmarkedListings"
+                />
             </div>
         </div>
     </AppLayout>

@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Listing;
 use App\Models\User;
 
 /*
@@ -44,5 +45,20 @@ test('an account with a dashboard keeps its Account link', function (array $role
 test('somebody not signed in sees Account', function () {
     visit('/listings')
         ->assertSeeLink(FOOTER_ACCOUNT)
+        ->assertNoJavaScriptErrors();
+});
+
+/*
+ * Somebody with a saved event still to come has the Dashboard, so they get
+ * the way there, and sign out from its sidebar.
+ */
+test('a reader with an event still to come keeps their Account link', function () {
+    $reader = User::factory()->create(['name' => 'Sam Reader']);
+    $reader->bookmarks()->attach(Listing::factory()->create(['start_date' => today()->addDay()]));
+    $this->actingAs($reader);
+
+    visit('/listings')
+        ->assertSeeLink(FOOTER_ACCOUNT)
+        ->assertDontSee('Log out Sam Reader')
         ->assertNoJavaScriptErrors();
 });

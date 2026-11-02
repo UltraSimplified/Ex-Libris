@@ -12,6 +12,7 @@ use App\Nova\Cards\AdvertReach;
 use App\Nova\Cards\FeaturesByCategory;
 use App\Nova\Cards\ListingsExport;
 use App\Nova\Cards\PromoterLeaders;
+use App\Nova\Cards\SiteVisits;
 use App\Nova\Cards\VenueLeaders;
 use App\Nova\Cards\WriterLeaders;
 use App\Nova\Dashboards\Main;
@@ -29,11 +30,12 @@ test('the dashboard is named for the office rather than Nova', function () {
 
 /*
  * The shop's three orders cards are switched off while the shop is quiet,
- * so the dashboard is the six office cards alone until they come back.
+ * so the dashboard is the seven office cards alone until they come back.
  */
-test('the dashboard shows the six office cards, the shop\'s orders cards switched off', function () {
+test('the dashboard shows the seven office cards, the shop\'s orders cards switched off', function () {
     expect(collect((new Main)->cards())->map(fn ($card) => $card::class)->all())
         ->toBe([
+            SiteVisits::class,
             FeaturesByCategory::class,
             AdvertReach::class,
             ListingsExport::class,

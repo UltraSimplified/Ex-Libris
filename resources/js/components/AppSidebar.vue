@@ -13,13 +13,13 @@ import {
     Receipt,
     User,
 } from '@lucide/vue';
-import { computed } from 'vue';
-import BookmarkController from '@/actions/App/Http/Controllers/Dashboard/BookmarkController';
+import { computed, nextTick } from 'vue';
 import ListingController from '@/actions/App/Http/Controllers/Dashboard/ListingController';
 import OrderController from '@/actions/App/Http/Controllers/Dashboard/OrderController';
 import PromoterController from '@/actions/App/Http/Controllers/Dashboard/PromoterController';
 import VenueController from '@/actions/App/Http/Controllers/Dashboard/VenueController';
 import WidgetController from '@/actions/App/Http/Controllers/Dashboard/WidgetController';
+import { useBookmarks } from '@/composables/useBookmarks';
 import { dashboard, home, logout } from '@/routes';
 import { edit as editProfile } from '@/routes/profile';
 import { type Managed, type NavGroup, type NavItem } from '@/types';
@@ -36,9 +36,58 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
     SidebarSeparator,
+    useSidebar,
 } from './ui/sidebar';
 
 const page = usePage();
+const { count: bookmarkCount } = useBookmarks();
+const { setOpenMobile } = useSidebar();
+
+/**
+ * The panel, glided to. Already on the Dashboard there is nothing to fetch,
+ * and from anywhere else the page arrives first, at its top, so the glide
+ * starts from there. The address keeps the panel's anchor for anybody opening
+ * the link in a new tab, which is left to the browser.
+ */
+function goToBookmarkedListings(event: MouseEvent): void {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+        return;
+    }
+
+    event.preventDefault();
+    setOpenMobile(false);
+
+    if (document.getElementById('bookmarked-listings')) {
+        scrollToBookmarkedListings();
+
+        return;
+    }
+
+    router.visit(dashboard().url, {
+        onSuccess: () => nextTick(scrollToBookmarkedListings),
+    });
+}
+
+function scrollToBookmarkedListings(): void {
+    /*
+     * A phone's menu holds the page still while it closes, then hands the
+     * focus back to the button that opened it, at the top of the page. Either
+     * would stop the glide where it began, so it waits until they are done.
+     */
+    if (document.querySelector('[data-mobile="true"]')) {
+        requestAnimationFrame(() => setTimeout(scrollToBookmarkedListings));
+
+        return;
+    }
+
+    const stayStill = window.matchMedia(
+        '(prefers-reduced-motion: reduce)',
+    ).matches;
+
+    document.getElementById('bookmarked-listings')?.scrollIntoView({
+        behavior: stayStill ? 'auto' : 'smooth',
+    });
+}
 
 /**
  * What the current address is narrowed to. The listings entries all point
@@ -126,11 +175,22 @@ const navGroups = computed<NavGroup[]>(() =>
                     href: home(),
                     icon: BookOpen,
                 },
-                {
-                    title: 'My Bookmarks',
-                    href: BookmarkController.index(),
-                    icon: Bookmark,
-                },
+                /*
+                 * The panel on the Dashboard rather than a page of its own,
+                 * so the entry goes when there is nothing to scroll to, and
+                 * is never lit: being on the Dashboard is not being here.
+                 */
+                ...(bookmarkCount.value > 0
+                    ? [
+                          {
+                              title: 'My Bookmarks',
+                              href: `${dashboard().url}#bookmarked-listings`,
+                              icon: Bookmark,
+                              isActive: false,
+                              onSelect: goToBookmarkedListings,
+                          },
+                      ]
+                    : []),
                 ...(page.props.auth.office
                     ? [
                           {

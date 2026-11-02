@@ -432,3 +432,13 @@ interface Listing {
     today: boolean;
     thisweek: boolean;
 }
+
+/**
+ * A listing as the Dashboard's bookmarks panel is given it, with the tick
+ * from the bookmark itself: 0 or 1 from the server, as pivot columns are not
+ * cast, and true or false once it has been changed on the page.
+ */
+interface BookmarkedListing extends Listing {
+    is_free: boolean;
+    pivot: { attending: boolean | number };
+}

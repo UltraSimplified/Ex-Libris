@@ -35,6 +35,23 @@ class AccountBookmarks implements BookmarkStore
     }
 
     /**
+     * Record whether the account is going to an event it has saved, and say
+     * whether it had saved it. Asked of the bookmark itself: an update that
+     * changes nothing reports no rows, which says nothing about whether the
+     * bookmark is there.
+     */
+    public function setAttending(Listing $listing, bool $attending): bool
+    {
+        if (! $this->user->bookmarks()->whereKey($listing->getKey())->exists()) {
+            return false;
+        }
+
+        $this->user->bookmarks()->updateExistingPivot($listing->getKey(), ['attending' => $attending]);
+
+        return true;
+    }
+
+    /**
      * Merge in bookmarks made before signing in. Ones already saved are
      * left as they are.
      *

@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
+use App\Models\Listing;
 use App\Models\Promoter;
 use App\Models\User;
 use App\Models\Venue;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,14 +16,15 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * The dashboard's front page: the account itself, then each venue and
- * promoter it manages with how many of their events are on the site.
+ * The dashboard's front page: the account itself, each venue and promoter it
+ * manages with how many of their events are on the site, then the events it
+ * has saved.
  *
- * Only accounts with something to manage have a dashboard - venue managers,
- * promoters and writers, and staff holding every role. Anybody else -
- * somebody who signed up to keep their bookmarks - has nothing here yet, so
- * they are sent to the home page. Logging in and registering both aim here,
- * so that is where they leave a reader too.
+ * Only accounts with something to see get this page - venue managers,
+ * promoters and writers, staff holding every role, and anybody with a saved
+ * event still to come. Anybody else has nothing here yet, so they are sent
+ * to the home page. Logging in and registering both aim here, so that is
+ * where they leave a reader too.
  */
 class HomeController extends Controller
 {
@@ -29,7 +32,7 @@ class HomeController extends Controller
     {
         $user = $request->user();
 
-        if (! $user->hasDashboard()) {
+        if (! $user->canOpenDashboard()) {
             return to_route('home');
         }
 
@@ -57,7 +60,24 @@ class HomeController extends Controller
                     'logo' => $promoter->logo,
                 ])
                 ->all(),
+            'bookmarkedListings' => $this->bookmarkedListings($user),
         ]);
+    }
+
+    /**
+     * The events this account has saved that have not finished, in the same
+     * order as the listings pages, with what the panel draws under each.
+     *
+     * @return Collection<int, Listing>
+     */
+    private function bookmarkedListings(User $user): Collection
+    {
+        return $user->bookmarks()
+            ->with(['venue', 'category', 'promoter'])
+            ->current()
+            ->finishingSoonest()
+            ->get()
+            ->each->append(['ticket_link', 'is_free']);
     }
 
     /**

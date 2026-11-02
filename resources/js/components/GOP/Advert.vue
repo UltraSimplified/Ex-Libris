@@ -78,7 +78,7 @@ useAdImpression(
             v-if="advert.mobile_image"
             :href="clickUrl('mobile')"
             target="_blank"
-            rel="sponsored noopener"
+            rel="sponsored nofollow noopener"
             ><img
                 ref="mobileImg"
                 :src="cdn(advert.mobile_image)"
@@ -90,7 +90,7 @@ useAdImpression(
             v-if="advert.desktop_image"
             :href="clickUrl('desktop')"
             target="_blank"
-            rel="sponsored noopener"
+            rel="sponsored nofollow noopener"
             ><img
                 ref="desktopImg"
                 :src="cdn(advert.desktop_image)"

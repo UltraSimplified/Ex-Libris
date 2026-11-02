@@ -41,14 +41,11 @@ const basketCount = computed(() => page.props.basket?.count ?? 0);
 const switchedFrom = computed(() => page.props.auth?.switchedFrom ?? null);
 
 /**
- * Whether this account has a dashboard: it holds a role, as staff all do.
- * Somebody signed up only to keep bookmarks has nothing there yet.
+ * Whether the Dashboard has anything for this account: it holds a role, as
+ * staff all do, or has saved an event still to come. Anybody else has
+ * nothing there yet.
  */
-const hasDashboard = computed(
-    () =>
-        !!page.props.auth?.user &&
-        Object.values(page.props.auth.roles ?? {}).some(Boolean),
-);
+const hasDashboard = computed(() => !!page.props.auth?.canOpenDashboard);
 
 const showMenu = ref(false);
 

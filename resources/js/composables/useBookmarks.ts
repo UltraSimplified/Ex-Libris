@@ -1,5 +1,6 @@
-import { usePage } from '@inertiajs/vue3';
+import { router, usePage } from '@inertiajs/vue3';
 import { computed, reactive, watch } from 'vue';
+import { jsonRequestHeaders } from '@/lib/jsonRequest';
 
 /**
  * Listing ids this visitor has saved: on their account when signed in, in a
@@ -13,17 +14,6 @@ const saved = reactive(new Set<number>());
 
 /** Ids with a request in flight, so a double click cannot race itself. */
 const inFlight = reactive(new Set<number>());
-
-/**
- * Laravel encrypts the CSRF token into a cookie and accepts it back as a
- * header. Nothing else in this app posts outside Inertia, so we read it here
- * rather than pulling in a client just for two endpoints.
- */
-function csrfToken(): string {
-    const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]*)/);
-
-    return match ? decodeURIComponent(match[1]) : '';
-}
 
 export function useBookmarks() {
     const page = usePage();
@@ -71,12 +61,7 @@ export function useBookmarks() {
         try {
             const response = await fetch(`/listings/${id}/bookmark`, {
                 method: wanted ? 'POST' : 'DELETE',
-                headers: {
-                    Accept: 'application/json',
-                    'Content-Type': 'application/json',
-                    'X-XSRF-TOKEN': csrfToken(),
-                    'X-Requested-With': 'XMLHttpRequest',
-                },
+                headers: jsonRequestHeaders(),
                 credentials: 'same-origin',
             });
 
@@ -91,6 +76,13 @@ export function useBookmarks() {
             } else {
                 saved.delete(id);
             }
+
+            /*
+             * Written back into the page as well: going back to it restores
+             * the props it was given, which would re-seed the set from the
+             * list as it was before this click.
+             */
+            router.replaceProp('bookmarks', [...saved]);
         } catch (error) {
             if (wanted) {
                 saved.delete(id);

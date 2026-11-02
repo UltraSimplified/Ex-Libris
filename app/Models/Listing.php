@@ -171,6 +171,23 @@ class Listing extends Model
     }
 
     /**
+     * Whether the event costs nothing, as far as its free-text price can
+     * say: the word "free" with no figure beside it. The figure is what
+     * keeps "£10 (adult), children go free" from counting. A listing with
+     * no price may simply not have been given one, so is not called free.
+     *
+     * Appended only where the answer is used, as with the ticket link.
+     */
+    protected function isFree(): Attribute
+    {
+        return Attribute::get(function (): bool {
+            $price = (string) $this->ticket_price;
+
+            return preg_match('/\bfree\b/i', $price) === 1 && preg_match('/\d/', $price) === 0;
+        });
+    }
+
+    /**
      * @return BelongsTo<Category, $this>
      */
     public function category(): BelongsTo

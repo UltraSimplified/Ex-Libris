@@ -36,9 +36,10 @@ export type NavItem = {
     /**
      * Run before following the link. Log out uses it to empty Inertia's
      * cache, so the next person to sign in on this browser is not handed
-     * the last one's pages.
+     * the last one's pages. My Bookmarks prevents the click's default and
+     * does the going itself, so nothing is fetched to scroll down a page.
      */
-    onSelect?: () => void;
+    onSelect?: (event: MouseEvent) => void;
     /**
      * A page this app does not render - Nova, say. Followed with an
      * ordinary browser navigation, because Inertia would choke on the

@@ -8,7 +8,6 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\ClaimOrderController;
 use App\Http\Controllers\Dashboard\AdvertController as DashboardAdvertController;
 use App\Http\Controllers\Dashboard\ArticleController as DashboardArticleController;
-use App\Http\Controllers\Dashboard\BookmarkController as DashboardBookmarkController;
 use App\Http\Controllers\Dashboard\HomeController as DashboardHomeController;
 use App\Http\Controllers\Dashboard\ListingController as DashboardListingController;
 use App\Http\Controllers\Dashboard\OrderController as DashboardOrderController;
@@ -19,6 +18,7 @@ use App\Http\Controllers\FeatureController;
 use App\Http\Controllers\FileController;
 use App\Http\Controllers\GuestOrderController;
 use App\Http\Controllers\IssueController;
+use App\Http\Controllers\ListingAttendingController;
 use App\Http\Controllers\ListingBookmarkController;
 use App\Http\Controllers\ListingController;
 use App\Http\Controllers\ListingExportController;
@@ -121,6 +121,18 @@ Route::middleware('throttle:60,1')->group(function (): void {
         ->name('listings.bookmark.destroy');
 });
 
+/*
+ * The tick under a bookmarked listing on the Dashboard. Accounts only: a
+ * bookmark kept in a browser's cookie has nowhere to record it.
+ */
+Route::middleware(['auth', 'throttle:60,1'])->group(function (): void {
+    Route::put('listings/{listing}/attending', [ListingAttendingController::class, 'store'])
+        ->name('listings.attending.store');
+
+    Route::delete('listings/{listing}/attending', [ListingAttendingController::class, 'destroy'])
+        ->name('listings.attending.destroy');
+});
+
 Route::get('listings/', [ListingController::class, 'all'])->name('Listings');
 
 // All was at listings/all until it became the listings home page.
@@ -194,10 +206,10 @@ Route::get('magazine/stockists', [IssueController::class, 'stockists']);
 
 /*
  * The account page belongs to venue managers, promoters and writers, with
- * staff holding every role. Anybody else - somebody who signed up to keep
- * their bookmarks - has nothing here yet, so they are sent to the home
- * page. Logging in and registering both aim here, so that is where they
- * leave a reader too.
+ * staff holding every role, and to anybody with a saved event still to come.
+ * Anybody else has nothing here yet, so they are sent to the home page.
+ * Logging in and registering both aim here, so that is where they leave a
+ * reader too.
  *
  * Only this one route redirects: every other dashboard page stays
  * reachable, so staff can still see what a promoter sees.
@@ -253,7 +265,9 @@ Route::middleware(['auth', 'verified'])
         Route::get('articles', [DashboardArticleController::class, 'index'])->name('articles.index');
         Route::get('orders', [DashboardOrderController::class, 'index'])->name('orders.index');
         Route::get('orders/{order:reference}', [DashboardOrderController::class, 'show'])->name('orders.show');
-        Route::get('bookmarks', [DashboardBookmarkController::class, 'index'])->name('bookmarks.index');
+
+        // Bookmarks were a page of their own until they became a panel on the Dashboard.
+        Route::permanentRedirect('bookmarks', '/dashboard#bookmarked-listings');
     });
 
 Route::get('/download/{id}', [FileController::class, 'download'])->whereNumber('id');

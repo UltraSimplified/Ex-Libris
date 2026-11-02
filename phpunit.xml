@@ -35,6 +35,12 @@
         <env name="STRIPE_KEY" value="" force="true"/>
         <env name="STRIPE_SECRET" value="" force="true"/>
         <env name="STRIPE_WEBHOOK_SECRET" value="" force="true"/>
+        <env name="DO_DEFAULT_REGION" value="test"/>
+        <env name="DO_BUCKET" value="test"/>
+        <env name="DO_URL" value="https://spaces.test"/>
+        <env name="DO_ENDPOINT" value="https://spaces.test"/>
+        <env name="SHOP_NOTIFY_TO" value="orders@goodonpaper.info"/>
+        <env name="SHOP_NOTIFY_CC" value="robin@ultrasimplified.com"/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>

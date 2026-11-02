@@ -6,6 +6,7 @@ use App\Nova\Cards\AdvertReach;
 use App\Nova\Cards\FeaturesByCategory;
 use App\Nova\Cards\ListingsExport;
 use App\Nova\Cards\PromoterLeaders;
+use App\Nova\Cards\SiteVisits;
 use App\Nova\Cards\VenueLeaders;
 use App\Nova\Cards\WriterLeaders;
 use App\Nova\Metrics\OrdersAwaiting;
@@ -53,6 +54,7 @@ class Main extends Dashboard
         ] : [];
 
         return [
+            SiteVisits::make(),
             ...$orders,
             FeaturesByCategory::make(),
             AdvertReach::make(),

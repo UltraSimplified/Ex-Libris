@@ -66,7 +66,7 @@ defineProps<Props>();
                             :href="item.href"
                             :as="posts(item) ? 'button' : undefined"
                             :class="posts(item) ? 'w-full' : undefined"
-                            @click="item.onSelect?.()"
+                            @click="item.onSelect?.($event)"
                         >
                             <component :is="item.icon" />
                             <span

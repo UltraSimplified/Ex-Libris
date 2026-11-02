@@ -15,14 +15,13 @@ const props = defineProps<Props>();
 const page = usePage();
 
 /**
- * Somebody signed in who manages no venue, promotes nothing and writes
- * nothing has no dashboard yet, so Account becomes the way to sign out.
+ * Somebody signed in with nothing to see on the Dashboard - no role, and no
+ * saved event still to come - gets the way to sign out in place of Account.
  * Staff hold every role, so they keep it.
  */
 const reader = computed(
     () =>
-        Boolean(page.props.auth?.user) &&
-        !Object.values(page.props.auth.roles ?? {}).some(Boolean),
+        Boolean(page.props.auth?.user) && !page.props.auth.canOpenDashboard,
 );
 
 /** Prefetched pages were drawn for the account, so they go with it. */

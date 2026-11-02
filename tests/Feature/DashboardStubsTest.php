@@ -7,28 +7,20 @@ use App\Models\Venue;
 use Illuminate\Support\Facades\File;
 
 /**
- * My orders and My bookmarks hold their place in the interface for every
- * account. These tests fix the routes and components so the shape does
- * not drift.
+ * My orders holds its place in the interface for every account. These tests
+ * fix the routes and components so the shape does not drift.
  */
 test('guests cannot reach any of them', function () {
     $this->get(route('dashboard.orders.index'))->assertRedirect(route('login'));
-    $this->get(route('dashboard.bookmarks.index'))->assertRedirect(route('login'));
+    $this->get('/dashboard/bookmarks')->assertRedirect(route('login'));
     $this->get(route('dashboard.adverts.index'))->assertRedirect(route('login'));
 });
 
-test('any signed-in account gets both sections', function () {
-    $user = User::factory()->create();
-
-    $this->actingAs($user)
+test('any signed-in account gets its orders', function () {
+    $this->actingAs(User::factory()->create())
         ->get(route('dashboard.orders.index'))
         ->assertOk()
         ->assertInertia(fn ($page) => $page->component('dashboard/orders/Index'));
-
-    $this->actingAs($user)
-        ->get(route('dashboard.bookmarks.index'))
-        ->assertOk()
-        ->assertInertia(fn ($page) => $page->component('dashboard/bookmarks/Index'));
 });
 
 test('adverts are for the people who advertise', function () {

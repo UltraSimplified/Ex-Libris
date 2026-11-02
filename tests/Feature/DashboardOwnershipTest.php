@@ -43,7 +43,7 @@ test('the dashboard is told what the account runs, by name', function () {
         ->create();
 
     $runs = function (User $user): array {
-        $props = $this->actingAs($user)->get(route('dashboard.bookmarks.index'))->viewData('page')['props']['auth'];
+        $props = $this->actingAs($user)->get(route('dashboard.orders.index'))->viewData('page')['props']['auth'];
 
         return [
             collect($props['promoters'])->pluck('name')->all(),

@@ -3,6 +3,7 @@
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\MergeGuestBookmarks;
+use App\Http\Middleware\RecordSiteVisit;
 use App\Http\Middleware\RequireHttps;
 use App\Http\Middleware\ServeEmbeds;
 use App\Services\Bookmarks\GuestBookmarks;
@@ -37,6 +38,8 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             $embeds->group(base_path('routes/embed.php'));
+
+            Route::middleware('calendar')->group(base_path('routes/calendar.php'));
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
@@ -50,11 +53,15 @@ return Application::configure(basePath: dirname(__DIR__))
             ServeEmbeds::class,
             SubstituteBindings::class,
         ]);
+        $middleware->group('calendar', [
+            SubstituteBindings::class,
+        ]);
         $middleware->web(append: [
             HandleAppearance::class,
             MergeGuestBookmarks::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
+            RecordSiteVisit::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
@@ -69,8 +76,9 @@ return Application::configure(basePath: dirname(__DIR__))
          * debug pages included.
          */
         $exceptions->render(function (HttpExceptionInterface $e, Request $request) {
-            // A widget that has gone leaves an empty frame, not the site.
-            if ($request->is('embed/*')) {
+            // A widget that has gone leaves an empty frame, not the site, and a
+            // calendar app has no use for a page either.
+            if ($request->is('embed/*', 'calendar/*')) {
                 return response('', $e->getStatusCode());
             }
 

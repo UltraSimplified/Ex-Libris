@@ -61,7 +61,14 @@ const { isCurrentUrl } = useCurrentUrl();
                         :is-active="item.isActive ?? isCurrentUrl(item.href)"
                         :tooltip="item.title"
                     >
-                        <Link :href="item.href">
+                        <!--
+                            On the way down, so an entry that handles the
+                            click itself has done so before Link sees it.
+                        -->
+                        <Link
+                            :href="item.href"
+                            @click.capture="item.onSelect?.($event)"
+                        >
                             <component :is="item.icon" />
                             <span
                                 class="font-semibold uppercase after:content-['.']"
