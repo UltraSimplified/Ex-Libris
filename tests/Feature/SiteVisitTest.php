@@ -21,12 +21,14 @@ function visitAs(string $userAgent, string $path = '/', string $ip = '203.0.113.
         ->get($path);
 }
 
-test('a reader counts once a day however many pages they read', function () {
+test('a reader counts once an hour however many pages they read', function () {
+    $this->travelTo('2026-11-02 14:35:00');
+
     visitAs(READER);
     visitAs(READER, '/listings');
 
     expect(SiteVisit::query()->count())->toBe(1)
-        ->and(SiteVisit::query()->sole()->visited_on)->toBe(today()->toDateString());
+        ->and(SiteVisit::query()->sole()->visited_at->toDateTimeString())->toBe('2026-11-02 14:00:00');
 });
 
 test('a page change made through Inertia counts as a visit', function () {
@@ -39,10 +41,10 @@ test('a page change made through Inertia counts as a visit', function () {
     expect(SiteVisit::query()->count())->toBe(1);
 });
 
-test('the same reader counts again on another day', function () {
+test('the same reader counts again in another hour', function () {
     visitAs(READER);
 
-    $this->travel(1)->day();
+    $this->travel(1)->hour();
     visitAs(READER);
 
     expect(SiteVisit::query()->count())->toBe(2)
@@ -98,11 +100,11 @@ test('a HEAD request, as an uptime monitor sends, is not a visit', function () {
     expect(SiteVisit::query()->count())->toBe(0);
 });
 
-test('visits older than the report are cleared', function () {
+test('visits older than the longest report are cleared', function () {
     Lottery::alwaysWin();
 
-    SiteVisit::factory()->create(['visited_on' => today()->subDays(SiteVisit::DAYS)->toDateString()]);
-    $oldestReported = SiteVisit::factory()->create(['visited_on' => today()->subDays(SiteVisit::DAYS - 1)->toDateString()]);
+    SiteVisit::factory()->create(['visited_at' => today()->subDays(SiteVisit::DAYS_KEPT)->endOfDay()]);
+    $oldestReported = SiteVisit::factory()->create(['visited_at' => today()->subDays(SiteVisit::DAYS_KEPT - 1)]);
 
     visitAs(READER);
 
@@ -117,29 +119,95 @@ test('a visit that cannot be recorded does not cost the reader the page', functi
     $this->withHeader('User-Agent', READER)->get('/')->assertOk();
 });
 
-test('the card has the last seven days in order, quiet days as zero', function () {
+function siteVisitsRange(string $label): array
+{
+    return collect((new SiteVisits)->jsonSerialize()['ranges'])->firstWhere('label', $label);
+}
+
+test('the card offers 24 hours, 7 days and 30 days, in that order', function () {
+    expect(collect((new SiteVisits)->jsonSerialize()['ranges'])->pluck('label')->all())
+        ->toBe(['24 Hours', '7 Days', '30 Days']);
+});
+
+test('the 24 hours run hour by hour up to the one under way, quiet hours as zero', function () {
+    $this->travelTo('2026-11-02 14:35:00');
+
+    SiteVisit::factory()->count(2)->create(['visited_at' => '2026-11-02 14:00:00']);
+    SiteVisit::factory()->create(['visited_at' => '2026-11-01 15:00:00']);
+    SiteVisit::factory()->create(['visited_at' => '2026-11-01 14:00:00']);
+
+    $points = siteVisitsRange('24 Hours')['points'];
+
+    expect($points)->toHaveCount(24)
+        ->and($points[0])->toBe(['label' => 'Sun 1 Nov, 3 PM', 'tick' => null, 'visits' => 1])
+        ->and($points[1]['visits'])->toBe(0)
+        ->and($points[23])->toBe(['label' => 'Mon 2 Nov, 2 PM', 'tick' => null, 'visits' => 2]);
+});
+
+test('the 24 hours mark the axis every four hours', function () {
+    $this->travelTo('2026-11-02 14:35:00');
+
+    expect(collect(siteVisitsRange('24 Hours')['points'])->pluck('tick')->filter()->values()->all())
+        ->toBe(['4 PM', '8 PM', '12 AM', '4 AM', '8 AM', '12 PM']);
+});
+
+test('the 7 days count a visitor once a day, quiet days as zero', function () {
     $this->travelTo('2026-11-02 12:00:00');
 
-    SiteVisit::factory()->count(2)->create(['visited_on' => '2026-11-02']);
-    SiteVisit::factory()->create(['visited_on' => '2026-10-27']);
-    SiteVisit::factory()->create(['visited_on' => '2026-10-26']);
+    SiteVisit::factory()->create(['visitor_hash' => 'returning', 'visited_at' => '2026-11-02 09:00:00']);
+    SiteVisit::factory()->create(['visitor_hash' => 'returning', 'visited_at' => '2026-11-02 11:00:00']);
+    SiteVisit::factory()->create(['visited_at' => '2026-11-02 11:00:00']);
+    SiteVisit::factory()->create(['visited_at' => '2026-10-27 00:00:00']);
+    SiteVisit::factory()->create(['visited_at' => '2026-10-26 23:00:00']);
 
-    expect((new SiteVisits)->jsonSerialize()['days'])->toBe([
-        ['day' => 'Tue 27 Oct', 'visits' => 1],
-        ['day' => 'Wed 28 Oct', 'visits' => 0],
-        ['day' => 'Thu 29 Oct', 'visits' => 0],
-        ['day' => 'Fri 30 Oct', 'visits' => 0],
-        ['day' => 'Sat 31 Oct', 'visits' => 0],
-        ['day' => 'Sun 1 Nov', 'visits' => 0],
-        ['day' => 'Mon 2 Nov', 'visits' => 2],
+    expect(siteVisitsRange('7 Days')['points'])->toBe([
+        ['label' => 'Tue 27 Oct', 'tick' => 'Tue', 'visits' => 1],
+        ['label' => 'Wed 28 Oct', 'tick' => 'Wed', 'visits' => 0],
+        ['label' => 'Thu 29 Oct', 'tick' => 'Thu', 'visits' => 0],
+        ['label' => 'Fri 30 Oct', 'tick' => 'Fri', 'visits' => 0],
+        ['label' => 'Sat 31 Oct', 'tick' => 'Sat', 'visits' => 0],
+        ['label' => 'Sun 1 Nov', 'tick' => 'Sun', 'visits' => 0],
+        ['label' => 'Mon 2 Nov', 'tick' => 'Mon', 'visits' => 2],
     ]);
 });
 
-test('the card\'s total counts a visitor once across the week and leaves out older visits', function () {
-    SiteVisit::factory()->create(['visitor_hash' => 'returning']);
-    SiteVisit::factory()->create(['visitor_hash' => 'returning', 'visited_on' => today()->subDay()->toDateString()]);
-    SiteVisit::factory()->create(['visitor_hash' => 'once']);
-    SiteVisit::factory()->create(['visitor_hash' => 'long-gone', 'visited_on' => today()->subDays(SiteVisit::DAYS)->toDateString()]);
+test('the 30 days run to today and mark the axis counting back from it', function () {
+    $this->travelTo('2026-11-02 12:00:00');
 
-    expect((new SiteVisits)->jsonSerialize()['total'])->toBe(2);
+    $points = siteVisitsRange('30 Days')['points'];
+
+    expect($points)->toHaveCount(30)
+        ->and($points[0]['label'])->toBe('Sun 4 Oct')
+        ->and($points[29]['label'])->toBe('Mon 2 Nov')
+        ->and(collect($points)->pluck('tick')->filter()->values()->all())
+        ->toBe(['9 Oct', '15 Oct', '21 Oct', '27 Oct', '2 Nov']);
+});
+
+test('each total counts a visitor once across its range and leaves out older visits', function () {
+    $this->travelTo('2026-11-02 12:00:00');
+
+    SiteVisit::factory()->create(['visitor_hash' => 'returning', 'visited_at' => '2026-11-02 11:00:00']);
+    SiteVisit::factory()->create(['visitor_hash' => 'returning', 'visited_at' => '2026-11-02 10:00:00']);
+    SiteVisit::factory()->create(['visitor_hash' => 'returning', 'visited_at' => '2026-10-30 10:00:00']);
+    SiteVisit::factory()->create(['visitor_hash' => 'this-week', 'visited_at' => '2026-10-30 10:00:00']);
+    SiteVisit::factory()->create(['visitor_hash' => 'this-month', 'visited_at' => '2026-10-10 10:00:00']);
+    SiteVisit::factory()->create(['visitor_hash' => 'long-gone', 'visited_at' => '2026-10-03 23:00:00']);
+
+    expect(siteVisitsRange('24 Hours')['total'])->toBe(1)
+        ->and(siteVisitsRange('7 Days')['total'])->toBe(2)
+        ->and(siteVisitsRange('30 Days')['total'])->toBe(3);
+});
+
+test('each range names the dates it covers', function () {
+    $this->travelTo('2026-11-02 14:35:00');
+
+    expect(siteVisitsRange('24 Hours')['period'])->toBe('1 November — 2 November')
+        ->and(siteVisitsRange('7 Days')['period'])->toBe('27 October — 2 November')
+        ->and(siteVisitsRange('30 Days')['period'])->toBe('4 October — 2 November');
+});
+
+test('24 hours that fall within one day name it once', function () {
+    $this->travelTo('2026-11-02 23:10:00');
+
+    expect(siteVisitsRange('24 Hours')['period'])->toBe('2 November');
 });

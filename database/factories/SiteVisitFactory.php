@@ -16,7 +16,7 @@ class SiteVisitFactory extends Factory
     public function definition(): array
     {
         return [
-            'visited_on' => today()->toDateString(),
+            'visited_at' => now()->startOfHour(),
             'visitor_hash' => hash('sha256', fake()->unique()->uuid()),
         ];
     }

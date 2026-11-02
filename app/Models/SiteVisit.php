@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\CarbonInterface;
 use Database\Factories\SiteVisitFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -9,7 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Lottery;
 
 /**
- * One visitor on one day. No address is kept, only a hash of it keyed with
+ * One visitor in one hour. No address is kept, only a hash of it keyed with
  * the application key, and only for as long as the Office's figures need it.
  */
 class SiteVisit extends Model
@@ -20,20 +21,20 @@ class SiteVisit extends Model
     public $timestamps = false;
 
     /**
-     * The days of visits the Office reports on, today included.
+     * The days of visits kept for the Office's longest report, today included.
      */
-    public const DAYS = 7;
+    public const DAYS_KEPT = 30;
 
     /**
      * @var list<string>
      */
     protected $fillable = [
-        'visited_on',
+        'visited_at',
         'visitor_hash',
     ];
 
     /**
-     * Note today's visit from whoever sent the request, once per day.
+     * Note this hour's visit from whoever sent the request, once per hour.
      *
      * Old visits are cleared here rather than on the schedule so that the
      * hashes cannot outlive the report if the scheduler is not running.
@@ -41,29 +42,39 @@ class SiteVisit extends Model
     public static function record(Request $request): void
     {
         self::query()->insertOrIgnore([
-            'visited_on' => today()->toDateString(),
+            'visited_at' => now()->startOfHour()->toDateTimeString(),
             'visitor_hash' => self::hashFor($request),
         ]);
 
         Lottery::odds(1, 100)
-            ->winner(fn () => self::query()->where('visited_on', '<', self::firstReportedDay())->delete())
+            ->winner(fn () => self::query()->where('visited_at', '<', self::firstKeptDay())->delete())
             ->choose();
     }
 
     /**
-     * The earliest date the Office reports on.
+     * The start of the earliest day still kept.
      */
-    public static function firstReportedDay(): string
+    public static function firstKeptDay(): CarbonInterface
     {
-        return today()->subDays(self::DAYS - 1)->toDateString();
+        return today()->subDays(self::DAYS_KEPT - 1);
     }
 
     /**
      * The same address and browser hash alike, which lets a visitor be
-     * counted once across the week without storing who they are.
+     * counted once across a whole report without storing who they are.
      */
     private static function hashFor(Request $request): string
     {
         return hash_hmac('sha256', $request->ip().'|'.$request->userAgent(), (string) config('app.key'));
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'visited_at' => 'datetime',
+        ];
     }
 }
