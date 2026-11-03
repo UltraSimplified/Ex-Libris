@@ -292,7 +292,7 @@ const footerNavItems = computed<NavItem[]>(() => [
             <NavFooter :items="footerNavItems" />
             <NavUser />
             <SidebarSeparator />
-            <AppearanceChooser class="self-center" />
+            <AppearanceChooser class="mt-2.5 self-center" />
         </SidebarFooter>
     </Sidebar>
     <slot />
