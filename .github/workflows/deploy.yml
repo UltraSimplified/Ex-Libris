@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       migrate:
-        description: Run the waiting database migrations on live
+        description: Run the waiting database migrations on staging and live
         type: boolean
         default: false
 
@@ -67,104 +67,24 @@ jobs:
       - name: Browser tests
         run: php artisan test tests/Browser --compact
 
-  deploy:
+  # Each stays off until its repository variable is set to true. Live also needs
+  # staging to have gone through, so a release that breaks there stops there.
+  staging:
     needs: test
-    # Stays off until the repository variable DEPLOY_ENABLED is set to true.
-    if: vars.DEPLOY_ENABLED == 'true' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    concurrency:
-      group: production
-      cancel-in-progress: false
-    env:
-      # Live keeps real copies of the nova-components packages in vendor, not symlinks.
-      COMPOSER_MIRROR_PATH_REPOS: '1'
-      SSH_TARGET: ${{ secrets.DEPLOY_SSH_TARGET }}
-      RSYNC_RSH: ssh -i ~/.ssh/deploy_key -p ${{ secrets.DEPLOY_SSH_PORT }} -o BatchMode=yes
-    steps:
-      - uses: actions/checkout@v4
+    if: vars.DEPLOY_STAGING_ENABLED == 'true' && github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/deploy-to.yml
+    with:
+      environment: staging
+      url: https://staging.goodonpaper.info/
+      migrate: ${{ github.event_name == 'workflow_dispatch' && inputs.migrate }}
+    secrets: inherit
 
-      - uses: shivammathur/setup-php@v2
-        with:
-          php-version: ${{ env.PHP_VERSION }}
-          extensions: ${{ env.PHP_EXTENSIONS }}
-          coverage: none
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-
-      - name: Build for production
-        run: |
-          composer install --no-interaction --no-progress --prefer-dist --no-dev --optimize-autoloader
-          cp .env.example .env
-          php artisan key:generate --no-interaction
-          php artisan vendor:publish --tag=cookies-consent-public --no-interaction
-          npm ci --no-audit --no-fund
-          npm run build
-
-      - name: Set up SSH
-        env:
-          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
-          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
-        run: |
-          install -m 700 -d ~/.ssh
-          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
-
-      # Migration files go up first, so that live can say what is waiting while
-      # it is still running the old code.
-      - name: Check for waiting migrations
-        env:
-          MIGRATE: ${{ inputs.migrate }}
-        run: |
-          rsync -rlc database "$SSH_TARGET:"
-          if [ "$MIGRATE" != 'true' ]; then
-            $RSYNC_RSH "$SSH_TARGET" 'export PATH=/usr/local/bin:$PATH; php artisan migrate:status --pending=1 --no-ansi' || {
-              echo '::error::Migrations are waiting, so nothing was deployed. Use Run workflow with the migrate box ticked.'
-              exit 1
-            }
-          fi
-
-      # The sources are always named: never ./, whose attributes would land on
-      # the home directory, and -p and -t are left out so live keeps its own
-      # permissions. Build chunks are never deleted, as open tabs still ask for
-      # them. A failure from here leaves the site in maintenance mode rather
-      # than serving half of a release, until the run is repeated.
-      - name: Upload the assets
-        run: rsync -rlc --exclude=.htaccess public "$SSH_TARGET:"
-
-      - name: Switch on maintenance mode
-        run: $RSYNC_RSH "$SSH_TARGET" 'export PATH=/usr/local/bin:$PATH; php artisan down --retry=30 --no-ansi'
-
-      - name: Upload the code
-        run: |
-          rsync -rlc --delete --force vendor app config lang routes "$SSH_TARGET:"
-          rsync -rlc --delete --exclude='*/vendor' --exclude='*/auth.json' --exclude='*/node_modules' nova-components "$SSH_TARGET:"
-          rsync -rlcR --delete resources/views "$SSH_TARGET:"
-          rsync -rlcR bootstrap/app.php bootstrap/providers.php artisan composer.json composer.lock "$SSH_TARGET:"
-
-      - name: Migrate and rebuild the caches
-        env:
-          MIGRATE: ${{ inputs.migrate }}
-        run: |
-          $RSYNC_RSH "$SSH_TARGET" "MIGRATE='$MIGRATE' bash -se" <<'REMOTE'
-          export PATH=/usr/local/bin:$PATH
-          rm -f bootstrap/cache/*.php
-          php artisan package:discover --no-ansi
-          if [ "$MIGRATE" = 'true' ]; then
-            php artisan migrate --force --no-ansi
-          fi
-          php artisan config:cache --no-ansi
-          php artisan route:cache --no-ansi
-          php artisan view:cache --no-ansi
-          php artisan queue:restart --no-ansi
-          REMOTE
-
-      - name: Switch off maintenance mode
-        run: $RSYNC_RSH "$SSH_TARGET" 'export PATH=/usr/local/bin:$PATH; php artisan up --no-ansi'
-
-      - name: Check the site answers
-        run: curl --fail --silent --show-error --location --retry 3 --retry-delay 5 --output /dev/null https://www.goodonpaper.info/
+  live:
+    needs: staging
+    if: vars.DEPLOY_LIVE_ENABLED == 'true' && github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/deploy-to.yml
+    with:
+      environment: production
+      url: https://www.goodonpaper.info/
+      migrate: ${{ github.event_name == 'workflow_dispatch' && inputs.migrate }}
+    secrets: inherit
