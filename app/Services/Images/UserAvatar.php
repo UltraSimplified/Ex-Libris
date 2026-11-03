@@ -51,6 +51,39 @@ final class UserAvatar
     }
 
     /**
+     * Whether a picture already in the bucket is bigger than an upload would
+     * now be allowed to be. Throws if it cannot be read as an image.
+     */
+    public function isOversized(string $path): bool
+    {
+        $image = Image::decodeBinary((string) Storage::disk(self::DISK)->get($path));
+
+        return $image->width() > self::SIZE || $image->height() > self::SIZE;
+    }
+
+    /**
+     * Store a smaller copy of a picture already in the bucket and return its
+     * path, leaving the original where it is.
+     *
+     * The copy is named after the original because live and staging share
+     * the bucket but not a database, so running against both lands on one
+     * file rather than two.
+     */
+    public function storeSmallerCopy(string $path): string
+    {
+        $encoded = Image::decodeBinary((string) Storage::disk(self::DISK)->get($path))
+            ->orient()
+            ->coverDown(self::SIZE, self::SIZE)
+            ->encodeUsingFormat(Format::WEBP, quality: self::QUALITY);
+
+        $copy = self::PATH.'/'.md5($path).'.webp';
+
+        Storage::disk(self::DISK)->put($copy, (string) $encoded);
+
+        return $copy;
+    }
+
+    /**
      * Remove a previously stored avatar, ignoring one that has already gone.
      *
      * Anything absolute belongs to somewhere else - an avatar service, or a
