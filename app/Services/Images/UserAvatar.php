@@ -11,7 +11,7 @@ use Intervention\Image\Laravel\Facades\Image;
 /**
  * Prepares and stores profile pictures on the DigitalOcean Spaces disk.
  *
- * Written to match what the Nova Avatar field produces so both entry points
+ * Used by both Settings and the Office's Avatar field, so both entry points
  * are interchangeable: a webp under "avatars/", referenced by that path and
  * served through the CDN.
  *
@@ -19,10 +19,13 @@ use Intervention\Image\Laravel\Facades\Image;
  * cropped to a circle whatever we do, so covering the square loses nothing
  * that was going to survive, and the alternative - bars down the sides of a
  * portrait photograph - would be visible everywhere the avatar appears.
+ *
+ * SIZE is a ceiling: a picture smaller than that is squared off at its own
+ * size rather than enlarged.
  */
 final class UserAvatar
 {
-    private const SIZE = 256;
+    private const SIZE = 250;
 
     private const QUALITY = 85;
 
@@ -37,7 +40,7 @@ final class UserAvatar
     {
         $encoded = Image::decodePath($file->getPathname())
             ->orient()
-            ->cover(self::SIZE, self::SIZE)
+            ->coverDown(self::SIZE, self::SIZE)
             ->encodeUsingFormat(Format::WEBP, quality: self::QUALITY);
 
         $path = self::PATH.'/'.Str::random(40).'.webp';

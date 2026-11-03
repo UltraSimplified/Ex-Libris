@@ -5,8 +5,10 @@ namespace App\Nova;
 use App\Models\Issue as IssueModel;
 use App\Nova\Fields\ActiveWriterToggle;
 use App\Nova\Filters\UserRole;
+use App\Services\Images\UserAvatar;
 use App\Support\InitialsAvatar;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\MergeValue;
 use Illuminate\Support\Facades\Storage;
 use Jacobfitzp\NovaCanvas\Canvas;
@@ -109,6 +111,11 @@ class User extends Resource
             Avatar::make('Avatar', 'avatar')
                 ->disk('do')
                 ->path('avatars')
+                ->store(fn (Request $request, object $model, string $attribute, string $requestAttribute): array => [
+                    $attribute => app(UserAvatar::class)->store($request->file($requestAttribute)),
+                ])
+                ->acceptedTypes('image/jpeg,image/png,image/webp')
+                ->rules('image', 'mimes:jpeg,jpg,png,webp', 'max:8192')
                 ->prunable()
                 ->nullable()
                 ->preview(fn ($value, $disk) => $value

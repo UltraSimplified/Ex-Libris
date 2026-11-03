@@ -3,6 +3,7 @@
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Intervention\Image\Laravel\Facades\Image;
 
 test('profile page is displayed', function () {
     $user = User::factory()->create();
@@ -103,6 +104,30 @@ test('a profile picture can be uploaded', function () {
 
     expect($avatar)->toStartWith('avatars/')->toEndWith('.webp');
     Storage::disk('do')->assertExists($avatar);
+
+    $stored = Image::decodeBinary(Storage::disk('do')->get($avatar));
+
+    expect($stored->width())->toBe(250)
+        ->and($stored->height())->toBe(250);
+});
+
+test('a small profile picture is not enlarged', function () {
+    Storage::fake('do');
+
+    $user = User::factory()->create(['avatar' => null]);
+
+    $this->actingAs($user)
+        ->patch(route('profile.update'), [
+            'name' => $user->name,
+            'email' => $user->email,
+            'avatar' => UploadedFile::fake()->image('face.jpg', 120, 80),
+        ])
+        ->assertSessionHasNoErrors();
+
+    $stored = Image::decodeBinary(Storage::disk('do')->get($user->refresh()->avatar));
+
+    expect($stored->width())->toBeLessThanOrEqual(120)
+        ->and($stored->width())->toBe($stored->height());
 });
 
 test('a new profile picture replaces the one it succeeds', function () {
