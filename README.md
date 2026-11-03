@@ -1,3 +1,4 @@
+[![Test and deploy](https://github.com/UltraSimplified/Ex-Libris/actions/workflows/deploy.yml/badge.svg)](https://github.com/UltraSimplified/Ex-Libris/actions/workflows/deploy.yml)
 # Ex-Libris
 Online magazine skeleton with event listings, shop, promoter and venue pages, with integrated adverts based on Laravel 13, Nova 5.
 

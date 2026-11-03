@@ -18,6 +18,7 @@ type Card = Pick<
     | 'cover_photo'
     | 'cover_alt_text'
     | 'published'
+    | 'status'
     | 'tag'
 >;
 
