@@ -29,11 +29,13 @@ use App\Http\Controllers\SwitchBackController;
 use App\Http\Controllers\WriterController;
 use App\Http\Controllers\WriterStatusController;
 use App\Http\Middleware\EnsureShopIsOpen;
+use App\Http\Middleware\SwitchBackOnLogout;
 use App\Models\Feature;
 use App\Models\Issue;
 use App\Support\SiteMeta;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use Laravel\Fortify\Http\Controllers\RegisteredUserController;
 
 /* handle ad clicks */
 Route::post('/ad/{advert}/impression', [AdvertEventController::class, 'impression'])
@@ -217,6 +219,14 @@ Route::get('magazine/stockists', [IssueController::class, 'stockists']);
 Route::get('dashboard', DashboardHomeController::class)
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
+
+/*
+ * Fortify's own register route with a limit added, which it has no setting
+ * for. Loaded after Fortify's, so this is the one that answers.
+ */
+Route::post('register', [RegisteredUserController::class, 'store'])
+    ->middleware([SwitchBackOnLogout::class, 'guest:web', 'throttle:register'])
+    ->name('register.store');
 
 /*
  * Staff who switched to somebody's account from the Office take their own

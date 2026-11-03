@@ -5,6 +5,7 @@ use App\Models\Promoter;
 use App\Models\User;
 use App\Models\Venue;
 use App\Models\Widget;
+use Illuminate\Support\Facades\URL;
 
 test('guests are redirected to the login page', function () {
     $response = $this->get(route('dashboard'));
@@ -37,7 +38,7 @@ test('a reader who logs in lands on the home page', function () {
         ->assertInertia(fn ($page) => $page->component('Welcome'));
 });
 
-test('a reader who registers lands on the home page', function () {
+test('a reader who registers is asked to verify their address, then lands on the home page', function () {
     $this->followingRedirects()
         ->post(route('register.store'), [
             'name' => 'Sam Reader',
@@ -45,6 +46,16 @@ test('a reader who registers lands on the home page', function () {
             'password' => 'password',
             'password_confirmation' => 'password',
         ])
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->component('auth/VerifyEmail'));
+
+    $reader = User::where('email', 'sam@example.com')->sole();
+
+    $this->followingRedirects()
+        ->get(URL::temporarySignedRoute('verification.verify', now()->addHour(), [
+            'id' => $reader->id,
+            'hash' => sha1($reader->email),
+        ]))
         ->assertOk()
         ->assertInertia(fn ($page) => $page->component('Welcome'));
 });

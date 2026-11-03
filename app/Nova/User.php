@@ -3,6 +3,7 @@
 namespace App\Nova;
 
 use App\Models\Issue as IssueModel;
+use App\Models\User as UserModel;
 use App\Nova\Fields\ActiveWriterToggle;
 use App\Nova\Filters\UserRole;
 use App\Services\Images\UserAvatar;
@@ -30,7 +31,7 @@ use Laravel\Nova\Panel;
 use Laravel\Nova\ResourceTool;
 
 /**
- * @extends \App\Nova\Resource<\App\Models\User>
+ * @extends \App\Nova\Resource<UserModel>
  */
 class User extends Resource
 {
@@ -39,9 +40,9 @@ class User extends Resource
     /**
      * The model the resource corresponds to.
      *
-     * @var class-string<\App\Models\User>
+     * @var class-string<UserModel>
      */
-    public static $model = \App\Models\User::class;
+    public static $model = UserModel::class;
 
     /**
      * The single value that should be used to represent the resource when being displayed.
@@ -302,5 +303,28 @@ class User extends Resource
     public function actions(NovaRequest $request): array
     {
         return [];
+    }
+
+    /**
+     * Staff typed the address themselves, so an account given out from the
+     * Office is ready to use, not waiting on an email nobody has been sent.
+     *
+     * @param  UserModel  $model
+     */
+    public static function afterCreate(NovaRequest $request, Model $model): void
+    {
+        if (filled($model->email)) {
+            $model->markEmailAsVerified();
+        }
+    }
+
+    /**
+     * @param  UserModel  $model
+     */
+    public static function afterUpdate(NovaRequest $request, Model $model): void
+    {
+        if ($model->wasChanged('email') && filled($model->email)) {
+            $model->markEmailAsVerified();
+        }
     }
 }

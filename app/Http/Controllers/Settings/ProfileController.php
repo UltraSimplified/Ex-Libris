@@ -75,6 +75,10 @@ class ProfileController extends Controller
             $this->avatars->delete($previousAvatar);
         }
 
+        if ($user->wasChanged('email')) {
+            $user->sendEmailVerificationNotification();
+        }
+
         return to_route('profile.edit');
     }
 

@@ -1,7 +1,9 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Laravel\Facades\Image;
 
@@ -34,6 +36,32 @@ test('profile information can be updated', function () {
     expect($user->name)->toBe('Test User');
     expect($user->email)->toBe('test@example.com');
     expect($user->email_verified_at)->toBeNull();
+});
+
+test('changing the email address sends a link to verify the new one', function () {
+    Notification::fake();
+
+    $user = User::factory()->create();
+
+    $this->actingAs($user)->patch(route('profile.update'), [
+        'name' => $user->name,
+        'email' => 'new-address@example.com',
+    ]);
+
+    Notification::assertSentTo($user, VerifyEmail::class);
+});
+
+test('saving the profile without changing the address sends nothing', function () {
+    Notification::fake();
+
+    $user = User::factory()->create();
+
+    $this->actingAs($user)->patch(route('profile.update'), [
+        'name' => 'A New Name',
+        'email' => $user->email,
+    ]);
+
+    Notification::assertNothingSent();
 });
 
 test('email verification status is unchanged when the email address is unchanged', function () {

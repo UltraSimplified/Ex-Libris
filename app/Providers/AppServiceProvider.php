@@ -2,14 +2,18 @@
 
 namespace App\Providers;
 
+use App\Mail\UntrackedLettrTransport;
 use App\Services\Shop\Payments\PaymentGateway;
 use App\Services\Shop\Payments\StripePaymentGateway;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Lettr\Laravel\Support\IdempotencyKeyGenerator;
+use Lettr\Lettr;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -27,6 +31,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+        $this->configureLettrTransport();
     }
 
     /**
@@ -53,5 +58,19 @@ class AppServiceProvider extends ServiceProvider
                 ->uncompromised()
             : null
         );
+    }
+
+    /**
+     * Replace the transport Lettr's own provider registered, which boots
+     * before this one, with one that sends without tracking.
+     */
+    protected function configureLettrTransport(): void
+    {
+        Mail::extend('lettr', fn (array $config = []): UntrackedLettrTransport => new UntrackedLettrTransport(
+            $this->app->make(Lettr::class),
+            $config['options'] ?? [],
+            $this->app->make(IdempotencyKeyGenerator::class),
+            (bool) config('lettr.idempotency.enabled', true),
+        ));
     }
 }

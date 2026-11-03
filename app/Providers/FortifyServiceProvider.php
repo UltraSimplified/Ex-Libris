@@ -87,5 +87,19 @@ class FortifyServiceProvider extends ServiceProvider
 
             return Limit::perMinute(5)->by($throttleKey);
         });
+
+        /*
+         * Every registration emails whatever address was typed, so this keeps
+         * the form from being used to send mail to strangers. Refusals land
+         * on the form like any other error, not on a bare 429 page.
+         */
+        RateLimiter::for('register', function (Request $request) {
+            $refuse = fn () => back()->withErrors(['email' => 'Too many sign-ups from here. Please try again later.']);
+
+            return [
+                Limit::perMinute(5)->by('minute:'.$request->ip())->response($refuse),
+                Limit::perHour(20)->by('hour:'.$request->ip())->response($refuse),
+            ];
+        });
     }
 }
