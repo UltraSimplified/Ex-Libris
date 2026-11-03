@@ -24,7 +24,7 @@
         "laravel/tinker": "^3.0",
         "laravel/wayfinder": "^0.1.14",
         "league/flysystem-aws-s3-v3": "^3.31",
-        "lettr/lettr-laravel": "*",
+        "lettr/lettr-laravel": "^2.8",
         "nesbot/carbon": "*",
         "outl1ne/nova-color-field": "^3.0",
         "outl1ne/nova-sortable": "^4.0",
