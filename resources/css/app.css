@@ -461,6 +461,40 @@ body:has([data-slot='sidebar-wrapper']) [data-slot='label'] {
 }
 
 /*
+ * For a Donorbox form in a page's Code embed, added as a class on the
+ * <dbox-widget> tag. It holds the form's room until its script has drawn it,
+ * so what follows is not drawn underneath and then pushed down. A style on
+ * the tag would not do: Donorbox rewrites that attribute when it loads, and
+ * a tag it has not reached yet is inline, which ignores heights.
+ *
+ * The form grows as it narrows. These are minimums set just under what it
+ * measures at each width, so the form can still grow past them, and leaves
+ * no gap beneath.
+ */
+.donorbox-form {
+    display: block;
+    min-height: 1090px;
+}
+
+@media (max-width: 430px) {
+    .donorbox-form {
+        min-height: 1110px;
+    }
+}
+
+@media (max-width: 390px) {
+    .donorbox-form {
+        min-height: 1195px;
+    }
+}
+
+@media (max-width: 360px) {
+    .donorbox-form {
+        min-height: 1260px;
+    }
+}
+
+/*
  * The cookie banner (scify/laravel-cookie-guard, added in app.blade.php)
  * in our own colours rather than its blues and greens. Its stylesheet loads
  * after this one, so the html prefix is what lets these settings win. Each
