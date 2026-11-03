@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Storage;
 use Throwable;
 
 /**
- * Brings profile pictures uploaded before the 250 x 250 limit down to it.
+ * Brings profile pictures uploaded before the 256 x 256 limit down to it.
  *
  * Originals stay in the bucket: live and staging share it, so a file this
  * database has finished with may still be the other one's avatar. Each change

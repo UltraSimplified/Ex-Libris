@@ -25,7 +25,7 @@ use Intervention\Image\Laravel\Facades\Image;
  */
 final class UserAvatar
 {
-    private const SIZE = 250;
+    private const SIZE = 256;
 
     private const QUALITY = 85;
 

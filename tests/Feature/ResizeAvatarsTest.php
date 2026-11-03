@@ -31,7 +31,7 @@ test('a dry run changes nothing', function () {
     expect(Storage::disk('do')->allFiles())->toBe(['avatars/big.png']);
 });
 
-test('an oversized avatar is replaced by a 250 by 250 webp and the original kept', function () {
+test('an oversized avatar is replaced by a 256 by 256 webp and the original kept', function () {
     $user = userWithStoredAvatar('avatars/big.png', 1080, 720);
     $lastEdited = $user->updated_at;
 
@@ -47,8 +47,8 @@ test('an oversized avatar is replaced by a 250 by 250 webp and the original kept
 
     $stored = Image::decodeBinary(Storage::disk('do')->get($user->avatar));
 
-    expect($stored->width())->toBe(250)
-        ->and($stored->height())->toBe(250);
+    expect($stored->width())->toBe(256)
+        ->and($stored->height())->toBe(256);
 });
 
 test('each change is noted so that it can be undone', function () {

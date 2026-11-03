@@ -107,8 +107,8 @@ test('a profile picture can be uploaded', function () {
 
     $stored = Image::decodeBinary(Storage::disk('do')->get($avatar));
 
-    expect($stored->width())->toBe(250)
-        ->and($stored->height())->toBe(250);
+    expect($stored->width())->toBe(256)
+        ->and($stored->height())->toBe(256);
 });
 
 test('a small profile picture is not enlarged', function () {

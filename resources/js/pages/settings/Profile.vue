@@ -142,7 +142,7 @@ const pickerButtonClass =
                                 </div>
                                 <p class="text-xs text-muted-foreground">
                                     JPEG, PNG or WebP, up to 8MB. It is squared
-                                    off to 250&times;250 at most, so a picture
+                                    off to 256&times;256 at most, so a picture
                                     that is already square keeps all of itself.
                                 </p>
 

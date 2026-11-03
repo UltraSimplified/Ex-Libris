@@ -10,7 +10,7 @@ use Laravel\Nova\Http\Requests\NovaRequest;
 
 /**
  * A picture uploaded in the Office comes out the same as one uploaded in
- * Settings: a webp no bigger than 250 x 250.
+ * Settings: a webp no bigger than 256 x 256.
  */
 beforeEach(function () {
     Storage::fake('do');
@@ -33,7 +33,7 @@ function officeAvatarUpload(User $user, UploadedFile $file): array
     return [$field, $request];
 }
 
-test('a picture uploaded in the Office is stored as a 250 by 250 webp', function () {
+test('a picture uploaded in the Office is stored as a 256 by 256 webp', function () {
     $user = User::factory()->create(['avatar' => null]);
 
     [$field, $request] = officeAvatarUpload($user, UploadedFile::fake()->image('face.png', 1600, 900));
@@ -44,8 +44,8 @@ test('a picture uploaded in the Office is stored as a 250 by 250 webp', function
 
     $stored = Image::decodeBinary(Storage::disk('do')->get($user->avatar));
 
-    expect($stored->width())->toBe(250)
-        ->and($stored->height())->toBe(250);
+    expect($stored->width())->toBe(256)
+        ->and($stored->height())->toBe(256);
 });
 
 test('a new picture in the Office removes the one it replaces', function () {
