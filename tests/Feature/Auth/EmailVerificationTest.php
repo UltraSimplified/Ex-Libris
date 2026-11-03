@@ -95,6 +95,40 @@ test('already verified user visiting verification link is redirected without fir
     expect($user->fresh()->hasVerifiedEmail())->toBeTrue();
 });
 
+test('a link opened while logged in as somebody else explains itself and verifies nobody', function () {
+    $owner = User::factory()->unverified()->create();
+    $other = User::factory()->unverified()->create();
+
+    $verificationUrl = URL::temporarySignedRoute(
+        'verification.verify',
+        now()->addMinutes(60),
+        ['id' => $owner->id, 'hash' => sha1($owner->email)]
+    );
+
+    $this->actingAs($other)->get($verificationUrl)
+        ->assertForbidden()
+        ->assertInertia(fn ($page) => $page->component('auth/VerifyEmailWrongAccount'));
+
+    expect($owner->fresh()->hasVerifiedEmail())->toBeFalse()
+        ->and($other->fresh()->hasVerifiedEmail())->toBeFalse();
+});
+
+test('an expired link is not mistaken for one meant for another account', function () {
+    $user = User::factory()->unverified()->create();
+
+    $expiredUrl = URL::temporarySignedRoute(
+        'verification.verify',
+        now()->subMinute(),
+        ['id' => $user->id, 'hash' => sha1($user->email)]
+    );
+
+    $this->actingAs($user)->get($expiredUrl)
+        ->assertForbidden()
+        ->assertDontSee('VerifyEmailWrongAccount');
+
+    expect($user->fresh()->hasVerifiedEmail())->toBeFalse();
+});
+
 /**
  * The migration that marks accounts from before verification was required.
  */

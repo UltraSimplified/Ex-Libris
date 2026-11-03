@@ -8,7 +8,7 @@ on:
       migrate:
         description: Run the waiting database migrations on staging and live
         type: boolean
-        default: false
+        default: true
 
 permissions:
   contents: read
@@ -76,7 +76,7 @@ jobs:
     with:
       environment: staging
       url: https://staging.goodonpaper.info/
-      migrate: ${{ github.event_name == 'workflow_dispatch' && inputs.migrate }}
+      migrate: ${{ github.event_name == 'push' || inputs.migrate }}
     secrets: inherit
 
   live:
@@ -86,5 +86,5 @@ jobs:
     with:
       environment: production
       url: https://www.goodonpaper.info/
-      migrate: ${{ github.event_name == 'workflow_dispatch' && inputs.migrate }}
+      migrate: ${{ github.event_name == 'push' || inputs.migrate }}
     secrets: inherit

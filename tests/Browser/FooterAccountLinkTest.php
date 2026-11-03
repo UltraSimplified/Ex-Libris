@@ -12,17 +12,20 @@ const FOOTER_ACCOUNT = '.site-footer a[href="/dashboard/"]';
 
 /**
  * An account that manages no venue, promotes nothing and writes nothing
- * has no dashboard yet, so the footer's Account link signs it out instead.
+ * still has a dashboard, and logs out from there rather than the footer.
  */
-test('a reader\'s Account link logs them out', function () {
+test('a reader\'s Account link goes to the dashboard, where they can log out', function () {
     $reader = User::factory()->create(['name' => 'Sam Reader']);
     $this->actingAs($reader);
 
     visit('/listings')
-        ->assertDontSeeLink(FOOTER_ACCOUNT)
-        ->click('Log out Sam Reader')
         ->assertSeeLink(FOOTER_ACCOUNT)
         ->assertDontSee('Log out Sam Reader')
+        ->click(FOOTER_ACCOUNT)
+        ->assertPathIs('/dashboard/')
+        ->click('Log out')
+        ->assertPathIs('/')
+        ->assertSeeLink(FOOTER_ACCOUNT)
         ->assertNoJavaScriptErrors();
 
     $this->assertGuest();

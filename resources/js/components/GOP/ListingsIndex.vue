@@ -11,6 +11,7 @@ import { useAdvertLineUp } from '@/composables/useAdvertLineUp';
 import { useBookmarks } from '@/composables/useBookmarks';
 import { resolvePlaceholders } from '@/composables/usePlaceholders.js';
 import { useScrollReveal } from '@/composables/useScrollReveal';
+import { collapseOnLeave } from '@/lib/collapseOnLeave';
 import { formatListingDates } from '@/lib/listingDates';
 import { register } from '@/routes';
 import type { Advert, Listing, Promoter, Venue } from '@/types/global';
@@ -71,7 +72,7 @@ const applyDates = () => {
 
 const page = usePage();
 const { containerRef, revealAll } = useScrollReveal();
-const { signedIn, count: bookmarkCount } = useBookmarks();
+const { signedIn, count: bookmarkCount, isBookmarked } = useBookmarks();
 const props = defineProps<Props>();
 
 /**
@@ -90,10 +91,16 @@ const emit = defineEmits<{ advertsShown: [shown: boolean] }>();
 
 /**
  * Listings with resolved image paths — CDN-prefixed where a thumbnail exists,
- * or a deterministic local placeholder where it does not.
+ * or a deterministic local placeholder where it does not. My Bookmarks goes by
+ * what is saved now, so a row leaves the moment its heart is emptied.
  */
 const resolvedListings = computed(() =>
-    resolvePlaceholders(props.listings, page.props.cdnUrl),
+    resolvePlaceholders(
+        props.bookmarked
+            ? props.listings.filter(({ id }) => isBookmarked(id))
+            : props.listings,
+        page.props.cdnUrl,
+    ),
 );
 
 /*
@@ -433,7 +440,7 @@ watch(search, () => revealAll());
             </div>
         </div>
     </div>
-    <div v-if="visibleListings.length > 0">
+    <div>
         <div
             ref="containerRef"
             class="grid grid-cols-1 divide-y divide-silver border-silver md:border-l"
@@ -445,7 +452,10 @@ watch(search, () => revealAll());
                 the group itself would hand the observer a component rather
                 than an element, so it goes on the grid.
             -->
-            <TransitionGroup name="listing">
+            <TransitionGroup
+                name="listing"
+                v-on="props.bookmarked ? collapseOnLeave : {}"
+            >
                 <div v-for="row in rows" :key="row.key">
                     <ListingAdvert
                         v-if="row.kind === 'advert'"
@@ -456,7 +466,11 @@ watch(search, () => revealAll());
             </TransitionGroup>
         </div>
     </div>
-    <div v-else class="border-silver px-5 py-5 md:border-l">
+
+    <div
+        v-if="visibleListings.length === 0"
+        class="border-silver px-5 py-5 md:border-l"
+    >
         <h1 v-if="filtering" class="font-bold uppercase">
             Nothing matches &ldquo;{{ search.trim() }}&rdquo;
         </h1>
@@ -471,11 +485,21 @@ watch(search, () => revealAll());
 /*
  * Rows fade rather than blink out. A leaving row keeps its place until the
  * fade finishes and then collapses, so the dividers between rows never
- * outlive what they were dividing.
+ * outlive what they were dividing. On My Bookmarks it closes up as it fades,
+ * as only one leaves at a time there, not a whole search's worth.
  */
 .listing-enter-active,
 .listing-leave-active {
-    transition: opacity 0.25s ease;
+    transition:
+        opacity 0.25s ease,
+        height 0.25s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .listing-enter-active,
+    .listing-leave-active {
+        transition: none;
+    }
 }
 
 .listing-enter-from,

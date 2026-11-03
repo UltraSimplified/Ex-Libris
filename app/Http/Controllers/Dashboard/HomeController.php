@@ -10,31 +10,21 @@ use App\Models\Venue;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * The dashboard's front page: the account itself, each venue and promoter it
- * manages with how many of their events are on the site, then the events it
- * has saved.
- *
- * Only accounts with something to see get this page - venue managers,
- * promoters and writers, staff holding every role, and anybody with a saved
- * event still to come. Anybody else has nothing here yet, so they are sent
- * to the home page. Logging in and registering both aim here, so that is
- * where they leave a reader too.
+ * The dashboard's front page, for every account: the account itself, each
+ * venue and promoter it manages with how many of their events are on the site,
+ * then the events it has saved. Logging in and verifying an address both land
+ * here, and it is where an account logs out from.
  */
 class HomeController extends Controller
 {
-    public function __invoke(Request $request): Response|RedirectResponse
+    public function __invoke(Request $request): Response
     {
         $user = $request->user();
-
-        if (! $user->canOpenDashboard()) {
-            return to_route('home');
-        }
 
         return Inertia::render('Dashboard', [
             'account' => [

@@ -8,13 +8,14 @@ import BookmarkedListingsCalendar from '@/components/GOP/BookmarkedListingsCalen
 import ListingRow from '@/components/GOP/ListingRow.vue';
 import { useBookmarks } from '@/composables/useBookmarks';
 import { resolvePlaceholders } from '@/composables/usePlaceholders.js';
+import { collapseOnLeave } from '@/lib/collapseOnLeave';
 import type { BookmarkedListing } from '@/types/global';
 
 /**
  * The events an account has saved that have not finished, on the Dashboard,
- * in whichever of three layouts the reader last chose on this device: each as
- * a brief listing row with what can be done with it beneath, or a
- * narrow grid of pictures and titles, or months of dates.
+ * in whichever of three layouts the reader last chose on this device, compact
+ * until they choose: each as a brief listing row with what can be done with it
+ * beneath, or a narrow grid of pictures and titles, or months of dates.
  *
  * Without the other panels' padding, as a row brings its own and the row's
  * hover has to reach the panel's edges.
@@ -34,7 +35,7 @@ type Layout = (typeof layouts)[number]['value'];
 
 const LAYOUT_KEY = 'bookmarked-listings-layout';
 
-const layout = ref<Layout>('full');
+const layout = ref<Layout>('compact');
 
 onMounted(() => {
     const stored = localStorage.getItem(LAYOUT_KEY);
@@ -46,21 +47,14 @@ onMounted(() => {
 
 watch(layout, (chosen) => localStorage.setItem(LAYOUT_KEY, chosen));
 
-const resolvedListings = computed(
-    () =>
+/** Goes by what is saved now, so a row leaves the moment its heart is emptied. */
+const savedListings = computed(() =>
+    (
         resolvePlaceholders(
             props.listings,
             page.props.cdnUrl,
-        ) as BookmarkedListing[],
-);
-
-/**
- * The full layout keeps a row whose heart has just been emptied, so it can be
- * filled again. The other two have no heart, and a date picked out for an
- * event no longer saved would be wrong, so they go by what is saved now.
- */
-const savedListings = computed(() =>
-    resolvedListings.value.filter(({ id }) => isBookmarked(id)),
+        ) as BookmarkedListing[]
+    ).filter(({ id }) => isBookmarked(id)),
 );
 </script>
 
@@ -111,17 +105,20 @@ const savedListings = computed(() =>
                 </div>
             </fieldset>
 
-            <ul
+            <TransitionGroup
                 v-if="layout === 'full'"
+                tag="ul"
+                name="bookmarked-row"
                 class="divide-y divide-sidebar-border/70 dark:divide-sidebar-border"
+                v-on="collapseOnLeave"
             >
-                <li v-for="listing in resolvedListings" :key="listing.id">
+                <li v-for="listing in savedListings" :key="listing.id">
                     <ListingRow :listing="listing" brief />
                     <BookmarkedListingActions :listing="listing" />
                 </li>
-            </ul>
+            </TransitionGroup>
 
-            <p v-else-if="!savedListings.length" class="px-5 pb-6">
+            <p v-if="!savedListings.length" class="px-5 pb-6">
                 Nothing bookmarked at the moment.
             </p>
 
@@ -133,7 +130,31 @@ const savedListings = computed(() =>
                 </ul>
             </div>
 
-            <BookmarkedListingsCalendar v-else :listings="savedListings" />
+            <BookmarkedListingsCalendar
+                v-else-if="layout === 'calendar'"
+                :listings="savedListings"
+            />
         </section>
     </div>
 </template>
+
+<style scoped>
+.bookmarked-row-enter-active,
+.bookmarked-row-leave-active {
+    transition:
+        opacity 0.25s ease,
+        height 0.25s ease;
+}
+
+.bookmarked-row-enter-from,
+.bookmarked-row-leave-to {
+    opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .bookmarked-row-enter-active,
+    .bookmarked-row-leave-active {
+        transition: none;
+    }
+}
+</style>

@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { EnvelopeIcon } from '@heroicons/vue/24/outline';
-import { Link, router, usePage } from '@inertiajs/vue3';
+import { Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
-import { logout } from '@/routes';
 
 interface Props {
     /**
@@ -12,21 +11,6 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-const page = usePage();
-
-/**
- * Somebody signed in with nothing to see on the Dashboard - no role, and no
- * saved event still to come - gets the way to sign out in place of Account.
- * Staff hold every role, so they keep it.
- */
-const reader = computed(
-    () =>
-        Boolean(page.props.auth?.user) && !page.props.auth.canOpenDashboard,
-);
-
-/** Prefetched pages were drawn for the account, so they go with it. */
-const signOut = () => router.flushAll();
-
 /**
  * Brings back the cookie banner from the page shell (app.blade.php), so a
  * visitor can change their mind. It is left alone if it is already showing.
@@ -121,18 +105,7 @@ const word = computed(() => {
                                 <li
                                     class="text-black hover:text-gray-600 dark:text-white dark:hover:text-gray-400"
                                 >
-                                    <Link
-                                        v-if="reader"
-                                        :href="logout()"
-                                        as="button"
-                                        class="cursor-pointer text-left"
-                                        @click="signOut"
-                                        >Log out
-                                        {{ page.props.auth.user.name }}</Link
-                                    >
-                                    <Link v-else href="/dashboard/"
-                                        >Account.</Link
-                                    >
+                                    <Link href="/dashboard/">Account.</Link>
                                 </li>
                                 <li
                                     class="text-black hover:text-gray-600 dark:text-white dark:hover:text-gray-400"

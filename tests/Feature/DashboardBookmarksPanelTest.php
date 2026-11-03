@@ -86,13 +86,14 @@ test('a reader with an event still to come gets the Dashboard', function () {
         );
 });
 
-test('a reader whose saved events have all finished is sent to the home page', function () {
+test('a reader whose saved events have all finished still gets the Dashboard, with none listed', function () {
     $reader = User::factory()->create();
     $reader->bookmarks()->attach(Listing::factory()->create(['start_date' => today()->subDay()]));
 
     $this->actingAs($reader)
         ->get(route('dashboard'))
-        ->assertRedirect(route('home'));
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->component('Dashboard')->where('bookmarkedListings', []));
 });
 
 test('a reader with an event still to come lands on the Dashboard on logging in', function () {
@@ -119,7 +120,7 @@ test('an event saved before logging in counts straight away', function () {
         );
 });
 
-test('the site\'s links are told who the Dashboard has anything for', function (array $role, ?int $startsInDays, bool $expected) {
+test('every kind of account gets the Dashboard', function (array $role, ?int $startsInDays) {
     $user = User::factory()->create($role);
 
     if ($startsInDays !== null) {
@@ -127,25 +128,27 @@ test('the site\'s links are told who the Dashboard has anything for', function (
     }
 
     $this->actingAs($user)
-        ->get('/listings')
-        ->assertInertia(fn ($page) => $page->where('auth.canOpenDashboard', $expected));
+        ->get(route('dashboard'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->component('Dashboard'));
 })->with([
-    'an account with a role' => [['is_writer' => true], null, true],
-    'a reader with an event to come' => [[], 1, true],
-    'a reader with a finished event' => [[], -1, false],
-    'a reader with nothing saved' => [[], null, false],
+    'an account with a role' => [['is_writer' => true], null],
+    'a reader with an event to come' => [[], 1],
+    'a reader with a finished event' => [[], -1],
+    'a reader with nothing saved' => [[], null],
 ]);
 
 /*
- * Saving an event opens the Dashboard, but not the account: who staff may
- * switch to is still decided by what it runs.
+ * Who staff may switch to is decided by what an account runs, not by its
+ * having a Dashboard, which everybody does.
  */
 test('saving an event does not let staff switch to a reader', function () {
     $reader = User::factory()->create();
     $reader->bookmarks()->attach(Listing::factory()->create(['start_date' => today()->addDay()]));
 
-    expect($reader->canOpenDashboard())->toBeTrue()
-        ->and($reader->hasDashboard())->toBeFalse()
+    $this->actingAs($reader)->get(route('dashboard'))->assertOk();
+
+    expect($reader->hasDashboard())->toBeFalse()
         ->and($reader->canBeImpersonated())->toBeFalse();
 });
 

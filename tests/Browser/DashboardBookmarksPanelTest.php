@@ -36,6 +36,14 @@ function waitForAnswer(object $page, string $path): void
     expect($page->script($answered))->toBeTrue();
 }
 
+/**
+ * The Dashboard with the panel in its full layout, which has to be asked for.
+ */
+function visitFullLayout(): object
+{
+    return visit('/dashboard')->click('Full');
+}
+
 const TICKET_LINK = 'a[href*="tickets.example.com"]';
 const HEART = '#bookmarked-listings [aria-pressed]';
 
@@ -49,7 +57,7 @@ test('the panel shows a saved event, and shows nothing with none saved', functio
 
     panelListing($user);
 
-    visit('/dashboard')
+    visitFullLayout()
         ->assertSee('Bookmarked listings.')
         ->assertSee('Village Fete')
         ->assertSee('Tickets purchased')
@@ -61,7 +69,7 @@ test('a free event asks whether you are going', function () {
     panelListing($user, ['ticket_price' => 'Free']);
     $this->actingAs($user);
 
-    visit('/dashboard')
+    visitFullLayout()
         ->assertSee('Going')
         ->assertDontSee('Tickets purchased')
         ->assertNoJavaScriptErrors();
@@ -73,7 +81,7 @@ test('the full layout leaves out the price and the promoter, which the listings 
     $listing = panelListing($user, ['ticket_price' => '£12', 'promoter_id' => $promoter->id]);
     $this->actingAs($user);
 
-    visit('/dashboard')
+    visitFullLayout()
         ->assertSeeIn('#bookmarked-listings', 'Village Fete')
         ->assertSeeIn('#bookmarked-listings', $listing->venue->name)
         ->assertDontSee('Price:')
@@ -92,7 +100,7 @@ test('a click on the row opens the event, and a click on the controls stays put'
     $listing = panelListing($user);
     $this->actingAs($user);
 
-    visit('/dashboard')
+    visitFullLayout()
         ->click('#attending-'.$listing->id)
         ->assertPathIs('/dashboard')
         ->click('Copy link')
@@ -108,7 +116,7 @@ test('ticking saves, swaps out the ticket link, and unticking brings it back', f
     $checkbox = '#attending-'.$listing->id;
     $this->actingAs($user);
 
-    $page = visit('/dashboard')->assertVisible(TICKET_LINK);
+    $page = visitFullLayout()->assertVisible(TICKET_LINK);
 
     $page->click($checkbox)
         ->assertAttribute($checkbox, 'aria-checked', 'true')
@@ -129,7 +137,7 @@ test('a tick that cannot be saved is taken back', function () {
     $checkbox = '#attending-'.$listing->id;
     $this->actingAs($user);
 
-    $page = visit('/dashboard')->assertVisible($checkbox);
+    $page = visitFullLayout()->assertVisible($checkbox);
 
     // Gone in another tab, so the request is refused.
     $user->bookmarks()->detach();
@@ -147,7 +155,7 @@ test('going to the event and back keeps a tick', function () {
     $checkbox = '#attending-'.$listing->id;
     $this->actingAs($user);
 
-    $page = visit('/dashboard')->click($checkbox);
+    $page = visitFullLayout()->click($checkbox);
     waitForAnswer($page, '/attending');
 
     $page->click('Village Fete')
@@ -159,47 +167,58 @@ test('going to the event and back keeps a tick', function () {
         ->assertNoJavaScriptErrors();
 });
 
-test('removing a bookmark keeps the row, and going to the event and back leaves it removed', function () {
+test('removing a bookmark takes its row away, and going to another event and back leaves it gone', function () {
     $user = User::factory()->create();
-    $listing = panelListing($user);
-    $checkbox = '#attending-'.$listing->id;
+    panelListing($user);
+    $other = panelListing($user, ['title' => 'Harvest Supper', 'slug' => 'harvest-supper', 'start_date' => today()->addDays(2)]);
     $this->actingAs($user);
 
-    $page = visit('/dashboard')->click(HEART);
+    $page = visitFullLayout()->click('#bookmarked-listings li:first-child [aria-pressed]');
     waitForAnswer($page, '/bookmark');
 
-    $this->assertDatabaseCount('bookmarks', 0);
+    $this->assertDatabaseCount('bookmarks', 1);
 
-    $page->assertSee('Village Fete')
-        ->assertAttribute(HEART, 'aria-pressed', 'false')
-        ->assertMissing($checkbox)
-        ->assertMissing(TICKET_LINK)
-        ->assertSee('Add to calendar')
-        ->click('Village Fete')
-        ->assertPathIs('/listings/'.$listing->id.'/village-fete')
+    $page->waitForText('Harvest Supper')
+        ->wait(0.4)
+        ->assertDontSee('Village Fete')
+        ->assertSee('Harvest Supper')
+        ->click('Harvest Supper')
+        ->assertPathIs('/listings/'.$other->id.'/harvest-supper')
         ->back()
         ->assertPathIs('/dashboard')
-        ->assertAttribute(HEART, 'aria-pressed', 'false')
+        ->assertDontSee('Village Fete')
+        ->assertSee('Harvest Supper')
         ->assertNoJavaScriptErrors();
 });
 
-test('saving it again brings the checkbox back unticked', function () {
+test('removing the last bookmark says there are none left', function () {
     $user = User::factory()->create();
-    $listing = panelListing($user);
-    $checkbox = '#attending-'.$listing->id;
-    $user->bookmarks()->updateExistingPivot($listing->id, ['attending' => true]);
+    panelListing($user);
     $this->actingAs($user);
 
-    $page = visit('/dashboard')
-        ->assertAttribute($checkbox, 'aria-checked', 'true')
-        ->click(HEART);
+    $page = visitFullLayout()->click(HEART);
     waitForAnswer($page, '/bookmark');
 
-    $page->assertMissing($checkbox)
-        ->click(HEART)
-        ->assertAttribute($checkbox, 'aria-checked', 'false')
-        ->assertVisible(TICKET_LINK)
+    $page->waitForText('Nothing bookmarked at the moment.')
+        ->wait(0.4)
+        ->assertDontSee('Village Fete')
         ->assertNoJavaScriptErrors();
+});
+
+test('a bookmark that cannot be removed comes back', function () {
+    $user = User::factory()->create();
+    panelListing($user);
+    $this->actingAs($user);
+
+    $page = visitFullLayout();
+    $page->script("window.fetch = () => Promise.resolve(new Response('', { status: 500 }))");
+
+    $page->click(HEART)
+        ->wait(0.6)
+        ->assertSee('Village Fete')
+        ->assertAttribute(HEART, 'aria-pressed', 'true');
+
+    $this->assertDatabaseCount('bookmarks', 1);
 });
 
 test('the share and calendar links carry the event', function () {
@@ -207,7 +226,7 @@ test('the share and calendar links carry the event', function () {
     $listing = panelListing($user);
     $this->actingAs($user);
 
-    $page = visit('/dashboard');
+    $page = visitFullLayout();
 
     $message = $page->script(<<<'JS'
         new URL(document.querySelector('a[href^="https://wa.me/"]').href).searchParams.get('text')
@@ -226,7 +245,7 @@ test('copying gives the address, or shows it where the clipboard refuses', funct
     $listing = panelListing($user);
     $this->actingAs($user);
 
-    $page = visit('/dashboard');
+    $page = visitFullLayout();
 
     // A clipboard that refuses, as one can on any phone.
     $page->script(<<<'JS'
@@ -362,7 +381,7 @@ test('compact shows the picture, title and date, and a click opens the event', f
     $listing = panelListing($user, ['start_date' => '2099-03-05']);
     $this->actingAs($user);
 
-    visit('/dashboard')
+    visitFullLayout()
         ->assertSee('Tickets purchased')
         ->click('Compact')
         ->assertDontSee('Tickets purchased')
@@ -375,17 +394,27 @@ test('compact shows the picture, title and date, and a click opens the event', f
         ->assertNoJavaScriptErrors();
 });
 
-test('the chosen layout is still chosen after a reload', function () {
+test('the panel starts compact, until something else is chosen', function () {
     $user = User::factory()->create();
     panelListing($user);
     $this->actingAs($user);
 
     visit('/dashboard')
-        ->click('Compact')
-        ->assertDontSee('Tickets purchased')
-        ->refresh()
         ->assertSee('Village Fete')
         ->assertDontSee('Tickets purchased')
+        ->assertNoJavaScriptErrors();
+});
+
+test('the chosen layout is still chosen after a reload', function () {
+    $user = User::factory()->create();
+    panelListing($user);
+    $this->actingAs($user);
+
+    visitFullLayout()
+        ->assertSee('Tickets purchased')
+        ->refresh()
+        ->assertSee('Village Fete')
+        ->assertSee('Tickets purchased')
         ->assertNoJavaScriptErrors();
 });
 
@@ -458,10 +487,10 @@ test('a bookmark removed in the full layout is gone from the other two', functio
     panelListing($user);
     $this->actingAs($user);
 
-    $page = visit('/dashboard')->click(HEART);
+    $page = visitFullLayout()->click(HEART);
     waitForAnswer($page, '/bookmark');
 
-    $page->assertSee('Village Fete')
+    $page->assertSee('Nothing bookmarked at the moment.')
         ->click('Compact')
         ->assertDontSee('Village Fete')
         ->assertSee('Nothing bookmarked at the moment.')
@@ -469,7 +498,7 @@ test('a bookmark removed in the full layout is gone from the other two', functio
         ->assertMissing('[data-day]')
         ->assertSee('Nothing bookmarked at the moment.')
         ->click('Full')
-        ->assertSee('Village Fete')
+        ->assertDontSee('Village Fete')
         ->assertNoJavaScriptErrors();
 });
 

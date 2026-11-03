@@ -97,12 +97,6 @@ class HandleInertiaRequests extends Middleware
                     ?? array_fill_keys(User::ROLES, false),
 
                 /*
-                 * Whether the Dashboard has anything for this account, so
-                 * the site's own links only send it there when it has.
-                 */
-                'canOpenDashboard' => fn (): bool => (bool) $request->user()?->canOpenDashboard(),
-
-                /*
                  * Where the office is, for the people allowed in it, and
                  * null for everybody else. Taken from Nova's own config so
                  * the sidebar cannot drift from the door.

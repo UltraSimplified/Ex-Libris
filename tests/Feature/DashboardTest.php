@@ -20,25 +20,26 @@ test('an account with a role can visit the dashboard', function (string $role) {
 })->with(User::ROLES);
 
 /**
- * Somebody who manages no venue, promotes nothing and writes nothing -
- * signed up to keep their bookmarks - has no dashboard yet.
+ * Somebody who manages no venue, promotes nothing and writes nothing still
+ * has an account to look after.
  */
-test('a reader is sent from the dashboard to the home page', function () {
+test('a reader with nothing saved gets the dashboard', function () {
     $this->actingAs(User::factory()->create())
         ->get(route('dashboard'))
-        ->assertRedirect(route('home'));
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->component('Dashboard'));
 });
 
-test('a reader who logs in lands on the home page', function () {
+test('a reader who logs in lands on the dashboard', function () {
     $reader = User::factory()->create();
 
     $this->followingRedirects()
         ->post(route('login.store'), ['email' => $reader->email, 'password' => 'password'])
         ->assertOk()
-        ->assertInertia(fn ($page) => $page->component('Welcome'));
+        ->assertInertia(fn ($page) => $page->component('Dashboard'));
 });
 
-test('a reader who registers is asked to verify their address, then lands on the home page', function () {
+test('a reader who registers is asked to verify their address, then lands on the dashboard', function () {
     $this->followingRedirects()
         ->post(route('register.store'), [
             'name' => 'Sam Reader',
@@ -57,7 +58,7 @@ test('a reader who registers is asked to verify their address, then lands on the
             'hash' => sha1($reader->email),
         ]))
         ->assertOk()
-        ->assertInertia(fn ($page) => $page->component('Welcome'));
+        ->assertInertia(fn ($page) => $page->component('Dashboard'));
 });
 
 test('a promoter who logs in lands on the dashboard', function () {

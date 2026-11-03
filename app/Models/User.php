@@ -257,18 +257,6 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Whether this account has anything to see on the Dashboard: what it
-     * runs, or events it has saved that are still to come.
-     *
-     * Deliberately not part of hasDashboard(), which says who staff may
-     * switch to: saving an event should not open an account to that.
-     */
-    public function canOpenDashboard(): bool
-    {
-        return $this->hasDashboard() || $this->bookmarks()->current()->exists();
-    }
-
-    /**
      * Whether staff may switch to this account from the Office, to see its
      * dashboard as its owner does. Only accounts with a dashboard, and
      * never another member of staff: switching to one would lend its Office

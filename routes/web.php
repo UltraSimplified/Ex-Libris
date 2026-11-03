@@ -207,14 +207,8 @@ Route::get('magazine/archives', [IssueController::class, 'archives'])->name('Arc
 Route::get('magazine/stockists', [IssueController::class, 'stockists']);
 
 /*
- * The account page belongs to venue managers, promoters and writers, with
- * staff holding every role, and to anybody with a saved event still to come.
- * Anybody else has nothing here yet, so they are sent to the home page.
- * Logging in and registering both aim here, so that is where they leave a
- * reader too.
- *
- * Only this one route redirects: every other dashboard page stays
- * reachable, so staff can still see what a promoter sees.
+ * The account page, for every account once its address is verified. Logging
+ * in and verifying both land here.
  */
 Route::get('dashboard', DashboardHomeController::class)
     ->middleware(['auth', 'verified'])

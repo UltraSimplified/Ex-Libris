@@ -38,8 +38,6 @@ export type Auth = {
     /** Whether this account has anything to look at under Orders. */
     hasOrders: boolean;
     roles: Roles;
-    /** Whether the Dashboard has anything for this account. */
-    canOpenDashboard: boolean;
     /** Where the office is, for staff; null for everybody else. */
     office: string | null;
     /** Who switched to this account from the Office, while they are in it. */

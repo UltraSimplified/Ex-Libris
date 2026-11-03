@@ -16,6 +16,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 new OomBootstrapper()->bootstrap();
@@ -84,6 +85,17 @@ return Application::configure(basePath: dirname(__DIR__))
 
             if ($request->is('office/*') || $request->is('nova-api/*') || $request->expectsJson()) {
                 return null;
+            }
+
+            /*
+             * A verification link opened while logged in as somebody else,
+             * which is easily done with two accounts and two browsers. An
+             * expired link is refused differently and is not this.
+             */
+            if ($request->routeIs('verification.verify') && $e instanceof AccessDeniedHttpException) {
+                return Inertia::render('auth/VerifyEmailWrongAccount')
+                    ->toResponse($request)
+                    ->setStatusCode($e->getStatusCode());
             }
 
             if (! in_array($e->getStatusCode(), [404, 410], true)) {

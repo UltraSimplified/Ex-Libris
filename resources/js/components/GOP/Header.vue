@@ -3,13 +3,11 @@ import {
     ArrowUturnLeftIcon,
     ClipboardDocumentCheckIcon,
     CubeIcon,
-    ShoppingBagIcon,
 } from '@heroicons/vue/24/outline';
 import { Link, usePage } from '@inertiajs/vue3';
 import { ref, computed, nextTick, onMounted, onUnmounted, watch } from 'vue';
 import type { Ref } from 'vue';
 import { show as basketShow } from '@/actions/App/Http/Controllers/BasketController';
-import { index as ordersIndex } from '@/actions/App/Http/Controllers/Dashboard/OrderController';
 import { category as shopCategoryRoute } from '@/actions/App/Http/Controllers/ShopController';
 import { dashboard, switchBack } from '@/routes';
 
@@ -26,26 +24,14 @@ const page = usePage();
 /** Where the Office is, for the people let in, and null for anyone else. */
 const office = computed(() => page.props.auth?.office ?? null);
 
-/**
- * Whether to offer Orders here: to somebody who has bought from the shop
- * but has no dashboard, whose sidebar would otherwise be the only way in.
- */
-const showOrders = computed(
-    () => !!page.props.auth?.hasOrders && !hasDashboard.value,
-);
-
 /** How many things are in the basket: nought while the shop is closed. */
 const basketCount = computed(() => page.props.basket?.count ?? 0);
 
 /** Who switched to this account from the Office, while they are in it. */
 const switchedFrom = computed(() => page.props.auth?.switchedFrom ?? null);
 
-/**
- * Whether the Dashboard has anything for this account: it holds a role, as
- * staff all do, or has saved an event still to come. Anybody else has
- * nothing there yet.
- */
-const hasDashboard = computed(() => !!page.props.auth?.canOpenDashboard);
+/** Every account has a dashboard, so this is whether anybody is logged in. */
+const hasDashboard = computed(() => !!page.props.auth?.user);
 
 const showMenu = ref(false);
 
@@ -466,7 +452,7 @@ onUnmounted(() => {
         <nav class="sm:h-full md:flex md:items-center">
             <div
                 :class="
-                    office || hasDashboard || showOrders || switchedFrom
+                    office || hasDashboard || switchedFrom
                         ? 'pt-8 pb-4'
                         : 'py-8'
                 "
@@ -480,13 +466,13 @@ onUnmounted(() => {
                     </Link>
                     <!--
                         The ways in for signed-in accounts: the Office for
-                        the people let in, and the dashboard for anyone with
-                        a role. Set close together, with less padding under
+                        the people let in, and the dashboard for everybody.
+                        Set close together, with less padding under
                         them, so they add little to the masthead's height.
                     -->
                     <div
                         v-if="
-                            office || hasDashboard || showOrders || switchedFrom
+                            office || hasDashboard || switchedFrom
                         "
                         class="ml-5 flex flex-col items-start gap-0.5"
                     >
@@ -509,17 +495,6 @@ onUnmounted(() => {
                                 aria-hidden="true"
                             />
                             Dashboard
-                        </Link>
-                        <Link
-                            v-if="showOrders"
-                            :href="ordersIndex()"
-                            class="inline-flex items-center gap-1.5 font-din text-xs/4 text-tyre uppercase hover:text-black dark:hover:text-white"
-                        >
-                            <ShoppingBagIcon
-                                class="size-4"
-                                aria-hidden="true"
-                            />
-                            Orders
                         </Link>
                         <!-- Staff in an account switched to from the Office. -->
                         <Link

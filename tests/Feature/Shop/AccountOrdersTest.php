@@ -106,9 +106,12 @@ test('a guest\'s confirmation offers the claim link and an account\'s does not',
     (new OrderConfirmed($accountOrder))->assertDontSeeInHtml('Add this order to your account');
 });
 
-test('a reader with orders but no dashboard is offered them in the header', function () {
-    $header = file_get_contents(resource_path('js/components/GOP/Header.vue'));
+test('a reader with orders is offered them on the dashboard', function () {
+    $reader = User::factory()->create();
+    Order::factory()->for($reader)->paid()->create();
 
-    expect($header)->toContain('page.props.auth?.hasOrders')
-        ->toContain('ordersIndex()');
+    $this->actingAs($reader)
+        ->get(route('dashboard'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->component('Dashboard')->where('auth.hasOrders', true));
 });
