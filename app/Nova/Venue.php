@@ -84,7 +84,7 @@ class Venue extends Resource
     public function fields(NovaRequest $request): array
     {
         return [
-            Text::make('Name')->sortable(),
+            Text::make('Name')->sortable()->rules('required', 'max:255'),
             BelongsTo::make('Owner', 'user', User::class)
                 ->nullable()
                 ->searchable()

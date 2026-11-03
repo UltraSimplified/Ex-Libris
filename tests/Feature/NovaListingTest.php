@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Category;
 use App\Models\Listing;
 use App\Models\User;
 use App\Nova\Filters\ListingPeriod;
@@ -108,4 +109,28 @@ test('a replicated listing drops the original slug so it regenerates', function 
 
     expect($copy->fresh()->slug)->toBe('los-fastidios-second-night')
         ->and($copy->id)->not->toBe($listing->id);
+});
+
+/*
+ * An event with nothing to book has nothing to put on a button, so the
+ * Office's button wording is left blank. Laravel turns a blank field into
+ * null on the way in, and the column would not take one: saving the
+ * listing failed on the database rather than in the form.
+ */
+test('a listing saves from the office with its button text left blank', function () {
+    $staff = staffUser();
+    $category = Category::factory()->create();
+
+    $this->actingAs($staff)
+        ->postJson('/nova-api/listings', [
+            'title' => 'John Ingledew: Inspired!',
+            'category' => $category->id,
+            'body' => 'A launch and an exhibition.',
+            'start_date' => '2026-11-06',
+            'ticket_price' => 'Free',
+            'button_text' => '',
+        ])
+        ->assertSuccessful();
+
+    expect(Listing::sole()->button_text)->toBeNull();
 });

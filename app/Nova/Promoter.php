@@ -63,7 +63,7 @@ class Promoter extends Resource
     public function fields(NovaRequest $request): array
     {
         return [
-            Text::make('Name')->sortable()->required(),
+            Text::make('Name')->sortable()->rules('required', 'max:255'),
             BelongsTo::make('Owner', 'user', User::class)
                 ->nullable()
                 ->searchable()

@@ -44,6 +44,12 @@ class Feature extends Resource
     use ShowsLayoutImages;
 
     /**
+     * The cover treatments a feature can be given, as the column's enum has
+     * them: the select offers these and nothing else is accepted.
+     */
+    private const COLOURWAYS = ['white' => 'White', 'hi-vis' => 'Hi-vis', 'slate' => 'Slate', 'key-lime' => 'Key Lime'];
+
+    /**
      * The model the resource corresponds to.
      *
      * @var class-string<\App\Models\Feature>
@@ -104,7 +110,10 @@ class Feature extends Resource
                 ->help('Show at the top of the home page. Feature more than one and they scroll as a carousel, in the order they are dragged into on the Features list; feature none and the newest feature goes there.'),
             Number::make('Issue number')->sortable()->nullable()->hideFromIndex(),
             BelongsTo::make('Tag')->nullable(),
-            Select::make('Colourway')->options(['white' => 'White', 'hi-vis' => 'Hi-vis', 'slate' => 'Slate', 'key-lime' => 'Key Lime'])->default('white'),
+            Select::make('Colourway')
+                ->options(self::COLOURWAYS)
+                ->default('white')
+                ->rules('sometimes', Rule::in(array_keys(self::COLOURWAYS))),
             ImageCropper::make('Cover photo')->croppable(640 / 397)->resize(1280, 794)->convert('webp')->disk('do')->indexWidth(300)->prunable(),
             Textarea::make('Alt', 'cover_alt_text'),
             ImageCropper::make('Feature image')->croppable(748 / 794)->resize(748, 794)->convert('webp')->disk('do')->indexWidth(300)->prunable()->hideFromIndex(),

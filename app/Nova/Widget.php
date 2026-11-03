@@ -7,6 +7,7 @@ use App\Support\Widgets\WidgetFont;
 use App\Support\Widgets\WidgetSizeMode;
 use App\Support\Widgets\WidgetSnippets;
 use App\Support\Widgets\WidgetTemplate;
+use Illuminate\Validation\Rule;
 use Laravel\Nova\Actions\Action;
 use Laravel\Nova\Card;
 use Laravel\Nova\Fields\BelongsTo;
@@ -96,11 +97,13 @@ class Widget extends Resource
                 ->options($this->options(WidgetFont::cases()))
                 ->default(WidgetFont::Sans->value)
                 ->displayUsingLabels()
+                ->rules('sometimes', Rule::enum(WidgetFont::class))
                 ->hideFromIndex(),
             Select::make('Size', 'size_mode')
                 ->options($this->options(WidgetSizeMode::cases()))
                 ->default(WidgetSizeMode::Auto->value)
                 ->displayUsingLabels()
+                ->rules('sometimes', Rule::enum(WidgetSizeMode::class))
                 ->hideFromIndex(),
             Number::make('Widest (px)', 'width')->nullable()->min(200)->max(2400)->hideFromIndex(),
             Number::make('Height (px)', 'height')->nullable()->min(100)->max(4000)->hideFromIndex(),

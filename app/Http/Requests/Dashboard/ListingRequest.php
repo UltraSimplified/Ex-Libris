@@ -82,7 +82,7 @@ class ListingRequest extends FormRequest
             'ticket_price' => ['nullable', 'string', 'max:255'],
             'sold_out' => ['boolean'],
             'event_link' => ['nullable', 'url', 'max:255'],
-            'button_text' => ['required', 'string', 'max:255'],
+            'button_text' => ['nullable', 'string', 'max:255'],
             'meta_description' => ['nullable', 'string', 'max:160'],
             'thumbnail' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:8192'],
             'remove_thumbnail' => ['nullable', 'boolean'],

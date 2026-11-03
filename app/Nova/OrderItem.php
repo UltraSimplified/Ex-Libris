@@ -63,10 +63,10 @@ class OrderItem extends Resource
     public function fields(NovaRequest $request): array
     {
         return [
-            Text::make('Product', 'product_name'),
-            Text::make('Colour and size', 'variant_name'),
-            Number::make('Quantity'),
-            Currency::make('Price', 'unit_price')->currency('GBP')->asMinorUnits(),
+            Text::make('Product', 'product_name')->rules('required', 'max:255'),
+            Text::make('Colour and size', 'variant_name')->rules('required', 'max:255'),
+            Number::make('Quantity')->rules('required', 'integer', 'min:1'),
+            Currency::make('Price', 'unit_price')->currency('GBP')->asMinorUnits()->rules('required', 'integer', 'min:0'),
             Text::make('Packing', 'postage_band'),
         ];
     }

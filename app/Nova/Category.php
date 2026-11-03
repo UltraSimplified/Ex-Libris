@@ -46,8 +46,8 @@ class Category extends Resource
     public function fields(NovaRequest $request): array
     {
         return [
-            Text::make('Name')->sortable(),
-            Text::make('Slug')->sortable(),
+            Text::make('Name')->sortable()->rules('required', 'max:255'),
+            Text::make('Slug')->sortable()->rules('required', 'max:255'),
         ];
     }
 

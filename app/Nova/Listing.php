@@ -179,7 +179,12 @@ class Listing extends Resource
                 ->help('Flashed across the event\'s image on the site')
                 ->hideFromIndex(),
 
-            Text::make('Button text', 'button_text')->default('Buy Tickets')->hideFromIndex(),
+            Text::make('Button text', 'button_text')
+                ->default('Buy Tickets')
+                ->nullable()
+                ->help('Leave blank where there is nothing to book, and the listing shows no button')
+                ->rules('nullable', 'string', 'max:255')
+                ->hideFromIndex(),
 
             Textarea::make('Body')->rules('required')->hideFromIndex(),
 

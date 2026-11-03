@@ -55,7 +55,7 @@ class Tag extends Resource
     public function fields(NovaRequest $request): array
     {
         return [
-            Text::make('Tag', 'tag'),
+            Text::make('Tag', 'tag')->rules('required', 'max:255'),
         ];
     }
 

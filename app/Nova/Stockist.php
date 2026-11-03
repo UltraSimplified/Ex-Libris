@@ -53,7 +53,7 @@ class Stockist extends Resource
     public function fields(NovaRequest $request): array
     {
         return [
-            Text::make('Name')->sortable()->required(),
+            Text::make('Name')->sortable()->rules('required', 'max:255'),
             ImageCropper::make('Cover photo')
                 ->croppable(600 / 400)
                 ->resize(300, 200)

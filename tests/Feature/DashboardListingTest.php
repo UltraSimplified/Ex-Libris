@@ -67,6 +67,20 @@ test('a user can create a listing', function () {
         ->and($listing->start_date->toDateString())->toBe('2026-09-01');
 });
 
+/*
+ * The button wording is optional: a free event has nothing to book, and a
+ * blank box means the listing is shown without a button at all.
+ */
+test('a listing can be created without any button text', function () {
+    $user = User::factory()->agreed()->create();
+
+    $this->actingAs($user)
+        ->post(route('dashboard.listings.store'), listingPayload(['button_text' => '']))
+        ->assertRedirect(route('dashboard.listings.index'));
+
+    expect(Listing::sole()->button_text)->toBeNull();
+});
+
 test('creating a listing requires the mandatory fields', function () {
     $user = User::factory()->agreed()->create();
 
