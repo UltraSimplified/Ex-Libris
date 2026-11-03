@@ -11,7 +11,6 @@ import {
     Megaphone,
     PanelsTopLeft,
     Receipt,
-    User,
 } from '@lucide/vue';
 import { computed, nextTick } from 'vue';
 import ListingController from '@/actions/App/Http/Controllers/Dashboard/ListingController';
@@ -21,7 +20,6 @@ import VenueController from '@/actions/App/Http/Controllers/Dashboard/VenueContr
 import WidgetController from '@/actions/App/Http/Controllers/Dashboard/WidgetController';
 import { useBookmarks } from '@/composables/useBookmarks';
 import { dashboard, home, logout } from '@/routes';
-import { edit as editProfile } from '@/routes/profile';
 import { type Managed, type NavGroup, type NavItem } from '@/types';
 import AppearanceChooser from './AppearanceChooser.vue';
 import AppLogo from './AppLogo.vue';
@@ -240,20 +238,31 @@ const navGroups = computed<NavGroup[]>(() =>
 );
 
 /**
- * Staff get a way back to the office, which is not an Inertia page and so
- * is followed as an ordinary link.
+ * Support is for the people working with the magazine: those the office has
+ * made a promoter or a venue manager, which staff all are, and anybody who
+ * already runs one. Somebody who only keeps bookmarks is not offered it.
  */
+const offeredSupport = computed<boolean>(() => {
+    const { roles, promoters, venues } = page.props.auth;
+
+    return (
+        roles.is_promoter ||
+        roles.is_venue_mgr ||
+        promoters.length > 0 ||
+        venues.length > 0
+    );
+});
+
 const footerNavItems = computed<NavItem[]>(() => [
-    {
-        title: 'Profile',
-        href: editProfile(),
-        icon: User,
-    },
-    {
-        title: 'Support',
-        href: 'mailto:alex@goodonpaper.info',
-        icon: Mail,
-    },
+    ...(offeredSupport.value
+        ? [
+              {
+                  title: 'Support',
+                  href: 'mailto:alex@goodonpaper.info',
+                  icon: Mail,
+              },
+          ]
+        : []),
     {
         title: 'Log out',
         href: logout(),

@@ -54,7 +54,7 @@ const { isCurrentUrl } = useCurrentUrl();
                 >{{ heading }}</SidebarGroupLabel
             >
 
-            <SidebarMenu>
+            <SidebarMenu class="gap-0">
                 <SidebarMenuItem v-for="item in items" :key="item.title">
                     <SidebarMenuButton
                         as-child

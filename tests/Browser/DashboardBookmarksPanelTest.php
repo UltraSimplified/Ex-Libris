@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Listing;
+use App\Models\Promoter;
 use App\Models\User;
 
 function panelListing(User $user, array $attributes = []): Listing
@@ -63,6 +64,26 @@ test('a free event asks whether you are going', function () {
     visit('/dashboard')
         ->assertSee('Going')
         ->assertDontSee('Tickets purchased')
+        ->assertNoJavaScriptErrors();
+});
+
+test('the full layout leaves out the price and the promoter, which the listings pages keep', function () {
+    $user = User::factory()->create(['is_promoter' => true]);
+    $promoter = Promoter::factory()->create(['name' => 'Acme Promotions']);
+    $listing = panelListing($user, ['ticket_price' => '£12', 'promoter_id' => $promoter->id]);
+    $this->actingAs($user);
+
+    visit('/dashboard')
+        ->assertSeeIn('#bookmarked-listings', 'Village Fete')
+        ->assertSeeIn('#bookmarked-listings', $listing->venue->name)
+        ->assertDontSee('Price:')
+        ->assertDontSee('Acme Promotions')
+        ->assertNoJavaScriptErrors();
+
+    visit('/listings')
+        ->assertSee('Village Fete')
+        ->assertSee('Price:')
+        ->assertSee('Acme Promotions')
         ->assertNoJavaScriptErrors();
 });
 

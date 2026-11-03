@@ -13,7 +13,7 @@ import type { BookmarkedListing } from '@/types/global';
 /**
  * The events an account has saved that have not finished, on the Dashboard,
  * in whichever of three layouts the reader last chose on this device: each as
- * the listings pages show it with what can be done with it beneath, or a
+ * a brief listing row with what can be done with it beneath, or a
  * narrow grid of pictures and titles, or months of dates.
  *
  * Without the other panels' padding, as a row brings its own and the row's
@@ -116,7 +116,7 @@ const savedListings = computed(() =>
                 class="divide-y divide-sidebar-border/70 dark:divide-sidebar-border"
             >
                 <li v-for="listing in resolvedListings" :key="listing.id">
-                    <ListingRow :listing="listing" />
+                    <ListingRow :listing="listing" brief />
                     <BookmarkedListingActions :listing="listing" />
                 </li>
             </ul>

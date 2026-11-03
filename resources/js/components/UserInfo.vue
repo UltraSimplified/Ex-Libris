@@ -7,11 +7,14 @@ type Props = {
     showEmail?: boolean;
     /** Dressed as a pin-back badge rather than shown as a flat square. */
     badge?: boolean;
+    /** The name set like the sidebar entries it sits among. */
+    asSidebarEntry?: boolean;
 };
 
 const props = withDefaults(defineProps<Props>(), {
     showEmail: false,
     badge: false,
+    asSidebarEntry: false,
 });
 </script>
 
@@ -34,7 +37,15 @@ const props = withDefaults(defineProps<Props>(), {
     />
 
     <div class="grid flex-1 text-left text-sm leading-tight">
-        <span class="truncate font-medium">{{ user.name }}</span>
+        <span
+            class="truncate"
+            :class="
+                props.asSidebarEntry
+                    ? 'font-semibold uppercase after:content-[\'.\']'
+                    : 'font-medium'
+            "
+            >{{ user.name }}</span
+        >
         <span v-if="showEmail" class="truncate text-xs text-muted-foreground">{{
             user.email
         }}</span>

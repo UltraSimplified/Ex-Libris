@@ -161,8 +161,8 @@ test('what is indented keeps an icon on the compacted rail', function () {
 
     expect($sub)
         ->toContain("state.value === 'collapsed' && !isMobile.value")
-        ->toContain('<SidebarMenu v-if="compacted">')
-        ->toContain('<SidebarMenuSub v-else>');
+        ->toContain('<SidebarMenu v-if="compacted"')
+        ->toContain('<SidebarMenuSub v-else');
 });
 
 /**

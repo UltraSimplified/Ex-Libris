@@ -6,9 +6,10 @@ import UserInfo from './UserInfo.vue';
 
 /*
  * Who is signed in. This used to be a dropdown holding Settings and Log
- * out; both now sit in the footer above it, so there is nothing left
+ * out; Log out now sits in the footer above it, so there is nothing left
  * behind the chevron to open. The name itself leads to the profile,
- * which is what people try to click on anyway.
+ * which is what people try to click on anyway, and the sidebar's only
+ * way there.
  */
 const page = usePage();
 const user = page.props.auth.user;
@@ -19,7 +20,7 @@ const user = page.props.auth.user;
         <SidebarMenuItem data-test="sidebar-user">
             <SidebarMenuButton size="lg" as-child>
                 <Link :href="editProfile()" class="h-auto gap-2 text-sm">
-                    <UserInfo :user="user" badge />
+                    <UserInfo :user="user" badge as-sidebar-entry />
                 </Link>
             </SidebarMenuButton>
         </SidebarMenuItem>

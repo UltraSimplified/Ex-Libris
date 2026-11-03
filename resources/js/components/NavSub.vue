@@ -44,7 +44,7 @@ const compacted = computed<boolean>(
 </script>
 
 <template>
-    <SidebarMenu v-if="compacted">
+    <SidebarMenu v-if="compacted" class="gap-0">
         <SidebarMenuItem v-for="item in items" :key="item.title">
             <SidebarMenuButton
                 as-child
@@ -61,7 +61,7 @@ const compacted = computed<boolean>(
         </SidebarMenuItem>
     </SidebarMenu>
 
-    <SidebarMenuSub v-else>
+    <SidebarMenuSub v-else class="gap-0">
         <SidebarMenuSubItem v-for="item in items" :key="item.title">
             <SidebarMenuSubButton
                 as-child

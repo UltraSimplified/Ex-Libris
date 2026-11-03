@@ -12,9 +12,15 @@ import type { Listing } from '@/types/global';
  * One listing as the listings pages show it, and as a feature shows the
  * event it is about. The listing's image is expected already resolved, a
  * placeholder standing in where it has none.
+ *
+ * Brief drops the price and the promoter and closes up what is left, for a
+ * list of events the reader has already chosen rather than is choosing from.
+ * Beside the image, the venue ends level with the picture's bottom edge
+ * however long the title runs.
  */
 interface Props {
     listing: Listing;
+    brief?: boolean;
 }
 
 const props = defineProps<Props>();
@@ -36,7 +42,8 @@ const slugify = (str: string) => {
         lifted above it so they still go where they say.
     -->
     <div
-        class="relative px-5 py-5 transition-colors duration-150 hover:bg-[#f7f7f7] active:bg-[#f7f7f7] has-[[aria-pressed]:active]:bg-transparent md:flex md:items-start md:gap-8 dark:hover:bg-white/5 dark:active:bg-white/5"
+        class="relative px-5 py-5 transition-colors duration-150 hover:bg-[#f7f7f7] active:bg-[#f7f7f7] has-[[aria-pressed]:active]:bg-transparent md:flex md:gap-8 dark:hover:bg-white/5 dark:active:bg-white/5"
+        :class="props.brief ? 'md:items-stretch' : 'md:items-start'"
     >
         <!-- Image: full width on mobile, fixed column on desktop -->
 
@@ -46,7 +53,10 @@ const slugify = (str: string) => {
         </div>
 
         <!-- Content column -->
-        <div class="min-w-0 md:flex-1">
+        <div
+            class="min-w-0 md:flex-1"
+            :class="{ 'md:flex md:flex-col': props.brief }"
+        >
             <div class="mt-4 flex items-center gap-3 md:mt-0">
                 <Link
                     :href="'/listings/category/' + props.listing.category.slug"
@@ -71,7 +81,7 @@ const slugify = (str: string) => {
                 {{ formatListingDates(props.listing) }}
             </h2>
 
-            <h1 class="mt-0 text-2xl">
+            <h1 class="mt-0 text-2xl" :class="{ 'leading-7': props.brief }">
                 <Link
                     :href="
                         '/listings/' +
@@ -90,7 +100,7 @@ const slugify = (str: string) => {
                 Time: {{ props.listing.event_time_description }}
             </h2>
             <h2
-                v-if="props.listing.ticket_price"
+                v-if="props.listing.ticket_price && !props.brief"
                 class="mt-0 font-din text-sm font-bold text-tyre uppercase md:text-xs"
             >
                 Price: {{ props.listing.ticket_price }}
@@ -101,7 +111,8 @@ const slugify = (str: string) => {
                 under the venue on a phone.
             -->
             <h2
-                class="mt-4 mb-0 flex flex-col font-din text-sm text-tyre uppercase md:flex-row md:items-center md:gap-6 md:text-xs"
+                class="mb-0 flex flex-col font-din text-sm text-tyre uppercase md:flex-row md:items-center md:gap-6 md:text-xs"
+                :class="props.brief ? 'mt-0 md:mt-auto' : 'mt-4'"
             >
                 <Link
                     :href="
@@ -111,12 +122,13 @@ const slugify = (str: string) => {
                         slugify(props.listing.venue.name)
                     "
                     class="relative z-10 flex w-fit items-center gap-2 p-2 pr-4 hover:rounded-lg hover:bg-hivis hover:text-tarmac"
+                    :class="{ '-ml-2 md:py-0.5': props.brief }"
                 >
                     <LocationPin class="h-4 w-3 shrink-0" />
                     {{ props.listing.venue.name }}
                 </Link>
                 <Link
-                    v-if="props.listing.promoter"
+                    v-if="props.listing.promoter && !props.brief"
                     :href="
                         '/listings/promoter/' +
                         props.listing.promoter.id +
