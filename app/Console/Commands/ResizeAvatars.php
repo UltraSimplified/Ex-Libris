@@ -48,8 +48,13 @@ class ResizeAvatars extends Command
                     }
 
                     $resized++;
-                } catch (Throwable) {
-                    $unreadable[] = 'User '.$user->id.': '.$user->avatar;
+                } catch (Throwable $e) {
+                    // One bad avatar does not stop the run, but it is not
+                    // waved through either: the reason goes to the log, and
+                    // its gist to whoever is watching the command.
+                    report($e);
+
+                    $unreadable[] = 'User '.$user->id.': '.$user->avatar.' ('.$e->getMessage().')';
                 }
             });
 
