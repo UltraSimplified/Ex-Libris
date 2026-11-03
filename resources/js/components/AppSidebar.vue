@@ -23,6 +23,7 @@ import { useBookmarks } from '@/composables/useBookmarks';
 import { dashboard, home, logout } from '@/routes';
 import { edit as editProfile } from '@/routes/profile';
 import { type Managed, type NavGroup, type NavItem } from '@/types';
+import AppearanceChooser from './AppearanceChooser.vue';
 import AppLogo from './AppLogo.vue';
 import NavFooter from './NavFooter.vue';
 import NavMain from './NavMain.vue';
@@ -290,6 +291,8 @@ const footerNavItems = computed<NavItem[]>(() => [
         <SidebarFooter>
             <NavFooter :items="footerNavItems" />
             <NavUser />
+            <SidebarSeparator />
+            <AppearanceChooser class="self-center" />
         </SidebarFooter>
     </Sidebar>
     <slot />

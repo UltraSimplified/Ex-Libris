@@ -36,7 +36,7 @@ function waitForAnswer(object $page, string $path): void
 }
 
 const TICKET_LINK = 'a[href*="tickets.example.com"]';
-const HEART = '[aria-pressed]';
+const HEART = '#bookmarked-listings [aria-pressed]';
 
 test('the panel shows a saved event, and shows nothing with none saved', function () {
     $user = User::factory()->create(['is_promoter' => true]);
@@ -327,3 +327,149 @@ test('My Bookmarks is not offered with nothing saved', function () {
         ->assertMissing(MY_BOOKMARKS)
         ->assertNoJavaScriptErrors();
 });
+
+/**
+ * The selector for a day picked out on the calendar.
+ */
+function calendarDay(DateTimeInterface $day): string
+{
+    return '[data-day="'.$day->format('Y-m-d').'"]';
+}
+
+test('compact shows the picture, title and date, and a click opens the event', function () {
+    $user = User::factory()->create();
+    $listing = panelListing($user, ['start_date' => '2099-03-05']);
+    $this->actingAs($user);
+
+    visit('/dashboard')
+        ->assertSee('Tickets purchased')
+        ->click('Compact')
+        ->assertDontSee('Tickets purchased')
+        ->assertDontSee('Add to calendar')
+        ->assertSee('Village Fete')
+        ->assertSee('THURS 5 MAR')
+        ->assertVisible('#bookmarked-listings li img')
+        ->click('Village Fete')
+        ->assertPathIs('/listings/'.$listing->id.'/village-fete')
+        ->assertNoJavaScriptErrors();
+});
+
+test('the chosen layout is still chosen after a reload', function () {
+    $user = User::factory()->create();
+    panelListing($user);
+    $this->actingAs($user);
+
+    visit('/dashboard')
+        ->click('Compact')
+        ->assertDontSee('Tickets purchased')
+        ->refresh()
+        ->assertSee('Village Fete')
+        ->assertDontSee('Tickets purchased')
+        ->assertNoJavaScriptErrors();
+});
+
+test('the calendar draws only the months with something on, and picks out their days', function () {
+    $user = User::factory()->create();
+    panelListing($user, ['start_date' => '2099-03-05']);
+    panelListing($user, ['title' => 'Harvest Supper', 'slug' => 'harvest-supper', 'start_date' => '2099-06-20']);
+    $this->actingAs($user);
+
+    visit('/dashboard')
+        ->click('Calendar')
+        ->assertSee('March 2099')
+        ->assertSee('June 2099')
+        ->assertDontSee('April 2099')
+        ->assertVisible('[data-day="2099-03-05"]')
+        ->assertVisible('[data-day="2099-06-20"]')
+        ->assertMissing('[data-day="2099-03-06"]')
+        ->assertNoJavaScriptErrors();
+});
+
+test('a picked out day opens what is on it, which leads to the event', function () {
+    $user = User::factory()->create();
+    $listing = panelListing($user, ['start_date' => '2099-03-05']);
+    $day = '[data-day="2099-03-05"]';
+    $this->actingAs($user);
+
+    visit('/dashboard')
+        ->click('Calendar')
+        ->assertDontSee('Village Fete')
+        ->assertAttribute($day, 'aria-expanded', 'false')
+        ->click($day)
+        ->assertAttribute($day, 'aria-expanded', 'true')
+        ->assertSee('Village Fete')
+        ->click($day)
+        ->assertDontSee('Village Fete')
+        ->click($day)
+        ->click('Village Fete')
+        ->assertPathIs('/listings/'.$listing->id.'/village-fete')
+        ->assertNoJavaScriptErrors();
+});
+
+test('a run picks out its days from today to its last, and a listing with no end date its one', function () {
+    $user = User::factory()->create();
+    panelListing($user, [
+        'start_date' => today()->subDays(2),
+        'end_date' => today()->addDay(),
+    ]);
+    panelListing($user, [
+        'title' => 'Harvest Supper',
+        'slug' => 'harvest-supper',
+        'start_date' => today()->addDays(5),
+        'end_date' => null,
+    ]);
+    $this->actingAs($user);
+
+    visit('/dashboard')
+        ->click('Calendar')
+        ->assertMissing(calendarDay(today()->subDay()))
+        ->assertVisible(calendarDay(today()))
+        ->assertAttribute(calendarDay(today()), 'aria-current', 'date')
+        ->assertVisible(calendarDay(today()->addDay()))
+        ->assertMissing(calendarDay(today()->addDays(2)))
+        ->assertVisible(calendarDay(today()->addDays(5)))
+        ->assertMissing(calendarDay(today()->addDays(6)))
+        ->assertNoJavaScriptErrors();
+});
+
+test('a bookmark removed in the full layout is gone from the other two', function () {
+    $user = User::factory()->create();
+    panelListing($user);
+    $this->actingAs($user);
+
+    $page = visit('/dashboard')->click(HEART);
+    waitForAnswer($page, '/bookmark');
+
+    $page->assertSee('Village Fete')
+        ->click('Compact')
+        ->assertDontSee('Village Fete')
+        ->assertSee('Nothing bookmarked at the moment.')
+        ->click('Calendar')
+        ->assertMissing('[data-day]')
+        ->assertSee('Nothing bookmarked at the moment.')
+        ->click('Full')
+        ->assertSee('Village Fete')
+        ->assertNoJavaScriptErrors();
+});
+
+test('every layout fits a phone without scrolling sideways', function (string $layout) {
+    $user = User::factory()->create();
+    panelListing($user, ['title' => 'A Very Long Title For A Village Fete That Goes On And On']);
+    $this->actingAs($user);
+
+    $page = visit('/dashboard')->on()->mobile()->resize(320, 640)->click($layout);
+
+    $clippedByThePanel = <<<'JS'
+        (() => {
+            const panel = document.getElementById('bookmarked-listings').getBoundingClientRect();
+
+            return [...document.querySelectorAll('#bookmarked-listings label')]
+                .filter((label) => label.getBoundingClientRect().right > panel.right).length;
+        })()
+        JS;
+
+    expect($page->script('document.documentElement.scrollWidth <= window.innerWidth'))->toBeTrue()
+        ->and($page->script($clippedByThePanel))->toBe(0);
+
+    $page->assertNoJavaScriptErrors();
+})->with(['Compact', 'Calendar']);

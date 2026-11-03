@@ -20,7 +20,7 @@ const months = [
  * is, rather than as midnight in UTC, which is the evening before west of
  * Greenwich.
  */
-function parseDay(raw: string | null | undefined): Date | null {
+export function parseDay(raw: string | null | undefined): Date | null {
     if (!raw) {
         return null;
     }
