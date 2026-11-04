@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Services\Shop\OrderMaps;
+use App\Support\Shop\Fulfilment;
 use App\Support\Shop\OrderSummary;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -42,7 +44,7 @@ class OrderController extends Controller
         ]);
     }
 
-    public function show(Request $request, Order $order): Response
+    public function show(Request $request, Order $order, OrderMaps $maps): Response
     {
         abort_unless($order->user_id === $request->user()->id && $order->paid_at !== null, 404);
 
@@ -57,6 +59,16 @@ class OrderController extends Controller
                 'collected_at' => $order->collected_at?->toIso8601String(),
                 'cancelled_at' => $order->cancelled_at?->toIso8601String(),
             ],
+            /*
+             * Where to collect from, which the page draws its own map of,
+             * and a picture of where a posted one is going - small enough
+             * to recognise the street by, since the customer gave us the
+             * address and knows it better than we do.
+             */
+            'collection' => $order->fulfilment === Fulfilment::Collection
+                ? $maps->collectionPlace()
+                : null,
+            'deliveryMap' => $maps->deliveryPicture($order),
         ]);
     }
 }

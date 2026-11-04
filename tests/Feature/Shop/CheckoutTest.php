@@ -62,6 +62,15 @@ test('checking out makes a pending order and sends the customer to Stripe', func
         ]);
 });
 
+test('the order line keeps a copy of the product picture it was bought with', function () {
+    $variant = basketWith();
+    $variant->product->update(['image' => 'shop/as-bought.webp']);
+
+    $this->post(route('checkout.store'));
+
+    expect(Order::query()->sole()->items()->sole()->image)->toBe('shop/as-bought.webp');
+});
+
 test('Stripe is asked for the lines at our prices, a UK address and the postage', function () {
     basketWith(price: 2000, band: 300, quantity: 2);
 

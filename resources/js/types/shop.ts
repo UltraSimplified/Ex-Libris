@@ -9,6 +9,8 @@ export interface ShopOrder {
         id: number;
         product: string;
         variant: string;
+        /** The product's picture as it was bought, on the CDN. */
+        image: string | null;
         quantity: number;
         subtotal: number;
     }[];

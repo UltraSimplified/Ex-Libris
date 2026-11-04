@@ -86,6 +86,8 @@ class Order extends Model
             'postage_capped' => 'boolean',
             'billing_address' => 'array',
             'shipping_address' => 'array',
+            'delivery_latitude' => 'float',
+            'delivery_longitude' => 'float',
             'oversold' => 'boolean',
             'refunded_amount' => 'integer',
             'paid_at' => 'datetime',

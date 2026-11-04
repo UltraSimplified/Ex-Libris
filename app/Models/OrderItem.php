@@ -23,6 +23,7 @@ class OrderItem extends Model
         'product_variant_id',
         'product_name',
         'variant_name',
+        'image',
         'unit_price',
         'quantity',
         'postage_band',
@@ -59,6 +60,23 @@ class OrderItem extends Model
     public function variant(): BelongsTo
     {
         return $this->belongsTo(ProductVariant::class, 'product_variant_id')->withTrashed();
+    }
+
+    /**
+     * The product's picture as it was bought, falling back to the picture
+     * the product has now.
+     *
+     * The fallback is for the lines ordered before the picture was copied
+     * in; everything since carries its own, so replacing a product's photo
+     * does not change what an old receipt shows.
+     */
+    public function picture(): ?string
+    {
+        if (filled($this->image)) {
+            return $this->image;
+        }
+
+        return $this->variant?->product?->image;
     }
 
     /**

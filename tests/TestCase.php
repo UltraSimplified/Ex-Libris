@@ -33,10 +33,11 @@ abstract class TestCase extends BaseTestCase
     }
 
     /**
-     * Saving a venue looks its postcode up on postcodes.io, and the
-     * factories give every venue a postcode, so without this every test
-     * that made one would reach out to the internet. The tests of the
-     * lookup itself put the real geocoder back and fake the service.
+     * Saving a venue looks its postcode up on postcodes.io, as does saving
+     * the shop's collection address, and the factories give every venue a
+     * postcode, so without this every test that made one would reach out
+     * to the internet. The tests of the lookup itself put the real geocoder
+     * back and fake the service.
      */
     protected function keepVenuesOffThePostcodeService(): void
     {

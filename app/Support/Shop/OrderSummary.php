@@ -16,7 +16,7 @@ class OrderSummary
      */
     public static function for(Order $order): array
     {
-        $order->loadMissing('items');
+        $order->loadMissing('items.variant.product');
 
         return [
             'reference' => $order->reference,
@@ -28,6 +28,7 @@ class OrderSummary
                 'id' => $item->id,
                 'product' => $item->product_name,
                 'variant' => $item->variant_name,
+                'image' => $item->picture(),
                 'quantity' => $item->quantity,
                 'subtotal' => $item->subtotal(),
             ])->all(),

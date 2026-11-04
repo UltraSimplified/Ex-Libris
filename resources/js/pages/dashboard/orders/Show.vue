@@ -2,6 +2,7 @@
 import { Head } from '@inertiajs/vue3';
 import OrderController from '@/actions/App/Http/Controllers/Dashboard/OrderController';
 import OrderSummary from '@/components/GOP/OrderSummary.vue';
+import VenueMap from '@/components/GOP/VenueMap.vue';
 import { formatPence } from '@/lib/money';
 import { dashboard } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
@@ -19,6 +20,10 @@ const props = defineProps<{
         collected_at: string | null;
         cancelled_at: string | null;
     };
+    /** Where to collect from, once the office's address has been placed. */
+    collection: { name: string; latitude: number; longitude: number } | null;
+    /** A picture of where a posted order is going, if it could be drawn. */
+    deliveryMap: string | null;
 }>();
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -80,12 +85,43 @@ const history = [
                         Tracking number:
                         <strong>{{ order.tracking_number }}</strong>
                     </p>
+                    <!--
+                        A picture rather than a map that can be panned: it
+                        is their own address, so all it has to do is show
+                        the street back to them.
+                    -->
+                    <figure v-if="deliveryMap" class="mt-3">
+                        <img
+                            :src="deliveryMap"
+                            alt="A map of the delivery address"
+                            class="block h-auto w-full rounded border border-silver"
+                            loading="lazy"
+                        />
+                        <figcaption class="mt-1 text-xs">
+                            &copy;
+                            <a
+                                href="https://www.openstreetmap.org/copyright"
+                                target="_blank"
+                                rel="noopener"
+                                class="underline"
+                                >OpenStreetMap</a
+                            >
+                            contributors
+                        </figcaption>
+                    </figure>
                 </div>
                 <div v-else>
                     <Heading variant="small" title="Collecting" />
                     <p class="text-sm">
                         From Good on Paper. We'll email you when it's ready.
                     </p>
+                    <div v-if="collection" class="mt-3">
+                        <VenueMap
+                            :latitude="collection.latitude"
+                            :longitude="collection.longitude"
+                            :name="collection.name"
+                        />
+                    </div>
                 </div>
 
                 <div v-if="order.billing_address.length">

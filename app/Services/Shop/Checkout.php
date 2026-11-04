@@ -94,6 +94,7 @@ class Checkout
                 'product_variant_id' => $line->variant->id,
                 'product_name' => $line->variant->product->name,
                 'variant_name' => $line->variant->displayName(),
+                'image' => $line->variant->product->image,
                 'unit_price' => $line->variant->currentPrice(),
                 'quantity' => $line->quantity,
                 'postage_band' => $line->variant->product->postageBand->name,

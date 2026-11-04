@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Laravel\Nova\Fields\Currency;
 use Laravel\Nova\Fields\Field;
+use Laravel\Nova\Fields\Number;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Http\Requests\NovaRequest;
@@ -86,6 +87,17 @@ class ShopSettings extends Resource
                 ->alwaysShow()
                 ->nullable()
                 ->help('When someone is there to hand orders over. Shown on the basket and in the ready-for-collection email.'),
+            Number::make('Latitude')
+                ->step(0.0000001)
+                ->nullable()
+                ->hideFromIndex()
+                ->rules('nullable', 'numeric', 'between:-90,90')
+                ->help('Where the pin goes on the collection map. Found from the postcode in the address above when it is saved; set it by hand to move the pin onto the door. Changing the address looks it up again.'),
+            Number::make('Longitude')
+                ->step(0.0000001)
+                ->nullable()
+                ->hideFromIndex()
+                ->rules('nullable', 'numeric', 'between:-180,180'),
             Text::make('Shop page description', fn (): string => Str::limit((string) $this->meta_description, 60))
                 ->onlyOnIndex(),
             Textarea::make('Shop page description', 'meta_description')

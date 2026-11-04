@@ -9,10 +9,15 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\ShopSettings;
 use App\Support\Shop\OrderStatus;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * What the order emails say.
  */
+beforeEach(function () {
+    // The confirmation asks the bucket for a JPEG of each line's picture.
+    Storage::fake('do');
+});
 function paidOrderToPost(): Order
 {
     $order = Order::factory()->paid()->create([
