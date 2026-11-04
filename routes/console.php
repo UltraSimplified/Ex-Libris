@@ -23,4 +23,11 @@ Schedule::command('galleries:prune --commit')
     ->dailyAt('03:40')
     ->withoutOverlapping();
 
+/*
+ * Orders Stripe's webhook never told the shop about.
+ */
+Schedule::command('shop:reconcile-orders --commit')
+    ->hourly()
+    ->withoutOverlapping();
+
 Schedule::command('queue:work --stop-when-empty --max-time=55')->everyMinute()->withoutOverlapping();

@@ -16,6 +16,16 @@ class FakePaymentGateway implements PaymentGateway
     /** @var list<array<string, mixed>> */
     public array $sessions = [];
 
+    /**
+     * What Stripe would answer about a session, by its id.
+     *
+     * @var array<string, array<string, mixed>>
+     */
+    public array $sessionsAtStripe = [];
+
+    /** @var list<string> */
+    public array $sessionsAskedAbout = [];
+
     /** @var list<array{payment_intent: string, amount: ?int, key: string}> */
     public array $refunds = [];
 
@@ -40,7 +50,9 @@ class FakePaymentGateway implements PaymentGateway
 
     public function retrieveCheckoutSession(string $id): array
     {
-        return ['id' => $id];
+        $this->sessionsAskedAbout[] = $id;
+
+        return $this->sessionsAtStripe[$id] ?? throw new RuntimeException("No such checkout.session: {$id}");
     }
 
     public function customerFor(User $user): string
