@@ -37,7 +37,6 @@ test('every public page that has no record of its own is still described for sha
     'features' => ['/magazine/features', 'Features'],
     'archives' => ['/magazine/archives', 'Archives'],
     'stockists' => ['/magazine/stockists', 'Stockists'],
-    'shop' => ['/shop', 'Shop'],
 ]);
 
 test('the home page speaks for the site', function () {

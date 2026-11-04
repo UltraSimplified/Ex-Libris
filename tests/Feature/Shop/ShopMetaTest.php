@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Issue;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\ShopCategory;
@@ -42,6 +43,17 @@ test('the shop front page is described in the words set in Shop settings', funct
         ->and($meta['description'])->toBe('Riso prints and records.')
         ->and($meta['url'])->toBe(route('Shop'))
         ->and($meta['type'])->toBe('website');
+});
+
+test('the shop front page reaches the page itself, shared with the latest cover', function () {
+    Issue::factory()->create(['hero_image' => 'issues/latest.webp']);
+    ShopSettings::current()->update(['meta_description' => 'Riso prints and records.']);
+
+    $this->get(route('Shop'))
+        ->assertSee('<meta property="og:title" content="The Good on Paper shop">', false)
+        ->assertSee('<meta property="og:description" content="Riso prints and records.">', false)
+        ->assertSee('<meta property="og:image" content="'.Storage::disk('do')->url('issues/latest.webp').'">', false)
+        ->assertSee('<meta name="twitter:card" content="summary_large_image">', false);
 });
 
 test('the shop front page falls back on the site\'s description when none is set', function () {
