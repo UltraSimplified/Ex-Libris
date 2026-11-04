@@ -142,6 +142,22 @@ class Order extends Model
     }
 
     /**
+     * Orders the office still has something to do about: paid and waiting
+     * to be posted, or not yet handed over to whoever is collecting them.
+     */
+    #[Scope]
+    protected function awaitingOffice(Builder $query): Builder
+    {
+        return $query->where(function (Builder $outstanding): void {
+            foreach (Fulfilment::cases() as $fulfilment) {
+                $outstanding->orWhere(fn (Builder $query): Builder => $query
+                    ->where('fulfilment', $fulfilment->value)
+                    ->whereIn('status', OrderStatus::awaitingValues($fulfilment)));
+            }
+        });
+    }
+
+    /**
      * Move the order on, stamping when it got there.
      *
      * @throws InvalidOrderTransition when the move is not one OrderStatus allows

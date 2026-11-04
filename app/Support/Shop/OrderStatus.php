@@ -72,6 +72,33 @@ enum OrderStatus: string
         };
     }
 
+    /**
+     * The statuses in which an order is still the office's to deal with:
+     * paid and waiting to go in the post, or not yet handed over.
+     *
+     * One definition, because the badge on the Orders link, the dashboard
+     * metrics and the lenses must agree about what is outstanding.
+     *
+     * @return list<self>
+     */
+    public static function awaiting(Fulfilment $fulfilment): array
+    {
+        return match ($fulfilment) {
+            Fulfilment::Post => [self::Paid],
+            Fulfilment::Collection => [self::Paid, self::Ready],
+        };
+    }
+
+    /**
+     * The same statuses as their database values.
+     *
+     * @return list<string>
+     */
+    public static function awaitingValues(Fulfilment $fulfilment): array
+    {
+        return array_map(fn (self $status): string => $status->value, self::awaiting($fulfilment));
+    }
+
     public function canMoveTo(self $status, Fulfilment $fulfilment): bool
     {
         return in_array($status, $this->next($fulfilment), true);

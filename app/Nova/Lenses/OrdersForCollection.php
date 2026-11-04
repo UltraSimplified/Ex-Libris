@@ -40,7 +40,7 @@ class OrdersForCollection extends Lens
     {
         return $request->withOrdering($request->withFilters(
             $query->where('fulfilment', Fulfilment::Collection->value)
-                ->whereIn('status', [OrderStatus::Paid->value, OrderStatus::Ready->value])
+                ->whereIn('status', OrderStatus::awaitingValues(Fulfilment::Collection))
                 ->withSum('items as item_count', 'quantity')
                 ->orderBy('paid_at')
         ));

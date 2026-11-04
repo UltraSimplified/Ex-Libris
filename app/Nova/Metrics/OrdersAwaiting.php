@@ -24,14 +24,10 @@ class OrdersAwaiting extends Value
 
     public function calculate(NovaRequest $request): ValueResult
     {
-        $waiting = $this->fulfilment === Fulfilment::Post
-            ? [OrderStatus::Paid]
-            : [OrderStatus::Paid, OrderStatus::Ready];
-
         return $this->result(
             Order::query()
                 ->where('fulfilment', $this->fulfilment->value)
-                ->whereIn('status', array_map(fn (OrderStatus $status): string => $status->value, $waiting))
+                ->whereIn('status', OrderStatus::awaitingValues($this->fulfilment))
                 ->count()
         )->allowZeroResult();
     }

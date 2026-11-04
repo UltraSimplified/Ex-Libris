@@ -39,7 +39,7 @@ class OrdersToPost extends Lens
     {
         return $request->withOrdering($request->withFilters(
             $query->where('fulfilment', Fulfilment::Post->value)
-                ->where('status', OrderStatus::Paid->value)
+                ->whereIn('status', OrderStatus::awaitingValues(Fulfilment::Post))
                 ->withSum('items as item_count', 'quantity')
                 ->orderBy('paid_at')
         ));

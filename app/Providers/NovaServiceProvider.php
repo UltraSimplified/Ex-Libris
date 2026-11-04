@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\Order as OrderModel;
 use App\Models\User;
 use App\Nova\Advert;
 use App\Nova\Category;
@@ -78,7 +79,8 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 ])->icon('book-open')->collapsable(),
 
                 MenuSection::make('Shop', [
-                    MenuItem::resource(Order::class),
+                    MenuItem::resource(Order::class)
+                        ->withBadge(fn (): string|false => $this->ordersOutstanding(), 'success'),
                     MenuItem::lens(Order::class, OrdersToPost::class),
                     MenuItem::lens(Order::class, OrdersForCollection::class),
                     MenuItem::resource(Product::class),
@@ -98,6 +100,20 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 ])->icon('adjustments')->collapsable(),
             ];
         });
+    }
+
+    /**
+     * How many orders are still the office's to deal with: to post, or
+     * waiting to be collected.
+     *
+     * False rather than nought, which leaves the badge off the Orders link
+     * entirely, so a badge there always means there is work to do.
+     */
+    protected function ordersOutstanding(): string|false
+    {
+        $outstanding = OrderModel::query()->awaitingOffice()->count();
+
+        return $outstanding > 0 ? (string) $outstanding : false;
     }
 
     /**
