@@ -4,6 +4,7 @@ use App\Models\Category;
 use App\Models\Listing;
 use App\Models\Promoter;
 use App\Models\Venue;
+use App\Services\Listings\ListingLineUp;
 
 /**
  * Every listing view carries a keyword filter that hides the rows that do
@@ -39,16 +40,23 @@ test('an event under no promoter still reaches the page', function () {
 });
 
 /**
- * Venue, genre, title and price are what the filter reads besides the
- * promoter. They were already being sent; this is here so that stays true.
+ * Line-up, venue, address, town, postcode, genre, title and price are what
+ * the filter reads besides the promoter. They were already being sent; this
+ * is here so that stays true.
  */
 test('the full listing carries everything the filter searches by', function () {
-    $venue = Venue::factory()->create(['name' => 'The Sub Rooms']);
+    $venue = Venue::factory()->create([
+        'name' => 'The Sub Rooms',
+        'address' => 'George Street',
+        'town' => 'Stroud',
+        'postcode' => 'GL5 1AE',
+    ]);
     $category = Category::factory()->create(['name' => 'Music']);
     $promoter = Promoter::factory()->create(['name' => 'Emergence Restock']);
 
     Listing::factory()->create([
         'title' => 'Late Night Jazz',
+        'line_up' => app(ListingLineUp::class)->fromSingleEmbeds('Jackson Almond', null, 'https://youtu.be/abc123'),
         'venue_id' => $venue->id,
         'category_id' => $category->id,
         'promoter_id' => $promoter->id,
@@ -60,7 +68,11 @@ test('the full listing carries everything the filter searches by', function () {
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->where('listings.0.title', 'Late Night Jazz')
+            ->where('listings.0.line_up', fn (string $lineUp): bool => str_contains($lineUp, 'Jackson Almond'))
             ->where('listings.0.venue.name', 'The Sub Rooms')
+            ->where('listings.0.venue.address', 'George Street')
+            ->where('listings.0.venue.town', 'Stroud')
+            ->where('listings.0.venue.postcode', 'GL5 1AE')
             ->where('listings.0.category.name', 'Music')
             ->where('listings.0.promoter.name', 'Emergence Restock')
             ->where('listings.0.ticket_price', 'Free')

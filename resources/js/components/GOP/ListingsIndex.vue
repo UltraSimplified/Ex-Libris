@@ -14,7 +14,13 @@ import { useScrollReveal } from '@/composables/useScrollReveal';
 import { collapseOnLeave } from '@/lib/collapseOnLeave';
 import { formatListingDates } from '@/lib/listingDates';
 import { register } from '@/routes';
-import type { Advert, Listing, Promoter, Venue } from '@/types/global';
+import type {
+    Advert,
+    LineUpArtist,
+    Listing,
+    Promoter,
+    Venue,
+} from '@/types/global';
 
 interface Props {
     title: string;
@@ -144,7 +150,31 @@ const toggleSearch = async () => {
 };
 
 /**
- * Everything a row can be found by, in one lowercased string each.
+ * Text as the search compares it: lowercased, with its accents and apostrophes
+ * taken off, so "tres" finds "Très", "très" finds "Tres", and "tomorrows" finds
+ * "Tomorrow’s". Splitting each accented letter into the letter and its mark is
+ * what lets the mark be dropped.
+ */
+const foldForSearch = (text: string): string =>
+    text
+        .normalize('NFD')
+        .replace(/[\p{M}'’‘ʼ]/gu, '')
+        .toLowerCase();
+
+/**
+ * The artists on a listing's bill, often not named in its title. Stored in
+ * Nova's Flexible shape, as a JSON string or already decoded.
+ */
+const lineUpNames = (listing: Listing): (string | undefined)[] => {
+    const stored = listing.line_up;
+    const groups: { attributes?: Partial<LineUpArtist> }[] =
+        typeof stored === 'string' ? JSON.parse(stored) : (stored ?? []);
+
+    return groups.map((group) => group.attributes?.name);
+};
+
+/**
+ * Everything a row can be found by, in one folded string each.
  *
  * Built per listing rather than per keystroke: the whole list is already
  * in the page, so the only cost worth avoiding is doing this work again
@@ -153,18 +183,22 @@ const toggleSearch = async () => {
 const searchable = computed(() =>
     resolvedListings.value.map((listing) => ({
         listing,
-        haystack: [
-            listing.title,
-            listing.venue?.name,
-            listing.venue?.town,
-            listing.promoter?.name,
-            listing.category?.name,
-            listing.ticket_price,
-            formatListingDates(listing),
-        ]
-            .filter(Boolean)
-            .join(' ')
-            .toLowerCase(),
+        haystack: foldForSearch(
+            [
+                listing.title,
+                ...lineUpNames(listing),
+                listing.venue?.name,
+                listing.venue?.address,
+                listing.venue?.town,
+                listing.venue?.postcode,
+                listing.promoter?.name,
+                listing.category?.name,
+                listing.ticket_price,
+                formatListingDates(listing),
+            ]
+                .filter(Boolean)
+                .join(' '),
+        ),
     })),
 );
 
@@ -174,9 +208,8 @@ const searchable = computed(() =>
  * The Sub Rooms without anybody having to guess the word order.
  */
 const visibleListings = computed(() => {
-    const words = search.value
+    const words = foldForSearch(search.value)
         .trim()
-        .toLowerCase()
         .split(/\s+/)
         .filter(Boolean);
 
@@ -387,7 +420,7 @@ watch(search, () => revealAll());
                     ref="searchInput"
                     v-model="search"
                     type="search"
-                    placeholder="Search by venue, promoter, genre or title"
+                    placeholder="Search by town, venue, promoter, genre or title"
                     class="w-full border border-silver bg-surface px-4 py-3 font-din text-xl placeholder:text-tyre focus:border-tarmac focus:outline-none md:max-w-2xl md:text-lg"
                 />
                 <p
