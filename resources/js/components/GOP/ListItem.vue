@@ -4,6 +4,7 @@ import { Megaphone } from '@lucide/vue';
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import BookmarkHeart from '@/components/GOP/BookmarkHeart.vue';
 import ListingLineUp from '@/components/GOP/ListingLineUp.vue';
+import ListingShareLinks from '@/components/GOP/ListingShareLinks.vue';
 import LocationPin from '@/components/GOP/LocationPin.vue';
 import OfficeEditLink from '@/components/GOP/OfficeEditLink.vue';
 import PlaceholderFlash from '@/components/GOP/PlaceholderFlash.vue';
@@ -293,10 +294,11 @@ const resolvedListings = computed(() =>
                 Tickets: {{ listing.ticket_price }}
             </div>
             <div
-                v-if="props.listing.button_text?.trim()"
-                class="mt-2 flex gap-2"
+                v-if="!props.preview || props.listing.button_text?.trim()"
+                class="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3"
             >
                 <a
+                    v-if="props.listing.button_text?.trim()"
                     :href="
                         props.listing.ticket_link ??
                         props.listing.event_link ??
@@ -305,13 +307,19 @@ const resolvedListings = computed(() =>
                     target="_blank"
                     noreferrer
                     nofollow
+                    class="flex"
                 >
                     <button
-                        class="text-tyr hover:dark:outline-solid-2 mt-4 mb-0 w-fit cursor-pointer rounded-full bg-hivis p-2 px-4 py-2 pr-4 font-din text-sm font-bold text-slate uppercase hover:bg-hivis hover:text-tarmac md:text-xs dark:text-tarmac hover:dark:bg-black hover:dark:text-hivis hover:dark:outline-offset-1 hover:dark:outline-hivis"
+                        class="text-tyr hover:dark:outline-solid-2 w-fit cursor-pointer rounded-full bg-hivis p-2 px-4 py-2 pr-4 font-din text-sm font-bold text-slate uppercase hover:bg-hivis hover:text-tarmac md:text-xs dark:text-tarmac hover:dark:bg-black hover:dark:text-hivis hover:dark:outline-offset-1 hover:dark:outline-hivis"
                     >
                         {{ props.listing.button_text }}
                     </button>
                 </a>
+
+                <ListingShareLinks
+                    v-if="!props.preview"
+                    :listing="props.listing"
+                />
             </div>
 
             <!-- Body text: mobile only, appears after buy tickets -->
