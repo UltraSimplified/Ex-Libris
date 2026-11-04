@@ -29,7 +29,6 @@ use App\Nova\Writer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Laravel\Fortify\Features;
-use Laravel\Nova\Badge;
 use Laravel\Nova\Dashboard;
 use Laravel\Nova\Menu\MenuGroup;
 use Laravel\Nova\Menu\MenuItem;
@@ -69,8 +68,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::resource(Promoter::class),
                     MenuItem::resource(Venue::class),
                     MenuItem::resource(Advert::class),
-                    MenuItem::resource(Widget::class)
-                        ->withBadge(Badge::make('New!', 'success')),
+                    MenuItem::resource(Widget::class),
                 ])->icon('bookmark-square')->collapsable(),
 
                 MenuSection::make('Lookups', [

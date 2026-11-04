@@ -28,7 +28,7 @@ defineProps<{
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: dashboard().url },
-    { title: 'Orders', href: OrderController.index().url },
+    { title: 'Purchases', href: OrderController.index().url },
 ];
 
 const paidOn = (order: OrderRow): string =>
@@ -39,42 +39,19 @@ const paidOn = (order: OrderRow): string =>
               year: 'numeric',
           })
         : '';
-
-/**
- * Advert payments and ticket orders are still to come. Laid out now so the
- * shape of the page is settled before anything records one.
- */
-const comingSections = [
-    {
-        title: 'Advert payments',
-        description:
-            'What you have paid to run in the magazine, and when it ran.',
-    },
-    {
-        title: 'Ticket orders',
-        description:
-            'Tickets bought through Good on Paper for events near you.',
-    },
-];
 </script>
 
 <template>
-    <Head title="Orders" />
+    <Head title="Purchases" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="flex-1 space-y-6 p-4">
             <Heading
-                title="Orders"
+                title="Purchases"
                 description="Everything you have bought from Good on Paper, in one place."
             />
 
             <div class="space-y-3">
-                <Heading
-                    variant="small"
-                    title="Shop purchases"
-                    description="Prints, t-shirts, posters and records from the shop."
-                />
-
                 <div
                     v-if="!orders.data.length"
                     class="rounded-xl border border-dashed border-sidebar-border/70 p-8 text-center dark:border-sidebar-border"
@@ -134,36 +111,16 @@ const comingSections = [
                         v-if="orders.prev_page_url"
                         :href="orders.prev_page_url"
                         class="underline"
-                        >Newer orders</Link
+                        >Newer purchases</Link
                     >
                     <span v-else></span>
                     <Link
                         v-if="orders.next_page_url"
                         :href="orders.next_page_url"
                         class="underline"
-                        >Older orders</Link
+                        >Older purchases</Link
                     >
                 </nav>
-            </div>
-
-            <div
-                v-for="section in comingSections"
-                :key="section.title"
-                class="space-y-3"
-            >
-                <Heading
-                    variant="small"
-                    :title="section.title"
-                    :description="section.description"
-                />
-
-                <div
-                    class="rounded-xl border border-dashed border-sidebar-border/70 p-8 text-center dark:border-sidebar-border"
-                >
-                    <p class="text-sm text-muted-foreground">
-                        Nothing here yet.
-                    </p>
-                </div>
             </div>
         </div>
     </AppLayout>

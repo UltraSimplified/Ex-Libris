@@ -139,17 +139,17 @@ test('every kind of account gets the Dashboard', function (array $role, ?int $st
 ]);
 
 /*
- * Who staff may switch to is decided by what an account runs, not by its
- * having a Dashboard, which everybody does.
+ * Everybody has a Dashboard, so staff may switch to anybody but each other,
+ * whether or not the account has saved anything to see there.
  */
-test('saving an event does not let staff switch to a reader', function () {
+test('staff can switch to a reader, whether or not they have saved an event', function () {
     $reader = User::factory()->create();
+
+    expect($reader->canBeImpersonated())->toBeTrue();
+
     $reader->bookmarks()->attach(Listing::factory()->create(['start_date' => today()->addDay()]));
 
-    $this->actingAs($reader)->get(route('dashboard'))->assertOk();
-
-    expect($reader->hasDashboard())->toBeFalse()
-        ->and($reader->canBeImpersonated())->toBeFalse();
+    expect($reader->canBeImpersonated())->toBeTrue();
 });
 
 test('a listing is free when its price says so with no figure beside it', function (?string $price, bool $free) {

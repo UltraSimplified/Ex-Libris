@@ -58,6 +58,46 @@ test('nobody sees another account\'s order, or one never paid for', function (Cl
     'never paid for' => fn (User $user) => Order::factory()->for($user)->create(),
 ]);
 
+test('the emailed link takes an account\'s owner to the order in their dashboard', function () {
+    $owner = User::factory()->create();
+    $order = Order::factory()->for($owner)->paid()->create();
+
+    $this->actingAs($owner)
+        ->get($order->guestUrl())
+        ->assertRedirect(route('dashboard.orders.show', $order));
+});
+
+test('the emailed link sends somebody not signed in to sign in, and shows them nothing', function () {
+    $order = Order::factory()->for(User::factory())->paid()->create(['email' => 'reader@example.com']);
+
+    $this->get($order->guestUrl())
+        ->assertRedirect(route('login'))
+        ->assertDontSee('reader@example.com');
+
+    expect(session('url.intended'))->toBe($order->guestUrl());
+});
+
+test('the emailed link does not open an order for another account', function () {
+    $order = Order::factory()->for(User::factory())->paid()->create(['email' => 'reader@example.com']);
+
+    $this->actingAs(User::factory()->create())
+        ->get($order->guestUrl())
+        ->assertForbidden()
+        ->assertDontSee('reader@example.com');
+});
+
+test('a guest\'s order locks to the account that claims it', function () {
+    $order = Order::factory()->paid()->create();
+
+    $this->get($order->guestUrl())->assertOk();
+
+    $this->actingAs(User::factory()->create())->get($order->claimUrl());
+
+    auth()->logout();
+
+    $this->get($order->guestUrl())->assertRedirect(route('login'));
+});
+
 test('a guest order joins the account that opens its claim link', function () {
     $user = User::factory()->create();
     $order = Order::factory()->paid()->create();

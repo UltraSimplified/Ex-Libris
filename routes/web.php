@@ -180,8 +180,10 @@ Route::middleware(EnsureShopIsOpen::class)->group(function () {
 });
 
 /*
- * An order as its customer sees it, from the signed link in their emails.
- * Outside the shop's opening switch, so links already sent keep working.
+ * An order as its customer sees it, from the signed link in their emails, and
+ * only for its account if it has one. Outside the auth group so a guest can
+ * still follow theirs, and outside the shop's opening switch so links already
+ * sent keep working.
  */
 Route::get('orders/{order:reference}', [GuestOrderController::class, 'show'])
     ->middleware('signed')

@@ -152,8 +152,8 @@ const runs = (
 
 /*
  * The sidebar in bands, separated by a rule: the magazine itself, so the
- * public site is always a click away, with what you follow and have paid
- * for, then each thing you run with its own listings under it. What you hear from us is a setting rather than a
+ * public site is always a click away, with what you follow, then what you
+ * have paid for, then each thing you run with its own listings under it. What you hear from us is a setting rather than a
  * section, and sits with the rest of them under Profile.
  *
  * Promoters and venues are granted by the office, so most accounts run
@@ -200,21 +200,26 @@ const navGroups = computed<NavGroup[]>(() =>
                           },
                       ]
                     : []),
-                /*
-                 * Orders is offered only to an account that has some.
-                 * Nothing records an order yet, so today that is nobody -
-                 * the entry is here rather than waiting to be remembered.
-                 */
-                ...(page.props.auth.hasOrders
-                    ? [
-                          {
-                              title: 'Orders',
-                              href: OrderController.index(),
-                              icon: Receipt,
-                          },
-                      ]
-                    : []),
             ],
+        },
+        /*
+         * Offered only to an account that has paid for something, and lit on
+         * a purchase's own page as well as the list of them.
+         */
+        {
+            heading: 'Purchases',
+            items: page.props.auth.hasOrders
+                ? [
+                      {
+                          title: 'View purchases',
+                          href: OrderController.index(),
+                          icon: Receipt,
+                          isActive: page.url.startsWith(
+                              OrderController.index.url(),
+                          ),
+                      },
+                  ]
+                : [],
         },
         ...page.props.auth.promoters.map((promoter) =>
             runs(

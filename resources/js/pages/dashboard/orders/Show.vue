@@ -23,7 +23,7 @@ const props = defineProps<{
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: dashboard().url },
-    { title: 'Orders', href: OrderController.index().url },
+    { title: 'Purchases', href: OrderController.index().url },
     {
         title: props.order.reference,
         href: OrderController.show(props.order.reference).url,

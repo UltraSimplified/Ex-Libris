@@ -248,24 +248,15 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Whether this account has a dashboard: it manages a venue, promotes or
-     * writes, which staff all do. Anybody else has nothing there yet.
-     */
-    public function hasDashboard(): bool
-    {
-        return collect(self::ROLES)->contains(fn (string $role): bool => $this->hasRole($role));
-    }
-
-    /**
      * Whether staff may switch to this account from the Office, to see its
-     * dashboard as its owner does. Only accounts with a dashboard, and
+     * dashboard as its owner does. Any account, as they all have one, but
      * never another member of staff: switching to one would lend its Office
      * to whoever switched. Who may switch is the trait's call, which is
      * whoever can reach the Office.
      */
     public function canBeImpersonated(): bool
     {
-        return $this->hasDashboard() && ! Gate::forUser($this)->allows('viewNova');
+        return ! Gate::forUser($this)->allows('viewNova');
     }
 
     /**

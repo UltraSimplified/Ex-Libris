@@ -2,6 +2,7 @@
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import ListingController from '@/actions/App/Http/Controllers/Dashboard/ListingController';
+import OrderController from '@/actions/App/Http/Controllers/Dashboard/OrderController';
 import PromoterController from '@/actions/App/Http/Controllers/Dashboard/PromoterController';
 import VenueController from '@/actions/App/Http/Controllers/Dashboard/VenueController';
 import WidgetController from '@/actions/App/Http/Controllers/Dashboard/WidgetController';
@@ -133,9 +134,16 @@ const eventsListedLabel = (count: number): string =>
                     </dl>
                     <Link
                         :href="editProfile()"
-                        class="mt-4 inline-block underline underline-offset-4"
+                        class="mt-4 block w-fit underline underline-offset-4"
                     >
                         Manage profile
+                    </Link>
+                    <Link
+                        v-if="page.props.auth.hasOrders"
+                        :href="OrderController.index()"
+                        class="mt-2 block w-fit underline underline-offset-4"
+                    >
+                        View purchases
                     </Link>
                 </section>
 

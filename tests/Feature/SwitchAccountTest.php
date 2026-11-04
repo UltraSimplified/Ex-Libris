@@ -32,7 +32,7 @@ test('staff can switch to a dashboard account and land on its dashboard', functi
     expect(session('nova_impersonated_by'))->toBe($this->staff->id);
 });
 
-test('the office offers Switch to for dashboard accounts only', function () {
+test('the office offers Switch to for every account but its own people', function () {
     $writer = User::factory()->writer()->create();
     $reader = User::factory()->create();
     $colleague = User::factory()->create(['email' => 'adam@goodonpaper.info']);
@@ -41,10 +41,25 @@ test('the office offers Switch to for dashboard accounts only', function () {
         ->mapWithKeys(fn (array $row) => [$row['id']['value'] => $row['authorizedToImpersonate']]);
 
     expect($offered[$writer->id])->toBeTrue()
-        ->and($offered[$reader->id])->toBeFalse()
+        ->and($offered[$reader->id])->toBeTrue()
         ->and($offered[$colleague->id])->toBeFalse()
         ->and($offered[$this->staff->id])->toBeFalse();
 });
+
+test('every list of accounts in the office offers Switch to', function (string $list, array $attributes) {
+    $account = User::factory()->create($attributes);
+
+    $row = collect($this->actingAs($this->staff)->getJson("/nova-api/{$list}?perPage=1000")->json('resources'))
+        ->firstWhere('id.value', $account->id);
+
+    expect($row['authorizedToImpersonate'])->toBeTrue();
+})->with([
+    'all users' => ['users', []],
+    'writers' => ['writers', ['is_writer' => true]],
+    'venue managers' => ['venue-managers', ['is_venue_mgr' => true]],
+    'promoters' => ['promoter-accounts', ['is_promoter' => true]],
+    'guests' => ['guests', []],
+]);
 
 test('staff cannot switch to another member of staff', function () {
     $colleague = User::factory()->create(['email' => 'adam@goodonpaper.info']);
@@ -55,11 +70,15 @@ test('staff cannot switch to another member of staff', function () {
     $this->assertAuthenticatedAs($this->staff);
 });
 
-test('staff cannot switch to an account without a dashboard', function () {
+test('staff can switch to a guest and land on their dashboard', function () {
+    $guest = User::factory()->create();
+
     $this->actingAs($this->staff);
 
-    switchTo(User::factory()->create())->assertForbidden();
-    $this->assertAuthenticatedAs($this->staff);
+    switchTo($guest)->assertOk()->assertJsonPath('redirect', '/dashboard');
+
+    $this->assertAuthenticatedAs($guest);
+    $this->get(route('dashboard'))->assertOk();
 });
 
 test('nobody outside the office can switch accounts', function () {
