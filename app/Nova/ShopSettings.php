@@ -85,6 +85,12 @@ class ShopSettings extends Resource
                 ->alwaysShow()
                 ->nullable()
                 ->help('When someone is there to hand orders over. Shown on the basket and in the ready-for-collection email.'),
+            Textarea::make('Shop page description', 'meta_description')
+                ->rows(3)
+                ->alwaysShow()
+                ->nullable()
+                ->rules('nullable', 'max:300')
+                ->help('What the shop page says about itself in search results and when a link to it is shared. Around 155 characters shows in full. Left empty, the site\'s own description is used.'),
         ];
     }
 }

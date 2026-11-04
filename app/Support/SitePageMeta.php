@@ -84,7 +84,7 @@ class SitePageMeta
      * HTML as plain words. A block ending or a line break becomes a space
      * first, so a heading does not run straight into the paragraph after it.
      */
-    private static function plain(string $html): string
+    public static function plain(string $html): string
     {
         $spaced = preg_replace('#</(p|h[1-6]|li|div|blockquote)>|<br\s*/?>#i', ' ', $html) ?? $html;
 

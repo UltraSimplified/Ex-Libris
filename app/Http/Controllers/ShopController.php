@@ -7,6 +7,8 @@ use App\Models\ProductImage;
 use App\Models\ProductVariant;
 use App\Models\ShopCategory;
 use App\Models\ShopSettings;
+use App\Support\ProductMeta;
+use App\Support\SiteMeta;
 use Illuminate\Database\Eloquent\Builder;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -44,6 +46,7 @@ class ShopController extends Controller
         return Inertia::render('Shop', [
             'title' => 'Shop',
             'categories' => $categories,
+            'meta' => SiteMeta::shop()->toArray(),
         ]);
     }
 
@@ -78,6 +81,7 @@ class ShopController extends Controller
                 'description' => $shopCategory->description,
             ],
             'products' => $products,
+            'meta' => SiteMeta::shopCategory($shopCategory)->toArray(),
         ]);
     }
 
@@ -120,6 +124,7 @@ class ShopController extends Controller
                 ]),
             ],
             'delivery' => $this->delivery($product),
+            'meta' => ProductMeta::for($product)->toArray(),
         ]);
     }
 

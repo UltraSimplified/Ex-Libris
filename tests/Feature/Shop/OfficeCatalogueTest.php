@@ -6,7 +6,16 @@ use App\Models\ProductVariant;
 use App\Models\ShopCategory;
 use App\Models\ShopSettings;
 use App\Models\User;
+use App\Nova\Product as ProductResource;
 use App\Services\Shop\VariantGrid;
+
+/*
+ * The sortable trait keeps its answer for the rest of the process, which in
+ * tests would carry from one request to the next.
+ */
+beforeEach(function () {
+    ProductResource::disableSortabilityCache();
+});
 
 /**
  * The shop's catalogue as the office keeps it, in the Office.
@@ -31,7 +40,6 @@ function productForm(array $overrides = []): array
         'summary' => 'A riso print of Lansdown.',
         'standard_price' => '12.50',
         'standard_stock' => '5',
-        'position' => 0,
         'is_published' => true,
     ], $overrides);
 }
@@ -106,6 +114,100 @@ test('a product cannot be given the same colour and size twice', function () {
         ->assertJsonValidationErrors('size');
 });
 
+/**
+ * The names of a category's products, in the order the Office lists them.
+ *
+ * @return list<string>
+ */
+function officeOrderOf(ShopCategory $category): array
+{
+    return collect(test()->getJson("/nova-api/products?viaResource=shop-categories&viaResourceId={$category->id}&viaRelationship=products&relationshipType=hasMany")
+        ->assertOk()
+        ->json('resources'))
+        ->map(fn (array $resource): string => collect($resource['fields'])->firstWhere('attribute', 'name')['value'])
+        ->all();
+}
+
+test('dragging products on their category\'s page sets the order the shop shows them in', function () {
+    $category = ShopCategory::factory()->create(['is_published' => true]);
+    $first = Product::factory()->for($category)->onSale()->create(['name' => 'First']);
+    $second = Product::factory()->for($category)->onSale()->create(['name' => 'Second']);
+    $third = Product::factory()->for($category)->onSale()->create(['name' => 'Third']);
+
+    $this->actingAs(shopOffice());
+
+    expect(officeOrderOf($category))->toBe(['First', 'Second', 'Third']);
+
+    $this->postJson('/nova-vendor/nova-sortable/sort/products/update-order', [
+        'resourceId' => null,
+        'resourceIds' => [$third->id, $first->id, $second->id],
+        'relatedResource' => null,
+        'relationshipType' => 'hasMany',
+        'viaRelationship' => 'products',
+        'viaResource' => 'shop-categories',
+        'viaResourceId' => $category->id,
+    ])->assertNoContent();
+
+    expect(officeOrderOf($category))->toBe(['Third', 'First', 'Second']);
+
+    $this->get(route('shop.category', $category))
+        ->assertInertia(fn ($page) => $page
+            ->where('products.0.name', 'Third')
+            ->where('products.1.name', 'First')
+            ->where('products.2.name', 'Second'));
+});
+
+test('moving a product to the start only shifts the others in its category', function () {
+    $category = ShopCategory::factory()->create();
+    $first = Product::factory()->for($category)->create();
+    $last = Product::factory()->for($category)->create();
+    $elsewhere = Product::factory()->for(ShopCategory::factory())->create();
+
+    $this->actingAs(shopOffice())
+        ->postJson('/nova-vendor/nova-sortable/sort/products/move-to-start', [
+            'resourceId' => $last->id,
+            'relatedResource' => null,
+            'relationshipType' => 'hasMany',
+            'viaRelationship' => 'products',
+            'viaResource' => 'shop-categories',
+            'viaResourceId' => $category->id,
+        ])
+        ->assertNoContent();
+
+    expect($last->fresh()->position)->toBeLessThan($first->fresh()->position)
+        ->and($elsewhere->fresh()->position)->toBe(1);
+});
+
+test('products cannot be dragged on the main list, where categories are mixed', function () {
+    Product::factory()->create();
+
+    $resource = $this->actingAs(shopOffice())->getJson('/nova-api/products')->assertOk()->json('resources.0');
+
+    expect($resource['sort_on_index'])->toBeFalse()
+        ->and($resource['sort_on_has_many'])->toBeTrue();
+});
+
+test('each category numbers its own products, and a new one goes to the end', function () {
+    $prints = ShopCategory::factory()->create();
+    $shirts = ShopCategory::factory()->create();
+
+    Product::factory()->for($prints)->create();
+
+    expect(Product::factory()->for($prints)->create()->position)->toBe(2)
+        ->and(Product::factory()->for($shirts)->create()->position)->toBe(1);
+});
+
+test('a product moved to another category goes to the end of it', function () {
+    $prints = ShopCategory::factory()->create();
+    $shirts = ShopCategory::factory()->create();
+    Product::factory()->for($shirts)->count(2)->create();
+    $product = Product::factory()->for($prints)->create();
+
+    $product->update(['shop_category_id' => $shirts->id]);
+
+    expect($product->fresh()->position)->toBe(3);
+});
+
 test('postage bands and shop settings can be edited but never made or removed', function (string $uriKey, Closure $model) {
     $office = shopOffice();
     $record = $model();
@@ -118,6 +220,45 @@ test('postage bands and shop settings can be edited but never made or removed', 
     'postage bands' => ['postage-bands', fn () => PostageBand::query()->first()],
     'shop settings' => ['shop-settings', fn () => ShopSettings::current()],
 ]);
+
+/**
+ * What the Office sends to save the shop's settings.
+ *
+ * @return array<string, mixed>
+ */
+function shopSettingsForm(ShopSettings $settings, ?string $description): array
+{
+    return [
+        'postage_cap' => $settings->postage_cap,
+        'collection_name' => $settings->collection_name,
+        'collection_address' => $settings->collection_address,
+        'collection_hours' => $settings->collection_hours,
+        'meta_description' => $description,
+    ];
+}
+
+test('the office can change or clear the shop page\'s description', function (?string $description) {
+    $settings = ShopSettings::current();
+
+    $this->actingAs(shopOffice())
+        ->putJson("/nova-api/shop-settings/{$settings->id}", shopSettingsForm($settings, $description))
+        ->assertOk();
+
+    expect($settings->fresh()->meta_description)->toBe($description);
+})->with(['changed' => 'Riso prints and records.', 'cleared' => null]);
+
+test('the shop page\'s description has to be short enough to be of use', function () {
+    $settings = ShopSettings::current();
+
+    $this->actingAs(shopOffice())
+        ->putJson("/nova-api/shop-settings/{$settings->id}", shopSettingsForm($settings, str_repeat('a', 301)))
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('meta_description');
+});
+
+test('the shop page starts out with a description already in the box', function () {
+    expect(ShopSettings::current()->meta_description)->toContain('Good on Paper');
+});
 
 test('only the office can reach the shop in the Office', function () {
     $this->actingAs(User::factory()->create(['email' => 'reader@example.com']))

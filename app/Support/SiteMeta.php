@@ -4,6 +4,8 @@ namespace App\Support;
 
 use App\Models\Issue;
 use App\Models\Promoter;
+use App\Models\ShopCategory;
+use App\Models\ShopSettings;
 use App\Models\Venue;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -159,6 +161,32 @@ class SiteMeta
                 'logo' => filled($promoter->logo) ? Storage::disk('do')->url($promoter->logo) : null,
                 'sameAs' => filled($promoter->website) ? $promoter->website : null,
             ]),
+        );
+    }
+
+    /**
+     * The shop's front page, in the words the office has set in Shop settings.
+     */
+    public static function shop(): PageMeta
+    {
+        return self::for(
+            'The Good on Paper shop',
+            Str::squish((string) ShopSettings::current()->meta_description),
+        );
+    }
+
+    /**
+     * A shelf in the shop: its own description and picture, or else a line
+     * saying whose it is and the site's picture.
+     */
+    public static function shopCategory(ShopCategory $category): PageMeta
+    {
+        $description = (string) Str::of((string) $category->description)->squish();
+
+        return self::for(
+            $category->name,
+            $description !== '' ? Str::limit($description, 200) : "{$category->name} from the Good on Paper shop.",
+            filled($category->image) ? Storage::disk('do')->url($category->image) : null,
         );
     }
 

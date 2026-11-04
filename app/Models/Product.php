@@ -11,6 +11,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Storage;
+use Spatie\EloquentSortable\Sortable;
+use Spatie\EloquentSortable\SortableTrait;
 
 /**
  * Something the shop sells: a print, a shirt, a poster, a record.
@@ -19,16 +21,29 @@ use Illuminate\Support\Facades\Storage;
  * stock. A print has a single variant with no colour or size; a t-shirt has
  * one for every colour and size.
  */
-class Product extends Model
+class Product extends Model implements Sortable
 {
     /** @use HasFactory<ProductFactory> */
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, SortableTrait;
 
     /**
      * The disk product pictures are kept on, the same public one as the rest
      * of the site's pictures, so Stripe's checkout page can show them too.
      */
     public const DISK = 'do';
+
+    /**
+     * Products are dragged into order in the Office on their category's page,
+     * as the order only means anything within a category. A new one goes to
+     * the end.
+     *
+     * @var array{order_column_name: string, sort_when_creating: bool, sort_on_has_many: bool}
+     */
+    public array $sortable = [
+        'order_column_name' => 'position',
+        'sort_when_creating' => true,
+        'sort_on_has_many' => true,
+    ];
 
     /**
      * @var list<string>
@@ -54,6 +69,27 @@ class Product extends Model
             'is_published' => 'boolean',
             'position' => 'integer',
         ];
+    }
+
+    /**
+     * A product moved to another category goes to the end of it, as its old
+     * position says nothing about where it belongs there.
+     */
+    protected static function booted(): void
+    {
+        static::updating(function (Product $product): void {
+            if ($product->isDirty('shop_category_id')) {
+                $product->setHighestOrderNumber();
+            }
+        });
+    }
+
+    /**
+     * The others in its category, which are all its position is relative to.
+     */
+    public function buildSortQuery(): Builder
+    {
+        return static::query()->where('shop_category_id', $this->shop_category_id);
     }
 
     /**

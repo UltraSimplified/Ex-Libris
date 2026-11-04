@@ -8,7 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * The shop-wide values the office changes in the Office: the most an order
- * pays for postage, and where and when collection orders are picked up.
+ * pays for postage, where and when collection orders are picked up, and how
+ * the shop page describes itself to search engines and link previews.
  *
  * There is only ever the one row, made by a migration.
  */
@@ -30,6 +31,7 @@ class ShopSettings extends Model
         'collection_name',
         'collection_address',
         'collection_hours',
+        'meta_description',
     ];
 
     /**

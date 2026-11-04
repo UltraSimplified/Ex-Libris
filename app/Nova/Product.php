@@ -17,6 +17,7 @@ use Laravel\Nova\Fields\Number;
 use Laravel\Nova\Fields\Slug;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Outl1ne\NovaSortable\Traits\HasSortableRows;
 use Ultrasimplified\ImageCropper\ImageCropper;
 
 /**
@@ -32,10 +33,22 @@ use Ultrasimplified\ImageCropper\ImageCropper;
  */
 class Product extends Resource
 {
+    use HasSortableRows {
+        indexQuery as sortableIndexQuery;
+    }
+
     /**
      * @var class-string<ProductModel>
      */
     public static $model = ProductModel::class;
+
+    /**
+     * Enough for a whole category on one page, as a product can only be
+     * dragged among those showing.
+     *
+     * @var array<int, int>
+     */
+    public static $perPageViaRelationshipOptions = [100];
 
     /**
      * @var string
@@ -58,7 +71,7 @@ class Product extends Resource
 
     public static function indexQuery(NovaRequest $request, Builder $query): Builder
     {
-        return $query->withMin('variants', 'price')->withMax('variants', 'price');
+        return static::sortableIndexQuery($request, $query)->withMin('variants', 'price')->withMax('variants', 'price');
     }
 
     /**
@@ -95,7 +108,6 @@ class Product extends Resource
             $this->standardSalePrice(),
             $this->standardStock(),
 
-            Number::make('Position')->min(0)->step(1)->default(0)->rules('required', 'integer', 'min:0')->hideFromIndex(),
             Boolean::make('Published', 'is_published')->sortable(),
 
             HasMany::make('Colours and sizes', 'variants', ProductVariant::class),
