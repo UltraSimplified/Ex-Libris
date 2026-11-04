@@ -44,6 +44,14 @@ class ShopCategory extends Resource
         'position' => 'asc',
     ];
 
+    /**
+     * Opens to its page rather than the form, as that is where its products
+     * are listed and dragged into order. The form is the pencil at the top.
+     *
+     * @var string
+     */
+    public static $clickAction = 'view';
+
     public static function label(): string
     {
         return 'Categories';

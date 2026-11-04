@@ -5,16 +5,18 @@ use App\Models\User;
 use App\Nova\Advert as AdvertResource;
 use App\Nova\Listing as ListingResource;
 use App\Nova\Resource;
+use App\Nova\ShopCategory as ShopCategoryResource;
 use Illuminate\Support\Facades\File;
 use Laravel\Nova\Nova;
 
 /**
  * Clicking a row in the Office opens the form, and the eye on a listings
  * row frames the listing as the public will see it rather than showing
- * the read-only detail page. Adverts are the exception: an advert opens to
- * its detail page, where its report and its figures are.
+ * the read-only detail page. Adverts and shop categories are the exceptions:
+ * an advert opens to its detail page, where its report and its figures are,
+ * and a category to its own, where its products are put in order.
  */
-test('every resource in the Office opens to the form when clicked, bar adverts', function () {
+test('every resource in the Office opens to the form when clicked, bar adverts and shop categories', function () {
     $resources = collect(File::files(app_path('Nova')))
         ->map(fn ($file): string => 'App\\Nova\\'.$file->getFilenameWithoutExtension())
         ->reject(fn (string $class): bool => $class === Resource::class);
@@ -25,7 +27,7 @@ test('every resource in the Office opens to the form when clicked, bar adverts',
         ->and($resources)->toContain(AdvertResource::class);
 
     $resources->each(function (string $class): void {
-        $clickAction = $class === AdvertResource::class ? 'view' : 'edit';
+        $clickAction = in_array($class, [AdvertResource::class, ShopCategoryResource::class], true) ? 'view' : 'edit';
 
         expect($class::$clickAction)->toBe($clickAction, "{$class} does not open to the {$clickAction} page");
     });

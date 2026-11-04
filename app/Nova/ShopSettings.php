@@ -3,6 +3,7 @@
 namespace App\Nova;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Laravel\Nova\Fields\Currency;
 use Laravel\Nova\Fields\Field;
 use Laravel\Nova\Fields\Text;
@@ -85,6 +86,8 @@ class ShopSettings extends Resource
                 ->alwaysShow()
                 ->nullable()
                 ->help('When someone is there to hand orders over. Shown on the basket and in the ready-for-collection email.'),
+            Text::make('Shop page description', fn (): string => Str::limit((string) $this->meta_description, 60))
+                ->onlyOnIndex(),
             Textarea::make('Shop page description', 'meta_description')
                 ->rows(3)
                 ->alwaysShow()
