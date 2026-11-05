@@ -31,6 +31,29 @@ test('a reader counts once an hour however many pages they read', function () {
         ->and(SiteVisit::query()->sole()->visited_at->toDateTimeString())->toBe('2026-11-02 14:00:00');
 });
 
+test('every page the reader asks for counts as a page view', function () {
+    visitAs(READER);
+    visitAs(READER, '/listings');
+    visitAs(READER, '/listings');
+
+    expect(SiteVisit::query()->sole()->requests)->toBe(3);
+});
+
+test('a page view is counted against the reader who asked for it', function () {
+    visitAs(READER);
+    visitAs(READER);
+    visitAs(READER, ip: '203.0.113.8');
+
+    expect(SiteVisit::query()->orderBy('id')->pluck('requests')->all())->toBe([2, 1]);
+});
+
+test('a page that did not load is not a page view', function () {
+    visitAs(READER);
+    visitAs(READER, '/there-is-no-such-page');
+
+    expect(SiteVisit::query()->sole()->requests)->toBe(1);
+});
+
 test('a page change made through Inertia counts as a visit', function () {
     $version = app(HandleInertiaRequests::class)->version(request());
 
@@ -139,9 +162,9 @@ test('the 24 hours run hour by hour up to the one under way, quiet hours as zero
     $points = siteVisitsRange('24 Hours')['points'];
 
     expect($points)->toHaveCount(24)
-        ->and($points[0])->toBe(['label' => 'Sun 1 Nov, 3 PM', 'tick' => null, 'visits' => 1])
+        ->and($points[0])->toBe(['label' => 'Sun 1 Nov, 3 PM', 'tick' => null, 'visits' => 1, 'requests' => 1])
         ->and($points[1]['visits'])->toBe(0)
-        ->and($points[23])->toBe(['label' => 'Mon 2 Nov, 2 PM', 'tick' => null, 'visits' => 2]);
+        ->and($points[23])->toBe(['label' => 'Mon 2 Nov, 2 PM', 'tick' => null, 'visits' => 2, 'requests' => 2]);
 });
 
 test('the 24 hours mark the axis every four hours', function () {
@@ -161,13 +184,13 @@ test('the 7 days count a visitor once a day, quiet days as zero', function () {
     SiteVisit::factory()->create(['visited_at' => '2026-10-26 23:00:00']);
 
     expect(siteVisitsRange('7 Days')['points'])->toBe([
-        ['label' => 'Tue 27 Oct', 'tick' => 'Tue', 'visits' => 1],
-        ['label' => 'Wed 28 Oct', 'tick' => 'Wed', 'visits' => 0],
-        ['label' => 'Thu 29 Oct', 'tick' => 'Thu', 'visits' => 0],
-        ['label' => 'Fri 30 Oct', 'tick' => 'Fri', 'visits' => 0],
-        ['label' => 'Sat 31 Oct', 'tick' => 'Sat', 'visits' => 0],
-        ['label' => 'Sun 1 Nov', 'tick' => 'Sun', 'visits' => 0],
-        ['label' => 'Mon 2 Nov', 'tick' => 'Mon', 'visits' => 2],
+        ['label' => 'Tue 27 Oct', 'tick' => 'Tue', 'visits' => 1, 'requests' => 1],
+        ['label' => 'Wed 28 Oct', 'tick' => 'Wed', 'visits' => 0, 'requests' => 0],
+        ['label' => 'Thu 29 Oct', 'tick' => 'Thu', 'visits' => 0, 'requests' => 0],
+        ['label' => 'Fri 30 Oct', 'tick' => 'Fri', 'visits' => 0, 'requests' => 0],
+        ['label' => 'Sat 31 Oct', 'tick' => 'Sat', 'visits' => 0, 'requests' => 0],
+        ['label' => 'Sun 1 Nov', 'tick' => 'Sun', 'visits' => 0, 'requests' => 0],
+        ['label' => 'Mon 2 Nov', 'tick' => 'Mon', 'visits' => 2, 'requests' => 3],
     ]);
 });
 
@@ -196,6 +219,22 @@ test('each total counts a visitor once across its range and leaves out older vis
     expect(siteVisitsRange('24 Hours')['total'])->toBe(1)
         ->and(siteVisitsRange('7 Days')['total'])->toBe(2)
         ->and(siteVisitsRange('30 Days')['total'])->toBe(3);
+});
+
+test('each range adds up every page view within it, a visitor counted as often as they read', function () {
+    $this->travelTo('2026-11-02 12:00:00');
+
+    SiteVisit::factory()->create(['visitor_hash' => 'returning', 'visited_at' => '2026-11-02 11:00:00', 'requests' => 4]);
+    SiteVisit::factory()->create(['visitor_hash' => 'returning', 'visited_at' => '2026-10-30 10:00:00', 'requests' => 2]);
+    SiteVisit::factory()->create(['visitor_hash' => 'long-gone', 'visited_at' => '2026-10-03 23:00:00', 'requests' => 9]);
+
+    expect(siteVisitsRange('24 Hours')['requests'])->toBe(4)
+        ->and(siteVisitsRange('7 Days')['requests'])->toBe(6)
+        ->and(siteVisitsRange('30 Days')['requests'])->toBe(6);
+});
+
+test('a range with nothing in it reports no page views', function () {
+    expect(siteVisitsRange('24 Hours')['requests'])->toBe(0);
 });
 
 test('each range names the dates it covers', function () {

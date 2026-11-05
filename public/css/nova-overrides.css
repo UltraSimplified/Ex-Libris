@@ -345,9 +345,11 @@ html.goblin [data-goblin-trigger]::before {
     color: rgb(17, 24, 39);
 }
 
-/* Unique Visitors: the period tabs and date above a panel holding the figure
-   and its chart. The phone layout is the figure over the chart; from 640px
-   they sit side by side. */
+/* Unique Visitors: the period tabs and date above a panel holding the two
+   figures and their chart. The phone layout is the figures over the chart;
+   from 640px they sit side by side. Page views are drawn in hot pink, which
+   goblin mode leaves alone: a second line that cannot be told from the
+   first is worse than an off-theme one. */
 .gop-visitors-bar {
     display: flex;
     flex-wrap: wrap;
@@ -397,8 +399,23 @@ html.goblin [data-goblin-trigger]::before {
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
+    gap: 0.75rem;
     justify-content: center;
     white-space: nowrap;
+}
+
+.gop-visitors-reading {
+    display: flex;
+    flex-direction: column;
+}
+
+.gop-visitors-swatch {
+    display: inline-block;
+    width: 0.5rem;
+    height: 0.5rem;
+    margin-right: 0.4rem;
+    border-radius: 50%;
+    background: rgb(96, 165, 250);
 }
 
 .gop-visitors-chart {
@@ -441,6 +458,25 @@ html.goblin [data-goblin-trigger]::before {
     stroke-width: 2;
     stroke-linejoin: round;
     stroke-linecap: round;
+}
+
+/* Page views: the line, dot and swatch pulled over to pink. The dot and the
+   swatch carry their own colour, so they are named alongside it to win. */
+.gop-visitors-requests {
+    stroke: rgb(236, 72, 153);
+}
+
+.gop-visitors-dot.gop-visitors-requests,
+.gop-visitors-swatch.gop-visitors-requests {
+    background: rgb(236, 72, 153);
+}
+
+.gop-visitors-requests-text {
+    color: rgb(190, 24, 93);
+}
+
+.dark .gop-visitors-requests-text {
+    color: rgb(244, 114, 182);
 }
 
 .gop-visitors-y,

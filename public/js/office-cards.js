@@ -93,17 +93,22 @@ Nova.booting((app) => {
         new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 2 }).format(value).toLowerCase()
 
     /*
-     * The visitors chart: a filled line over dashed gridlines. The svg stretches
-     * to fit, so the labels are HTML placed by percentage rather than svg text,
-     * which would stretch with it. It sits out of the flow, as an svg in it
-     * holds the page open at its viewBox width on a phone.
+     * The visitors chart: two lines over dashed gridlines, unique visitors
+     * filled underneath and page views above them in pink. Both are drawn
+     * against one axis, so the gap between them is the gap it looks like.
+     * The svg stretches to fit, so the labels are HTML placed by percentage
+     * rather than svg text, which would stretch with it. It sits out of the
+     * flow, as an svg in it holds the page open at its viewBox width on a
+     * phone.
      */
     const visitorsChart = (points, hovered, onHover) => {
-        const { step, top } = axisScale(Math.max(...points.map((point) => point.visits)))
+        const highest = Math.max(...points.map((point) => Math.max(point.visits, point.requests)))
+        const { step, top } = axisScale(highest)
         const xOf = (position) => (position / (points.length - 1)) * 100
-        const yOf = (visits) => 100 - (visits / top) * 100
+        const yOf = (value) => 100 - (value / top) * 100
         const marks = Array.from({ length: top / step + 1 }, (_, index) => index * step)
-        const line = points.map((point, position) => `${xOf(position)},${yOf(point.visits)}`).join(' ')
+        const lineOf = (reading) => points.map((point, position) => `${xOf(position)},${yOf(reading(point))}`).join(' ')
+        const visitsLine = lineOf((point) => point.visits)
         const hoveredPoint = hovered === null ? null : points[hovered]
 
         const nearestPoint = (event) => {
@@ -111,6 +116,12 @@ Nova.booting((app) => {
 
             onHover(Math.round(((event.clientX - box.left) / box.width) * (points.length - 1)))
         }
+
+        const reading = (count, one, many) => `${count.toLocaleString()} ${count === 1 ? one : many}`
+
+        const axisLabel = points
+            .map((point) => `${point.label}: ${reading(point.visits, 'visitor', 'visitors')}, ${reading(point.requests, 'page view', 'page views')}`)
+            .join(', ')
 
         return h('div', { class: 'gop-visitors-chart' }, [
             h('div', {
@@ -123,7 +134,7 @@ Nova.booting((app) => {
                     viewBox: '0 0 100 100',
                     preserveAspectRatio: 'none',
                     role: 'img',
-                    'aria-label': points.map((point) => `${point.label}: ${point.visits}`).join(', '),
+                    'aria-label': axisLabel,
                 }, [
                     ...marks.map((mark) =>
                         h('line', {
@@ -135,8 +146,13 @@ Nova.booting((app) => {
                             'vector-effect': 'non-scaling-stroke',
                         })
                     ),
-                    h('polygon', { class: 'gop-visitors-area', points: `0,100 ${line} 100,100` }),
-                    h('polyline', { class: 'gop-visitors-line', points: line, 'vector-effect': 'non-scaling-stroke' }),
+                    h('polygon', { class: 'gop-visitors-area', points: `0,100 ${visitsLine} 100,100` }),
+                    h('polyline', {
+                        class: 'gop-visitors-line gop-visitors-requests',
+                        points: lineOf((point) => point.requests),
+                        'vector-effect': 'non-scaling-stroke',
+                    }),
+                    h('polyline', { class: 'gop-visitors-line', points: visitsLine, 'vector-effect': 'non-scaling-stroke' }),
                 ]),
                 ...marks.map((mark) =>
                     h('span', { class: 'gop-visitors-y gop-muted', style: { top: `${yOf(mark)}%` } }, compactNumber(mark))
@@ -148,6 +164,10 @@ Nova.booting((app) => {
                 ),
                 hoveredPoint && h('span', { class: 'gop-visitors-crosshair', style: { left: `${xOf(hovered)}%` } }),
                 hoveredPoint && h('span', {
+                    class: 'gop-visitors-dot gop-visitors-requests',
+                    style: { left: `${xOf(hovered)}%`, top: `${yOf(hoveredPoint.requests)}%` },
+                }),
+                hoveredPoint && h('span', {
                     class: 'gop-visitors-dot',
                     style: { left: `${xOf(hovered)}%`, top: `${yOf(hoveredPoint.visits)}%` },
                 }),
@@ -158,13 +178,24 @@ Nova.booting((app) => {
                         : { left: `calc(${xOf(hovered)}% + 0.6rem)` },
                 }, [
                     h('span', { class: 'gop-muted' }, hoveredPoint.label),
-                    h('strong', { class: 'gop-strong' },
-                        `${hoveredPoint.visits.toLocaleString()} ${hoveredPoint.visits === 1 ? 'visitor' : 'visitors'}`
+                    h('strong', { class: 'gop-strong' }, reading(hoveredPoint.visits, 'visitor', 'visitors')),
+                    h('strong', { class: 'gop-strong gop-visitors-requests-text' },
+                        reading(hoveredPoint.requests, 'page view', 'page views')
                     ),
                 ]),
             ]),
         ])
     }
+
+    /** A headline count under its heading, with the swatch of the line it reads. */
+    const chartFigure = (heading, total, requests) =>
+        h('div', { class: requests ? 'gop-visitors-reading gop-visitors-views' : 'gop-visitors-reading gop-visitors-unique' }, [
+            h('span', { class: 'text-sm gop-muted' }, [
+                h('span', { class: 'gop-visitors-swatch' + (requests ? ' gop-visitors-requests' : '') }),
+                heading,
+            ]),
+            h('span', { class: 'text-2xl font-bold gop-strong' }, compactNumber(total)),
+        ])
 
     app.component('gop-site-visits', {
         props: ['card'],
@@ -194,8 +225,8 @@ Nova.booting((app) => {
                 ]),
                 h('div', { class: 'gop-visitors-panel bg-white dark:bg-gray-800 rounded-lg shadow' }, [
                     h('div', { class: 'gop-visitors-figure' }, [
-                        h('span', { class: 'text-sm gop-muted' }, this.card.heading),
-                        h('span', { class: 'text-2xl font-bold gop-strong' }, compactNumber(range.total)),
+                        chartFigure(this.card.heading, range.total, false),
+                        chartFigure(this.card.requestsHeading, range.requests, true),
                     ]),
                     visitorsChart(range.points, this.hovered, (position) => {
                         this.hovered = position
