@@ -409,6 +409,12 @@ html.goblin [data-goblin-trigger]::before {
     flex-direction: column;
 }
 
+/* The average visit has no line on the chart and so carries no swatch; it is
+   indented to the width of one, to line up with the two that do. */
+.gop-visitors-visit > .text-sm {
+    padding-left: 0.9rem;
+}
+
 .gop-visitors-swatch {
     display: inline-block;
     width: 0.5rem;
@@ -449,6 +455,14 @@ html.goblin [data-goblin-trigger]::before {
 
 .gop-visitors-area {
     fill: rgb(96, 165, 250);
+    opacity: 0.12;
+}
+
+/* Page views are shaded as a band resting on the visitors line, not as a
+   second fill from the axis, so the two shadings never sit over each other
+   and the pink is always and only the pages read beyond one apiece. */
+.gop-visitors-band {
+    fill: rgb(236, 72, 153);
     opacity: 0.12;
 }
 

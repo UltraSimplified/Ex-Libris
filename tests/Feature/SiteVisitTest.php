@@ -3,6 +3,7 @@
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\RecordSiteVisit;
 use App\Models\SiteVisit;
+use App\Models\User;
 use App\Nova\Cards\SiteVisits;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
@@ -45,6 +46,35 @@ test('a page view is counted against the reader who asked for it', function () {
     visitAs(READER, ip: '203.0.113.8');
 
     expect(SiteVisit::query()->orderBy('id')->pluck('requests')->all())->toBe([2, 1]);
+});
+
+test('the time between a reader\'s first and last page is kept', function () {
+    $this->travelTo('2026-11-02 14:05:00');
+    visitAs(READER);
+
+    $this->travelTo('2026-11-02 14:08:30');
+    visitAs(READER, '/listings');
+
+    $visit = SiteVisit::query()->sole();
+
+    expect($visit->first_seen_at->toDateTimeString())->toBe('2026-11-02 14:05:00')
+        ->and($visit->last_seen_at->toDateTimeString())->toBe('2026-11-02 14:08:30');
+});
+
+test('the Office\'s own staff reading the public site are not counted', function () {
+    $this->actingAs(User::factory()->create(['email' => User::OFFICE_EMAILS[0]]));
+
+    visitAs(READER);
+
+    expect(SiteVisit::query()->count())->toBe(0);
+});
+
+test('a reader who is signed in but not office staff is counted', function () {
+    $this->actingAs(User::factory()->create());
+
+    visitAs(READER);
+
+    expect(SiteVisit::query()->count())->toBe(1);
 });
 
 test('a page that did not load is not a page view', function () {
@@ -235,6 +265,32 @@ test('each range adds up every page view within it, a visitor counted as often a
 
 test('a range with nothing in it reports no page views', function () {
     expect(siteVisitsRange('24 Hours')['requests'])->toBe(0);
+});
+
+test('each range averages how long its visits lasted', function () {
+    $this->travelTo('2026-11-02 12:00:00');
+
+    SiteVisit::factory()->lasting(60)->create(['visited_at' => '2026-11-02 11:00:00']);
+    SiteVisit::factory()->lasting(180)->create(['visited_at' => '2026-11-02 11:00:00']);
+    SiteVisit::factory()->lasting(600)->create(['visited_at' => '2026-10-30 10:00:00']);
+
+    expect(siteVisitsRange('24 Hours')['averageVisit'])->toBe(120)
+        ->and(siteVisitsRange('7 Days')['averageVisit'])->toBe(280);
+});
+
+test('a visit of one page has no length to average, and is passed over', function () {
+    $this->travelTo('2026-11-02 12:00:00');
+
+    SiteVisit::factory()->create(['visited_at' => '2026-11-02 11:00:00']);
+    SiteVisit::factory()->lasting(90)->create(['visited_at' => '2026-11-02 11:00:00']);
+
+    expect(siteVisitsRange('24 Hours')['averageVisit'])->toBe(90);
+});
+
+test('a range with nothing that can be timed reports no average', function () {
+    SiteVisit::factory()->create();
+
+    expect(siteVisitsRange('24 Hours')['averageVisit'])->toBeNull();
 });
 
 test('each range names the dates it covers', function () {

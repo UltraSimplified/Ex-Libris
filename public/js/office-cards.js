@@ -93,9 +93,12 @@ Nova.booting((app) => {
         new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 2 }).format(value).toLowerCase()
 
     /*
-     * The visitors chart: two lines over dashed gridlines, unique visitors
-     * filled underneath and page views above them in pink. Both are drawn
-     * against one axis, so the gap between them is the gap it looks like.
+     * The visitors chart: two lines over dashed gridlines. Unique visitors
+     * are filled in blue from the axis up, and page views add a pink band
+     * on top of that fill rather than a second one from the axis, so the
+     * two shadings never sit over each other and the pink is always and
+     * only the pages read beyond one apiece. Both lines are drawn against
+     * one axis, so the gap between them is the gap it looks like.
      * The svg stretches to fit, so the labels are HTML placed by percentage
      * rather than svg text, which would stretch with it. It sits out of the
      * flow, as an svg in it holds the page open at its viewBox width on a
@@ -109,6 +112,7 @@ Nova.booting((app) => {
         const marks = Array.from({ length: top / step + 1 }, (_, index) => index * step)
         const lineOf = (reading) => points.map((point, position) => `${xOf(position)},${yOf(reading(point))}`).join(' ')
         const visitsLine = lineOf((point) => point.visits)
+        const requestsLine = lineOf((point) => point.requests)
         const hoveredPoint = hovered === null ? null : points[hovered]
 
         const nearestPoint = (event) => {
@@ -116,6 +120,9 @@ Nova.booting((app) => {
 
             onHover(Math.round(((event.clientX - box.left) / box.width) * (points.length - 1)))
         }
+
+        /* A line's points right to left, to close a band over the line below it. */
+        const backAlong = (line) => line.split(' ').reverse().join(' ')
 
         const reading = (count, one, many) => `${count.toLocaleString()} ${count === 1 ? one : many}`
 
@@ -147,12 +154,13 @@ Nova.booting((app) => {
                         })
                     ),
                     h('polygon', { class: 'gop-visitors-area', points: `0,100 ${visitsLine} 100,100` }),
+                    h('polygon', { class: 'gop-visitors-band', points: `${requestsLine} ${backAlong(visitsLine)}` }),
+                    h('polyline', { class: 'gop-visitors-line', points: visitsLine, 'vector-effect': 'non-scaling-stroke' }),
                     h('polyline', {
                         class: 'gop-visitors-line gop-visitors-requests',
-                        points: lineOf((point) => point.requests),
+                        points: requestsLine,
                         'vector-effect': 'non-scaling-stroke',
                     }),
-                    h('polyline', { class: 'gop-visitors-line', points: visitsLine, 'vector-effect': 'non-scaling-stroke' }),
                 ]),
                 ...marks.map((mark) =>
                     h('span', { class: 'gop-visitors-y gop-muted', style: { top: `${yOf(mark)}%` } }, compactNumber(mark))
@@ -164,12 +172,12 @@ Nova.booting((app) => {
                 ),
                 hoveredPoint && h('span', { class: 'gop-visitors-crosshair', style: { left: `${xOf(hovered)}%` } }),
                 hoveredPoint && h('span', {
-                    class: 'gop-visitors-dot gop-visitors-requests',
-                    style: { left: `${xOf(hovered)}%`, top: `${yOf(hoveredPoint.requests)}%` },
-                }),
-                hoveredPoint && h('span', {
                     class: 'gop-visitors-dot',
                     style: { left: `${xOf(hovered)}%`, top: `${yOf(hoveredPoint.visits)}%` },
+                }),
+                hoveredPoint && h('span', {
+                    class: 'gop-visitors-dot gop-visitors-requests',
+                    style: { left: `${xOf(hovered)}%`, top: `${yOf(hoveredPoint.requests)}%` },
                 }),
                 hoveredPoint && h('div', {
                     class: 'gop-visitors-tooltip',
@@ -187,15 +195,33 @@ Nova.booting((app) => {
         ])
     }
 
-    /** A headline count under its heading, with the swatch of the line it reads. */
-    const chartFigure = (heading, total, requests) =>
-        h('div', { class: requests ? 'gop-visitors-reading gop-visitors-views' : 'gop-visitors-reading gop-visitors-unique' }, [
+    /**
+     * A headline reading under its heading, carrying the swatch of the line
+     * it reads where it has one. The average visit has no line of its own.
+     */
+    const chartFigure = (heading, value, name, swatchClass) =>
+        h('div', { class: `gop-visitors-reading gop-visitors-${name}` }, [
             h('span', { class: 'text-sm gop-muted' }, [
-                h('span', { class: 'gop-visitors-swatch' + (requests ? ' gop-visitors-requests' : '') }),
+                swatchClass ? h('span', { class: swatchClass }) : null,
                 heading,
             ]),
-            h('span', { class: 'text-2xl font-bold gop-strong' }, compactNumber(total)),
+            h('span', { class: 'text-2xl font-bold gop-strong' }, value),
         ])
+
+    /** 252 seconds as 4m 12s, and nothing measurable as a dash. */
+    const duration = (seconds) => {
+        if (seconds === null || seconds === undefined) {
+            return '—'
+        }
+
+        const minutes = Math.floor(seconds / 60)
+
+        if (minutes >= 60) {
+            return `${Math.floor(minutes / 60)}h ${minutes % 60}m`
+        }
+
+        return minutes > 0 ? `${minutes}m ${seconds % 60}s` : `${seconds}s`
+    }
 
     app.component('gop-site-visits', {
         props: ['card'],
@@ -225,8 +251,9 @@ Nova.booting((app) => {
                 ]),
                 h('div', { class: 'gop-visitors-panel bg-white dark:bg-gray-800 rounded-lg shadow' }, [
                     h('div', { class: 'gop-visitors-figure' }, [
-                        chartFigure(this.card.heading, range.total, false),
-                        chartFigure(this.card.requestsHeading, range.requests, true),
+                        chartFigure(this.card.averageVisitHeading, duration(range.averageVisit), 'visit', null),
+                        chartFigure(this.card.heading, compactNumber(range.total), 'unique', 'gop-visitors-swatch'),
+                        chartFigure(this.card.requestsHeading, compactNumber(range.requests), 'views', 'gop-visitors-swatch gop-visitors-requests'),
                     ]),
                     visitorsChart(range.points, this.hovered, (position) => {
                         this.hovered = position

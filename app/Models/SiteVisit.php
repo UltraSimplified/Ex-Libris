@@ -34,25 +34,32 @@ class SiteVisit extends Model
         'visited_at',
         'visitor_hash',
         'requests',
+        'first_seen_at',
+        'last_seen_at',
     ];
 
     /**
      * Note this hour's visit from whoever sent the request, once per hour,
-     * counting every page they asked for within it.
+     * counting every page they asked for within it and moving the last page
+     * on, so that the time between the two is how long they stayed.
      *
      * Old visits are cleared here rather than on the schedule so that the
      * hashes cannot outlive the report if the scheduler is not running.
      */
     public static function record(Request $request): void
     {
+        $now = now();
+
         self::query()->upsert(
             [[
-                'visited_at' => now()->startOfHour()->toDateTimeString(),
+                'visited_at' => $now->copy()->startOfHour()->toDateTimeString(),
                 'visitor_hash' => self::hashFor($request),
                 'requests' => 1,
+                'first_seen_at' => $now->toDateTimeString(),
+                'last_seen_at' => $now->toDateTimeString(),
             ]],
             ['visited_at', 'visitor_hash'],
-            ['requests' => DB::raw('requests + 1')],
+            ['requests' => DB::raw('requests + 1'), 'last_seen_at'],
         );
 
         Lottery::odds(1, 100)
@@ -85,6 +92,8 @@ class SiteVisit extends Model
         return [
             'visited_at' => 'datetime',
             'requests' => 'integer',
+            'first_seen_at' => 'datetime',
+            'last_seen_at' => 'datetime',
         ];
     }
 }

@@ -5,6 +5,7 @@ namespace App\Nova\Cards;
 use App\Models\SiteVisit;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Laravel\Nova\Card;
 
 /**
@@ -29,6 +30,7 @@ class SiteVisits extends Card
         return array_merge(parent::jsonSerialize(), [
             'heading' => 'Unique Visitors',
             'requestsHeading' => 'Page Views',
+            'averageVisitHeading' => 'Average Visit',
             'ranges' => [
                 $this->lastDayByHour(),
                 $this->lastDays('7 Days', 7, 1, 'D'),
@@ -40,7 +42,7 @@ class SiteVisits extends Card
     /**
      * The hour under way and the 23 before it, with an axis mark every four hours.
      *
-     * @return array{label: string, period: string, total: int, requests: int, points: list<array{label: string, tick: ?string, visits: int, requests: int}>}
+     * @return array{label: string, period: string, total: int, requests: int, averageVisit: ?int, points: list<array{label: string, tick: ?string, visits: int, requests: int}>}
      */
     private function lastDayByHour(): array
     {
@@ -67,7 +69,7 @@ class SiteVisits extends Card
      * Whole days up to today, oldest first, counting a visitor once a day
      * however many hours they came in. The axis marks count back from today.
      *
-     * @return array{label: string, period: string, total: int, requests: int, points: list<array{label: string, tick: ?string, visits: int, requests: int}>}
+     * @return array{label: string, period: string, total: int, requests: int, averageVisit: ?int, points: list<array{label: string, tick: ?string, visits: int, requests: int}>}
      */
     private function lastDays(string $label, int $days, int $daysBetweenTicks, string $tickFormat): array
     {
@@ -110,6 +112,39 @@ class SiteVisits extends Card
     }
 
     /**
+     * How long the average visit lasted, in seconds, or null where none can
+     * be measured yet.
+     *
+     * A visit of one page has no length to read: the only moment known about
+     * it is the moment it arrived. Those are passed over rather than counted
+     * as nothing, so the figure describes the visits that can be timed. It
+     * also undercounts by the time spent on the last page, which no request
+     * records, and splits a visit that crosses the hour into two.
+     */
+    private function averageVisit(CarbonInterface $from): ?int
+    {
+        $seconds = SiteVisit::query()
+            ->where('visited_at', '>=', $from)
+            ->whereColumn('last_seen_at', '>', 'first_seen_at')
+            ->toBase()
+            ->avg(DB::raw($this->secondsBetween('first_seen_at', 'last_seen_at')));
+
+        return $seconds === null ? null : (int) round((float) $seconds);
+    }
+
+    /**
+     * The seconds between two columns, in the dialect of the connection the
+     * card is reading: the Office runs on MariaDB and the tests on SQLite,
+     * which share no function for it.
+     */
+    private function secondsBetween(string $start, string $end): string
+    {
+        return SiteVisit::query()->getConnection()->getDriverName() === 'sqlite'
+            ? "(julianday({$end}) - julianday({$start})) * 86400"
+            : "timestampdiff(second, {$start}, {$end})";
+    }
+
+    /**
      * @return array{label: string, tick: ?string, visits: int, requests: int}
      */
     private function point(string $label, ?string $tick, ?object $totals): array
@@ -124,7 +159,7 @@ class SiteVisits extends Card
 
     /**
      * @param  list<array{label: string, tick: ?string, visits: int, requests: int}>  $points
-     * @return array{label: string, period: string, total: int, requests: int, points: list<array{label: string, tick: ?string, visits: int, requests: int}>}
+     * @return array{label: string, period: string, total: int, requests: int, averageVisit: ?int, points: list<array{label: string, tick: ?string, visits: int, requests: int}>}
      */
     private function range(string $label, CarbonInterface $from, array $points): array
     {
@@ -139,6 +174,7 @@ class SiteVisits extends Card
             'period' => $from->isToday() ? $from->format('j F') : $from->format('j F').' — '.today()->format('j F'),
             'total' => (int) ($totals->visitors ?? 0),
             'requests' => (int) ($totals->requests ?? 0),
+            'averageVisit' => $this->averageVisit($from),
             'points' => $points,
         ];
     }
