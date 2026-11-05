@@ -139,7 +139,7 @@ class SiteVisits extends Card
      */
     private function secondsBetween(string $start, string $end): string
     {
-        return SiteVisit::query()->getConnection()->getDriverName() === 'sqlite'
+        return (new SiteVisit)->getConnection()->getDriverName() === 'sqlite'
             ? "(julianday({$end}) - julianday({$start})) * 86400"
             : "timestampdiff(second, {$start}, {$end})";
     }
