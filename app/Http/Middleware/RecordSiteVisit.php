@@ -3,10 +3,9 @@
 namespace App\Http\Middleware;
 
 use App\Models\SiteVisit;
-use App\Support\Crawler;
+use App\Support\Reader;
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Gate;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
@@ -52,17 +51,7 @@ class RecordSiteVisit
             && $response->isSuccessful()
             && $this->isPage($response)
             && ! $request->is('office', 'office/*', 'nova-api/*', 'nova-vendor/*')
-            && ! Crawler::sent($request)
-            && ! $this->isOfficeStaff($request);
-    }
-
-    /**
-     * The Office's own people, who read the public site all day while they
-     * work on it and would otherwise be its most devoted readers.
-     */
-    private function isOfficeStaff(Request $request): bool
-    {
-        return Gate::forUser($request->user())->allows('viewNova');
+            && Reader::counts($request);
     }
 
     private function isPage(Response $response): bool

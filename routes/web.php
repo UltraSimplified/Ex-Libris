@@ -15,6 +15,7 @@ use App\Http\Controllers\Dashboard\PromoterController as DashboardPromoterContro
 use App\Http\Controllers\Dashboard\VenueController as DashboardVenueController;
 use App\Http\Controllers\Dashboard\WidgetController as DashboardWidgetController;
 use App\Http\Controllers\FeatureController;
+use App\Http\Controllers\FeatureReadController;
 use App\Http\Controllers\FileController;
 use App\Http\Controllers\GuestOrderController;
 use App\Http\Controllers\IssueController;
@@ -44,6 +45,15 @@ Route::post('/ad/{advert}/impression', [AdvertEventController::class, 'impressio
 Route::get('/ad/{advert}/click', AdvertClickController::class)
     ->name('advert.click')
     ->middleware('throttle:60,1');
+
+/*
+ * The reading time a feature page reports as its reader leaves, by beacon.
+ * Like the impression beacon it carries no CSRF token: it can only add to
+ * anonymous totals, and the throttle keeps that within reason.
+ */
+Route::post('/magazine/features/{feature}/reading', FeatureReadController::class)
+    ->middleware('throttle:60,1')
+    ->name('features.reading');
 
 /*
  * The home page leads with the features picked for it, or the newest if

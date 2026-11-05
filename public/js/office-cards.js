@@ -208,7 +208,7 @@ Nova.booting((app) => {
             h('span', { class: 'text-2xl font-bold gop-strong' }, value),
         ])
 
-    /** 252 seconds as 4m 12s, and nothing measurable as a dash. */
+    /** 252 seconds as 4m 12s, 300 as 5m, and nothing measurable as a dash. */
     const duration = (seconds) => {
         if (seconds === null || seconds === undefined) {
             return '—'
@@ -220,7 +220,11 @@ Nova.booting((app) => {
             return `${Math.floor(minutes / 60)}h ${minutes % 60}m`
         }
 
-        return minutes > 0 ? `${minutes}m ${seconds % 60}s` : `${seconds}s`
+        if (minutes === 0) {
+            return `${seconds}s`
+        }
+
+        return seconds % 60 === 0 ? `${minutes}m` : `${minutes}m ${seconds % 60}s`
     }
 
     app.component('gop-site-visits', {
@@ -263,17 +267,47 @@ Nova.booting((app) => {
         },
     })
 
+    /** A feature in the most-read list: its time, then its readers. */
+    const readingRow = (row) =>
+        h('div', { style: { padding: '0.35rem 0' } }, [
+            h('div', { style: { display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '1rem' } }, [
+                h(
+                    'a',
+                    {
+                        href: Nova.url(row.link),
+                        class: 'gop-strong text-sm no-underline hover:text-primary-500 cursor-pointer',
+                        onClick: (event) => {
+                            event.preventDefault()
+                            Nova.visit(row.link)
+                        },
+                    },
+                    row.name
+                ),
+                h('span', { class: 'text-sm font-bold gop-strong', style: { whiteSpace: 'nowrap' } }, duration(row.seconds)),
+            ]),
+            h('div', { class: 'text-xs gop-muted' }, [
+                `${row.reads} ${row.reads === 1 ? 'read' : 'reads'}`,
+                row.averageRead === null ? null : ` · ${duration(row.averageRead)} each`,
+                row.reachedEnd === null ? null : ` · ${row.reachedEnd}% reached the end`,
+            ].filter(Boolean).join('')),
+        ])
+
+    /*
+     * Reading time over the last month: a donut of the time each category
+     * took, and the features that held readers longest beneath it.
+     */
     app.component('gop-features-by-category', {
         props: ['card'],
 
         render() {
             const slices = this.card.slices || []
             const total = this.card.total || 0
+            const footer = h('div', { style: { marginTop: '0.75rem' } }, [novaLink(app, this.card.linkText, this.card.link)])
 
             if (total === 0) {
                 return panel(this.card.heading, [
-                    h('p', { class: 'gop-muted text-sm' }, this.card.emptyText),
-                    h('div', { style: { marginTop: '0.75rem' } }, [novaLink(app, this.card.linkText, this.card.link)]),
+                    h('p', { class: 'gop-muted text-sm', style: { flex: '1' } }, this.card.emptyText),
+                    footer,
                 ])
             }
 
@@ -304,17 +338,26 @@ Nova.booting((app) => {
                 h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.15rem 0' } }, [
                     h('span', { style: { width: '8px', height: '8px', borderRadius: '50%', background: slice.colour, flexShrink: '0' } }),
                     h('span', { class: 'text-xs gop-muted' },
-                        `${slice.label} (${slice.value} - ${Math.round((slice.value / total) * 100)}%)`
+                        `${slice.label} · ${duration(slice.value)} (${Math.round((slice.value / total) * 100)}%)`
                     ),
                 ])
             )
 
             return panel(this.card.heading, [
-                h('div', { style: { flex: '1', display: 'flex', alignItems: 'center', gap: '1rem' } }, [
-                    h('div', { style: { flex: '1' } }, legend),
+                h('div', { style: { marginBottom: '1rem' } }, [
+                    h('span', { class: 'text-2xl font-bold gop-strong' }, duration(total)),
+                    h('span', { class: 'text-sm gop-muted' }, ` ${this.card.period}`),
+                ]),
+                h('div', { style: { display: 'flex', alignItems: 'center', gap: '1rem' } }, [
+                    h('div', { style: { flex: '1', minWidth: '0' } }, legend),
                     h('svg', { width: 120, height: 120, viewBox: '0 0 120 120', style: { flexShrink: '0' } }, arcs),
                 ]),
-                h('div', { style: { marginTop: '0.75rem' } }, [novaLink(app, this.card.linkText, this.card.link)]),
+                h('h4', {
+                    class: 'text-xs uppercase tracking-wide font-bold gop-muted',
+                    style: { margin: '1.25rem 0 0.25rem' },
+                }, this.card.listHeading),
+                h('div', { class: 'gop-reading-list', style: { flex: '1' } }, (this.card.leaders || []).map(readingRow)),
+                footer,
             ])
         },
     })

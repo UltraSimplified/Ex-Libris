@@ -3,6 +3,7 @@
 use App\Models\Advert;
 use App\Models\AdvertEvent;
 use App\Models\Feature;
+use App\Models\FeatureRead;
 use App\Models\Listing;
 use App\Models\Promoter;
 use App\Models\Tag;
@@ -45,23 +46,35 @@ test('the dashboard shows the seven office cards, the shop\'s orders cards switc
         ]);
 });
 
-test('features are counted by their category name', function () {
+test('reading time is grouped by category name, longest first', function () {
     $interviews = Tag::factory()->create(['tag' => 'Interviews']);
-    $reviews = Tag::factory()->create(['tag' => 'Reviews']);
+    $archives = Tag::factory()->create(['tag' => 'Archives']);
 
-    Feature::factory()->count(3)->create(['tag_id' => $interviews->id]);
-    Feature::factory()->create(['tag_id' => $reviews->id]);
+    FeatureRead::factory()->create([
+        'feature_id' => Feature::factory()->create(['tag_id' => $interviews->id])->id,
+        'seconds_read' => 600,
+    ]);
+    $archive = Feature::factory()->create(['tag_id' => $archives->id]);
+    FeatureRead::factory()->create(['feature_id' => $archive->id, 'seconds_read' => 3600]);
+    FeatureRead::factory()->create(['feature_id' => $archive->id, 'seconds_read' => 3600, 'read_on' => today()->subDay()]);
 
     $card = (new FeaturesByCategory)->jsonSerialize();
 
-    expect($card['total'])->toBe(4)
+    expect($card['total'])->toBe(7800)
         ->and(collect($card['slices'])->mapWithKeys(fn (array $slice): array => [$slice['label'] => $slice['value']])->all())
-        ->toBe(['Interviews' => 3, 'Reviews' => 1])
+        ->toBe(['Archives' => 7200, 'Interviews' => 600])
         ->and($card['linkText'])->toBe('View all Features');
 });
 
-test('features with no category are labelled rather than dropped', function () {
-    Feature::factory()->create(['tag_id' => null]);
+test('reading before the last 30 days is left out', function () {
+    FeatureRead::factory()->create(['read_on' => today()->subDays(FeaturesByCategory::DAYS), 'seconds_read' => 900]);
+    FeatureRead::factory()->create(['read_on' => today()->subDays(FeaturesByCategory::DAYS - 1), 'seconds_read' => 60]);
+
+    expect((new FeaturesByCategory)->jsonSerialize()['total'])->toBe(60);
+});
+
+test('reading in features with no category is labelled rather than dropped', function () {
+    FeatureRead::factory()->create(['feature_id' => Feature::factory()->untagged()->create()->id]);
 
     $slices = (new FeaturesByCategory)->jsonSerialize()['slices'];
 
@@ -70,12 +83,52 @@ test('features with no category are labelled rather than dropped', function () {
 });
 
 test('every slice gets a colour, even past the end of the palette', function () {
-    Tag::factory()->count(8)->create()->each(fn ($tag) => Feature::factory()->create(['tag_id' => $tag->id]));
+    Tag::factory()->count(8)->create()->each(fn ($tag) => FeatureRead::factory()->create([
+        'feature_id' => Feature::factory()->create(['tag_id' => $tag->id])->id,
+    ]));
 
     $colours = collect((new FeaturesByCategory)->jsonSerialize()['slices'])->pluck('colour');
 
     expect($colours)->toHaveCount(8)
         ->and($colours->filter())->toHaveCount(8);
+});
+
+test('the most read are the features read longest, with their readers and how many finished', function () {
+    $longest = Feature::factory()->create(['title' => 'Longest']);
+    FeatureRead::factory()->create(['feature_id' => $longest->id, 'read_count' => 3, 'seconds_read' => 600, 'reached_end_count' => 2]);
+    FeatureRead::factory()->create(['feature_id' => $longest->id, 'read_count' => 1, 'seconds_read' => 200, 'reached_end_count' => 0, 'read_on' => today()->subDay()]);
+
+    Feature::factory()->count(5)->create()->each(fn (Feature $feature, int $index) => FeatureRead::factory()->create([
+        'feature_id' => $feature->id,
+        'seconds_read' => 100 + $index,
+    ]));
+
+    Feature::factory()->create(['title' => 'Never read']);
+
+    $leaders = (new FeaturesByCategory)->jsonSerialize()['leaders'];
+
+    expect($leaders)->toHaveCount(FeaturesByCategory::LEADERS)
+        ->and(collect($leaders)->pluck('name'))->not->toContain('Never read')
+        ->and($leaders[0])->toBe([
+            'name' => 'Longest',
+            'seconds' => 800,
+            'reads' => 4,
+            'averageRead' => 200,
+            'reachedEnd' => 50,
+            'link' => '/resources/features/'.$longest->id,
+        ])
+        ->and($leaders[1]['seconds'])->toBe(104);
+});
+
+test('with nothing read, the card says so', function () {
+    Feature::factory()->create();
+
+    $card = (new FeaturesByCategory)->jsonSerialize();
+
+    expect($card['total'])->toBe(0)
+        ->and($card['slices'])->toBe([])
+        ->and($card['leaders'])->toBe([])
+        ->and($card['emptyText'])->toBe('No feature has been read in the last 30 days.');
 });
 
 test('the writers card counts the roster and the body of work', function () {

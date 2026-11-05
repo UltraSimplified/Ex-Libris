@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { Head, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import Advert from '@/components/GOP/Advert.vue';
 import BylineName from '@/components/GOP/BylineName.vue';
 import ListingRow from '@/components/GOP/ListingRow.vue';
 import UserAvatar from '@/components/UserAvatar.vue';
+import { useFeatureReading } from '@/composables/useFeatureReading';
 import { resolvePlaceholders } from '@/composables/usePlaceholders.js';
 import type { Article, Colourway } from '@/types/global';
 import Colophon from '../../components/GOP/layouts/Colophon.vue';
@@ -44,6 +45,17 @@ const listing = computed(() =>
     props.feature.listing
         ? resolvePlaceholders([props.feature.listing], page.props.cdnUrl)[0]
         : null,
+);
+
+/**
+ * How long the feature is read, for the Office. Not in the preview, which is
+ * the Office reading its own work.
+ */
+const readingEnd = ref<HTMLElement | null>(null);
+
+useFeatureReading(
+    () => (props.preview ? null : props.feature.id),
+    readingEnd,
 );
 </script>
 <template>
@@ -165,6 +177,17 @@ const listing = computed(() =>
                         <div v-if="listing" class="feature-listing -mx-5">
                             <ListingRow :listing="listing" />
                         </div>
+                        <!--
+                            The end of the article, for counting who reached
+                            it. After the listing rather than before: the
+                            body's spacing rules look for the listing
+                            directly after the last block of text.
+                        -->
+                        <span
+                            ref="readingEnd"
+                            class="block"
+                            aria-hidden="true"
+                        ></span>
                         <div>
                             <Divider
                                 layout="divider"

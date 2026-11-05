@@ -229,12 +229,6 @@ parameters:
 			path: app/Nova/Actions/ExportListings.php
 
 		-
-			message: '#^Access to an undefined property App\\Models\\Feature\:\:\$total\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Nova/Cards/FeaturesByCategory.php
-
-		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
 			identifier: property.notFound
 			count: 1

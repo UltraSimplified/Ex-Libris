@@ -48,6 +48,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(RequireHttps::class);
         $middleware->preventRequestForgery(except: [
             'ad/*/impression',
+            'magazine/features/*/reading',
         ]);
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state', GuestBookmarks::COOKIE]);
         $middleware->group('embed', [
