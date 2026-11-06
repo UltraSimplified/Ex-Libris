@@ -31,7 +31,7 @@ class FeatureBodyListings
     {
         $blocks = array_filter(
             $layouts ?? [],
-            fn (mixed $layout): bool => is_object($layout) && ($layout->layout ?? null) === self::LAYOUT,
+            fn (object $layout): bool => ($layout->layout ?? null) === self::LAYOUT,
         );
 
         if ($blocks === []) {
@@ -85,7 +85,7 @@ class FeatureBodyListings
             ->orderBy('title')
             ->get()
             ->mapWithKeys(fn (Listing $listing): array => [
-                $listing->id => collect([$listing->title, $listing->venue?->name, $listing->start_date?->format('j M Y')])
+                $listing->id => collect([$listing->title, $listing->venue?->name, $listing->start_date->format('j M Y')])
                     ->filter()
                     ->implode(' · '),
             ])

@@ -52,7 +52,7 @@ class WidgetFactory extends Factory
     {
         return $this->state(fn (): array => [
             'owner_type' => User::class,
-            'owner_id' => $publisher?->id ?? User::factory()->publisher(),
+            'owner_id' => $publisher->id ?? User::factory()->publisher(),
         ]);
     }
 

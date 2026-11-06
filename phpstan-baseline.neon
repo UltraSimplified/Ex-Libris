@@ -45,12 +45,6 @@ parameters:
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
 			identifier: property.notFound
-			count: 2
-			path: app/Http/Controllers/Dashboard/WidgetController.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\Widget\>\:\:map\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
 			count: 1
 			path: app/Http/Controllers/Dashboard/WidgetController.php
 
@@ -209,12 +203,6 @@ parameters:
 			identifier: method.notFound
 			count: 1
 			path: app/Models/User.php
-
-		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:brand\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Models/Widget.php
 
 		-
 			message: '#^Access to an undefined property Laravel\\Nova\\Fields\\ActionFields\:\:\$from\.$#'
