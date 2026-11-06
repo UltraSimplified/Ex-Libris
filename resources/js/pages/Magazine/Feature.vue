@@ -3,11 +3,18 @@ import { Head, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import Advert from '@/components/GOP/Advert.vue';
 import BylineName from '@/components/GOP/BylineName.vue';
+import ListingAdvert from '@/components/GOP/ListingAdvert.vue';
 import ListingRow from '@/components/GOP/ListingRow.vue';
 import UserAvatar from '@/components/UserAvatar.vue';
+import { useAdvertLineUp } from '@/composables/useAdvertLineUp';
 import { useFeatureReading } from '@/composables/useFeatureReading';
 import { resolvePlaceholders } from '@/composables/usePlaceholders.js';
-import type { Article, Colourway } from '@/types/global';
+import type {
+    Advert as AdvertRecord,
+    Article,
+    Colourway,
+    Listing,
+} from '@/types/global';
 import Colophon from '../../components/GOP/layouts/Colophon.vue';
 import Copy from '../../components/GOP/layouts/Copy.vue';
 import Divider from '../../components/GOP/layouts/Divider.vue';
@@ -46,6 +53,51 @@ const listing = computed(() =>
         ? resolvePlaceholders([props.feature.listing], page.props.cdnUrl)[0]
         : null,
 );
+
+/**
+ * The listing for each Listing block in the body, by the block's key, with
+ * its image resolved as the one at the foot is. A block whose listing has
+ * finished, or was never chosen, has none and shows nothing.
+ */
+const bodyListings = computed<Record<string, Listing>>(() => {
+    const listings: Record<string, Listing> = {};
+
+    props.feature.body.forEach((layout) => {
+        if (layout.layout === 'listing' && layout.attributes.listing) {
+            listings[layout.key] = resolvePlaceholders(
+                [layout.attributes.listing],
+                page.props.cdnUrl,
+            )[0];
+        }
+    });
+
+    return listings;
+});
+
+/**
+ * The advert for each advert block in the body, by the block's key: the
+ * live line-up taken in turn, as the listings take it, so two slots in one
+ * feature show different adverts while there are enough to go round. A
+ * block left without one, when nothing is live, shows nothing.
+ */
+const advertLineUp = useAdvertLineUp();
+
+const slotAdverts = computed<Record<string, AdvertRecord>>(() => {
+    const lineUp = advertLineUp.value;
+    const slots: Record<string, AdvertRecord> = {};
+
+    if (lineUp.length === 0) {
+        return slots;
+    }
+
+    props.feature.body
+        .filter((layout) => layout.layout === 'advert')
+        .forEach((layout, slot) => {
+            slots[layout.key] = lineUp[slot % lineUp.length];
+        });
+
+    return slots;
+});
 
 /**
  * How long the feature is read, for the Office. Not in the preview, which is
@@ -144,6 +196,44 @@ useFeatureReading(
                                     :colourway="
                                         props.feature.colourway as Colourway
                                     "
+                                />
+                            </div>
+
+                            <!--
+                                Pulled out by the advert's own padding, as
+                                the listing below is, so the creative lines
+                                up with the text. In the Office's preview it
+                                is marked rather than shown, so reading a
+                                draft never counts as an impression.
+                            -->
+                            <div
+                                v-else-if="layout.layout === 'advert'"
+                                class="feature-advert -mx-5"
+                            >
+                                <p
+                                    v-if="props.preview"
+                                    class="mx-5 my-5 border border-dashed border-tyre py-10 text-center font-din text-xs text-tyre uppercase"
+                                >
+                                    Advert slot
+                                </p>
+                                <ListingAdvert
+                                    v-else-if="slotAdverts[layout.key]"
+                                    :advert="slotAdverts[layout.key]"
+                                />
+                            </div>
+
+                            <!--
+                                Pulled out by the row's own padding, as the
+                                listing at the foot is, so its picture lines
+                                up with the text.
+                            -->
+                            <div
+                                v-else-if="layout.layout === 'listing'"
+                                class="feature-listing -mx-5"
+                            >
+                                <ListingRow
+                                    v-if="bodyListings[layout.key]"
+                                    :listing="bodyListings[layout.key]"
                                 />
                             </div>
 
@@ -280,12 +370,17 @@ useFeatureReading(
     margin-bottom: 0;
 }
 
+/*
+ * The row keeps its own padding under it, as above it, and the space after
+ * is margin, so the hover shade stops clear of whatever comes next.
+ */
 .feature-body .feature-listing {
     margin-top: 40px;
+    margin-bottom: 20px;
 }
 
 .feature-body .feature-listing > div {
-    padding-bottom: calc(1.25rem + 20px + 1rem);
+    padding-bottom: 1.25rem;
 }
 
 .feature-listing > div:hover,

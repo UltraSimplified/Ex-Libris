@@ -9,6 +9,7 @@ use App\Support\Widgets\WidgetOptions;
 use App\Support\Widgets\WidgetSizeMode;
 use App\Support\Widgets\WidgetTemplate;
 use Database\Factories\WidgetFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -17,8 +18,8 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Str;
 
 /**
- * A gig widget: a venue's or a promoter's upcoming events, embedded in
- * somebody else's website.
+ * A gig widget: a venue's or a promoter's upcoming events, or the events a
+ * publisher has bookmarked, embedded in somebody else's website.
  *
  * It belongs to the venue or promoter rather than to whoever made it, so
  * one the Office makes for a venue nobody has claimed yet passes to the
@@ -91,7 +92,8 @@ class Widget extends Model
     }
 
     /**
-     * The venue or promoter whose events it shows.
+     * The venue or promoter whose events it shows, or the publisher's own
+     * account, whose bookmarks it shows.
      *
      * @return MorphTo<Model, $this>
      */
@@ -139,7 +141,11 @@ class Widget extends Model
             return Brand::from($this->colours);
         }
 
-        return $this->owner?->brand() ?? Brand::from([]);
+        $owner = $this->owner;
+
+        return $owner instanceof Venue || $owner instanceof Promoter
+            ? $owner->brand()
+            : Brand::from([]);
     }
 
     /**
@@ -151,10 +157,46 @@ class Widget extends Model
     }
 
     /**
-     * The listings column that ties an event to the owner.
+     * Whether it shows a publisher's bookmarks, which may be at any venue.
      */
-    public function listingsColumn(): string
+    public function isForBookmarks(): bool
     {
-        return $this->isForPromoter() ? 'promoter_id' : 'venue_id';
+        return $this->owner_type === User::class;
+    }
+
+    /**
+     * Whether its events may be at more than one venue, so each says where.
+     */
+    public function spansVenues(): bool
+    {
+        return $this->isForPromoter() || $this->isForBookmarks();
+    }
+
+    /**
+     * Narrow a query of listings to the ones this widget shows: the
+     * venue's or promoter's own, or those the publisher has bookmarked.
+     *
+     * @param  Builder<Listing>  $listings
+     * @return Builder<Listing>
+     */
+    public function constrainListings(Builder $listings): Builder
+    {
+        if ($this->isForBookmarks()) {
+            return $listings->whereHas(
+                'bookmarkedBy',
+                fn (Builder $query): Builder => $query->whereKey($this->owner_id),
+            );
+        }
+
+        return $listings->where($this->isForPromoter() ? 'promoter_id' : 'venue_id', $this->owner_id);
+    }
+
+    /**
+     * Whether a listing is one this widget shows, whether or not it is
+     * still to come.
+     */
+    public function shows(Listing $listing): bool
+    {
+        return $this->constrainListings(Listing::query()->whereKey($listing->getKey()))->exists();
     }
 }

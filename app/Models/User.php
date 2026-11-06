@@ -42,7 +42,7 @@ class User extends Authenticatable implements MustVerifyEmail
      *
      * @var list<string>
      */
-    public const ROLES = ['is_venue_mgr', 'is_promoter', 'is_writer'];
+    public const ROLES = ['is_venue_mgr', 'is_promoter', 'is_writer', 'is_publisher'];
 
     /**
      * The office's own accounts, the admins: let into the Office, and
@@ -248,6 +248,18 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Whether this account works with the magazine rather than only reading
+     * it: it holds a role, or runs a venue or a promoter. Its dashboard is
+     * Backstage; a guest's, with neither, is their Account.
+     */
+    public function isBackstage(): bool
+    {
+        return in_array(true, $this->roles(), true)
+            || $this->venues()->exists()
+            || $this->promoters()->exists();
+    }
+
+    /**
      * Whether staff may switch to this account from the Office, to see its
      * dashboard as its owner does. Any account, as they all have one, but
      * never another member of staff: switching to one would lend its Office
@@ -366,6 +378,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'is_venue_mgr' => 'boolean',
             'is_promoter' => 'boolean',
             'is_writer' => 'boolean',
+            'is_publisher' => 'boolean',
             'is_active_writer' => 'boolean',
         ];
     }

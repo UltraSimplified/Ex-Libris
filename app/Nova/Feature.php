@@ -6,6 +6,7 @@ use App\Nova\Concerns\ShowsLayoutImages;
 use App\Rules\Embed;
 use App\Services\Images\FeatureGallery;
 use App\Services\Images\FeatureImages;
+use App\Support\FeatureBodyListings;
 use App\Support\FeatureStatus;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Validation\Rule;
@@ -87,7 +88,8 @@ class Feature extends Resource
              * far it has got: only the title is needed to file it. A
              * published feature stays published when it is edited, and can
              * be put back to a draft. Publishing asks for everything the
-             * site shows - see afterValidation().
+             * site shows - see afterValidation(). A private feature is kept
+             * off the site for everybody, the Office included.
              */
             Select::make('Status')
                 ->options(FeatureStatus::options())
@@ -95,11 +97,15 @@ class Feature extends Resource
                 ->resolveUsing(fn ($status) => $status instanceof FeatureStatus ? $status->value : $status)
                 ->displayUsingLabels()
                 ->rules('required', Rule::enum(FeatureStatus::class))
-                ->help('A draft is seen only by the Office, marked as a draft. Publish it once it has a subject, date, tag, both pictures and an excerpt.')
+                ->help('A draft is seen only by the Office, marked as a draft. Publish it once it has a subject, date, tag, both pictures and an excerpt. A private feature is not shown on the site at all, to anybody.')
                 ->hideFromIndex(),
             Badge::make('Status')
                 ->resolveUsing(fn ($status) => $status instanceof FeatureStatus ? $status->value : $status)
-                ->map([FeatureStatus::Draft->value => 'warning', FeatureStatus::Published->value => 'success'])
+                ->map([
+                    FeatureStatus::Draft->value => 'warning',
+                    FeatureStatus::Published->value => 'success',
+                    FeatureStatus::Private->value => 'danger',
+                ])
                 ->labels(FeatureStatus::options())
                 ->onlyOnIndex(),
             Text::make('Title')->hideFromIndex()->sortable()->rules('required'),
@@ -151,6 +157,19 @@ class Feature extends Resource
                     Canvas::make('Col2 Text'),
                 ])
                 ->addLayout('Divider', 'divider', [])
+                /*
+                 * A slot for an in-list advert, set in the body wherever
+                 * it is dropped. Nothing to fill in: the advert is taken
+                 * from the live line-up in turn, as the listings take theirs.
+                 */
+                ->addLayout('Advert', 'advert', [])
+                ->addLayout('Listing', FeatureBodyListings::LAYOUT, [
+                    Select::make('Listing', 'listing_id')
+                        ->options(fn (): array => FeatureBodyListings::options($this->resource))
+                        ->searchable()
+                        ->displayUsingLabels()
+                        ->help('Show this event here, as it appears on the listings page. Only events still to come are offered, and one that has finished is left off the feature.'),
+                ])
                 ->addLayout('Colophon', 'colophon', [
                     Canvas::make('Col1 Text'),
                     Canvas::make('Col2 Text'),

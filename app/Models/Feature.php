@@ -132,15 +132,16 @@ class Feature extends Model implements Sortable
     }
 
     /**
-     * The features whoever is looking may see: every one for somebody who
-     * can use the Office, so they can read a draft where it will appear,
-     * and only the published ones for everybody else.
+     * The features whoever is looking may see: drafts as well for somebody
+     * who can use the Office, so they can read one where it will appear,
+     * and only the published ones for everybody else. A private feature is
+     * never seen on the site, by the Office or anybody.
      */
     #[Scope]
     protected function visible(Builder $query): Builder
     {
         if (Gate::allows('viewNova')) {
-            return $query;
+            return $query->whereNot($query->qualifyColumn('status'), FeatureStatus::Private);
         }
 
         return $query->where($query->qualifyColumn('status'), FeatureStatus::Published);

@@ -3,7 +3,7 @@ import { Form, Head, Link } from '@inertiajs/vue3';
 import { Check, Copy, ExternalLink } from '@lucide/vue';
 import { computed, reactive, ref, watch } from 'vue';
 import WidgetController from '@/actions/App/Http/Controllers/Dashboard/WidgetController';
-import { dashboard } from '@/routes';
+import { useAccountCrumb } from '@/composables/useAccountName';
 import { type BreadcrumbItem } from '@/types';
 import { type BrandColours } from '../../../components/dashboard/BrandFields.vue';
 import ColourField from '../../../components/dashboard/ColourField.vue';
@@ -24,6 +24,10 @@ type Widget = {
     name: string;
     owner: string | null;
     for_promoter: boolean;
+    /** A publisher's widget, showing the events they have bookmarked. */
+    for_bookmarks: boolean;
+    /** Whether its events may be at more than one venue. */
+    spans_venues: boolean;
     template: string;
     density: string;
     font: string;
@@ -58,7 +62,7 @@ const props = defineProps<{
 }>();
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Dashboard', href: dashboard().url },
+    useAccountCrumb(),
     { title: 'Gig widgets', href: WidgetController.index().url },
     {
         title: props.widget.name,
@@ -80,7 +84,11 @@ const settings = reactive({
     width: props.widget.width ?? undefined,
     height: props.widget.height ?? undefined,
     options: { ...props.widget.options },
-    useBrand: props.widget.use_brand,
+    /*
+     * A publisher's widget has no venue or promoter to take colours from,
+     * so it always has its own.
+     */
+    useBrand: props.widget.use_brand && !props.widget.for_bookmarks,
     colours: {
         ...(props.widget.use_brand && props.ownerColours
             ? props.ownerColours
@@ -177,7 +185,11 @@ const confirmDelete = (): boolean =>
             <Heading
                 title="Edit widget"
                 :subject="widget.name"
-                :description="`Showing upcoming events from ${widget.owner ?? 'nobody'}.`"
+                :description="
+                    widget.for_bookmarks
+                        ? 'Showing the upcoming events you have bookmarked. Bookmark an event on the site and it joins the widget; once it has happened it drops off.'
+                        : `Showing upcoming events from ${widget.owner ?? 'nobody'}.`
+                "
             />
 
             <p
@@ -310,7 +322,7 @@ const confirmDelete = (): boolean =>
                                 Show prices
                             </label>
                             <label
-                                v-if="widget.for_promoter"
+                                v-if="widget.spans_venues"
                                 class="flex items-center gap-2"
                             >
                                 <input
@@ -351,7 +363,13 @@ const confirmDelete = (): boolean =>
                             </select>
                         </div>
 
-                        <label class="flex items-center gap-2 text-sm">
+                        <input
+                            v-if="widget.for_bookmarks"
+                            type="hidden"
+                            name="use_brand"
+                            value="0"
+                        />
+                        <label v-else class="flex items-center gap-2 text-sm">
                             <input type="hidden" name="use_brand" value="0" />
                             <input
                                 v-model="settings.useBrand"

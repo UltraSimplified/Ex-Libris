@@ -24,6 +24,7 @@ test('a new account holds none of them', function () {
         'is_venue_mgr' => false,
         'is_promoter' => false,
         'is_writer' => false,
+        'is_publisher' => false,
     ]);
 });
 
@@ -40,6 +41,7 @@ test('being staff grants all of them without being granted any', function () {
         'is_venue_mgr' => true,
         'is_promoter' => true,
         'is_writer' => true,
+        'is_publisher' => true,
     ]);
 
     // The columns themselves are untouched: the permission is inferred.
@@ -85,6 +87,7 @@ test('a guest is told they may be nothing rather than nothing at all', function 
             'is_venue_mgr' => false,
             'is_promoter' => false,
             'is_writer' => false,
+            'is_publisher' => false,
         ]));
 });
 

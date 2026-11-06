@@ -6,6 +6,7 @@ import OrderController from '@/actions/App/Http/Controllers/Dashboard/OrderContr
 import PromoterController from '@/actions/App/Http/Controllers/Dashboard/PromoterController';
 import VenueController from '@/actions/App/Http/Controllers/Dashboard/VenueController';
 import WidgetController from '@/actions/App/Http/Controllers/Dashboard/WidgetController';
+import { useAccountName } from '@/composables/useAccountName';
 import { dashboard } from '@/routes';
 import { edit as editProfile } from '@/routes/profile';
 import { type BreadcrumbItem, type User } from '@/types';
@@ -38,9 +39,12 @@ const page = usePage();
 
 const user = computed<User>(() => page.props.auth.user);
 
+/** Backstage, or a guest's Account. */
+const accountName = useAccountName();
+
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Dashboard',
+        title: accountName.value,
         href: dashboard().url,
     },
     {
@@ -95,7 +99,7 @@ const eventsListedLabel = (count: number): string =>
 </script>
 
 <template>
-    <Head title="Dashboard" />
+    <Head :title="accountName" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">

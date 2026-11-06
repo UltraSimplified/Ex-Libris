@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
 import AdvertController from '@/actions/App/Http/Controllers/Dashboard/AdvertController';
-import { dashboard } from '@/routes';
+import { useAccountCrumb } from '@/composables/useAccountName';
 import { type BreadcrumbItem } from '@/types';
 import Heading from '../../../components/Heading.vue';
 import AppLayout from '../../../layouts/AppLayout.vue';
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Dashboard', href: dashboard().url },
+    useAccountCrumb(),
     { title: 'Adverts', href: AdvertController.index().url },
 ];
 

@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Promoter;
+use App\Models\User;
 use App\Models\Venue;
 use App\Models\Widget;
 use App\Support\Widgets\WidgetDensity;
@@ -41,6 +42,17 @@ class WidgetFactory extends Factory
         return $this->state(fn (): array => [
             'owner_type' => Promoter::class,
             'owner_id' => $promoter?->id ?? Promoter::factory(),
+        ]);
+    }
+
+    /**
+     * Showing the events a publisher has bookmarked.
+     */
+    public function forBookmarks(?User $publisher = null): static
+    {
+        return $this->state(fn (): array => [
+            'owner_type' => User::class,
+            'owner_id' => $publisher?->id ?? User::factory()->publisher(),
         ]);
     }
 

@@ -54,7 +54,9 @@ class EmbedController extends Controller
             'settings' => $settings,
             'events' => $events->take($settings->count),
             'more' => $events->count() > $settings->count,
-            'ownerName' => $widget->owner?->name,
+            // A publisher's widget is their picks, not events at their
+            // name, and an account's name is nobody else's business.
+            'ownerName' => $widget->isForBookmarks() ? null : $widget->owner?->name,
             'ownerPage' => $this->feed->ownerPage($widget),
             'brand' => $widget->brand(),
             'preview' => $preview,

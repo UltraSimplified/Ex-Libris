@@ -97,6 +97,13 @@ class HandleInertiaRequests extends Middleware
                     ?? array_fill_keys(User::ROLES, false),
 
                 /*
+                 * Whether the dashboard is Backstage, for an account that
+                 * works with the magazine, or the Account of a guest who
+                 * only reads it. Nobody signed in has an Account to go to.
+                 */
+                'backstage' => fn (): bool => (bool) $request->user()?->isBackstage(),
+
+                /*
                  * Where the office is, for the people allowed in it, and
                  * null for everybody else. Taken from Nova's own config so
                  * the sidebar cannot drift from the door.

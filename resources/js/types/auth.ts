@@ -21,6 +21,7 @@ export type Roles = {
     is_venue_mgr: boolean;
     is_promoter: boolean;
     is_writer: boolean;
+    is_publisher: boolean;
 };
 
 /** Something this account runs, which the sidebar heads a section with. */
@@ -38,6 +39,8 @@ export type Auth = {
     /** Whether this account has anything to look at under Orders. */
     hasOrders: boolean;
     roles: Roles;
+    /** Whether the dashboard is Backstage rather than the guest's Account. */
+    backstage: boolean;
     /** Where the office is, for staff; null for everybody else. */
     office: string | null;
     /** Who switched to this account from the Office, while they are in it. */

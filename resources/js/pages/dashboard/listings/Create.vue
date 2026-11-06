@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Form, Head, Link } from '@inertiajs/vue3';
 import ListingController from '@/actions/App/Http/Controllers/Dashboard/ListingController';
-import { dashboard } from '@/routes';
+import { useAccountCrumb } from '@/composables/useAccountName';
 import { type BreadcrumbItem } from '@/types';
 import FormErrors from '../../../components/dashboard/FormErrors.vue';
 import ListingFormFields from '../../../components/dashboard/ListingFormFields.vue';
@@ -20,7 +20,7 @@ defineProps<{
 }>();
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Dashboard', href: dashboard().url },
+    useAccountCrumb(),
     { title: 'Listings', href: ListingController.index().url },
     { title: 'Add a listing', href: ListingController.create().url },
 ];

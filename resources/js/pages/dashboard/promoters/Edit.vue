@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Form, Head, Link } from '@inertiajs/vue3';
 import PromoterController from '@/actions/App/Http/Controllers/Dashboard/PromoterController';
-import { dashboard } from '@/routes';
+import { useAccountCrumb } from '@/composables/useAccountName';
 import { type BreadcrumbItem } from '@/types';
 import BrandFields from '../../../components/dashboard/BrandFields.vue';
 import FormErrors from '../../../components/dashboard/FormErrors.vue';
@@ -31,7 +31,7 @@ type Promoter = {
 const props = defineProps<{ promoter: Promoter }>();
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Dashboard', href: dashboard().url },
+    useAccountCrumb(),
     { title: 'Promoter pages', href: PromoterController.index().url },
     {
         title: props.promoter.name,

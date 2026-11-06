@@ -3,8 +3,8 @@ import { Head } from '@inertiajs/vue3';
 import OrderController from '@/actions/App/Http/Controllers/Dashboard/OrderController';
 import OrderSummary from '@/components/GOP/OrderSummary.vue';
 import VenueMap from '@/components/GOP/VenueMap.vue';
+import { useAccountCrumb } from '@/composables/useAccountName';
 import { formatPence } from '@/lib/money';
-import { dashboard } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
 import type { ShopOrder } from '@/types/shop';
 import Heading from '../../../components/Heading.vue';
@@ -27,7 +27,7 @@ const props = defineProps<{
 }>();
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Dashboard', href: dashboard().url },
+    useAccountCrumb(),
     { title: 'Purchases', href: OrderController.index().url },
     {
         title: props.order.reference,

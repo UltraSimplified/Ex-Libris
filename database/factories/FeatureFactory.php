@@ -106,6 +106,16 @@ class FeatureFactory extends Factory
     }
 
     /**
+     * Kept off the site altogether, for the Office as for everybody.
+     */
+    public function madePrivate(): static
+    {
+        return $this->state(fn (array $attributes): array => [
+            'status' => FeatureStatus::Private,
+        ]);
+    }
+
+    /**
      * A feature picked for the top of the home page.
      */
     public function featured(): static

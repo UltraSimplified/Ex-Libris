@@ -21,7 +21,7 @@ class WidgetClickController extends Controller
 {
     public function __invoke(Widget $widget, Listing $listing): RedirectResponse
     {
-        abort_unless((int) $listing->{$widget->listingsColumn()} === (int) $widget->owner_id, 404);
+        abort_unless($widget->shows($listing), 404);
 
         $link = AffiliateLink::tag(
             trim((string) ($listing->event_link ?: $listing->venue?->url)),

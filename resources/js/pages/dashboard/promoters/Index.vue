@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
 import PromoterController from '@/actions/App/Http/Controllers/Dashboard/PromoterController';
-import { dashboard } from '@/routes';
+import { useAccountCrumb } from '@/composables/useAccountName';
 import { type BreadcrumbItem } from '@/types';
 import RowLink from '../../../components/dashboard/RowLink.vue';
 import Heading from '../../../components/Heading.vue';
@@ -21,7 +21,7 @@ defineProps<{
 }>();
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Dashboard', href: dashboard().url },
+    useAccountCrumb(),
     { title: 'Promoter pages', href: PromoterController.index().url },
 ];
 

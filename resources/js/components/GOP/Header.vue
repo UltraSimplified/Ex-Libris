@@ -1,14 +1,15 @@
 <script setup lang="ts">
 import {
     ArrowUturnLeftIcon,
-    ClipboardDocumentCheckIcon,
     CubeIcon,
+    IdentificationIcon,
 } from '@heroicons/vue/24/outline';
 import { Link, usePage } from '@inertiajs/vue3';
 import { ref, computed, nextTick, onMounted, onUnmounted, watch } from 'vue';
 import type { Ref } from 'vue';
 import { show as basketShow } from '@/actions/App/Http/Controllers/BasketController';
 import { category as shopCategoryRoute } from '@/actions/App/Http/Controllers/ShopController';
+import { useAccountName } from '@/composables/useAccountName';
 import { dashboard, switchBack } from '@/routes';
 
 interface Props {
@@ -30,8 +31,14 @@ const basketCount = computed(() => page.props.basket?.count ?? 0);
 /** Who switched to this account from the Office, while they are in it. */
 const switchedFrom = computed(() => page.props.auth?.switchedFrom ?? null);
 
-/** Every account has a dashboard, so this is whether anybody is logged in. */
-const hasDashboard = computed(() => !!page.props.auth?.user);
+/**
+ * Whether this account works with the magazine, and so has Backstage under
+ * the brandmark. A guest reaches their Account from the menu alone.
+ */
+const backstage = computed(() => !!page.props.auth?.backstage);
+
+/** The menu's last entry: Backstage, or a guest's Account. */
+const accountName = useAccountName();
 
 const showMenu = ref(false);
 
@@ -452,7 +459,7 @@ onUnmounted(() => {
         <nav class="sm:h-full md:flex md:items-center">
             <div
                 :class="
-                    office || hasDashboard || switchedFrom
+                    office || backstage || switchedFrom
                         ? 'pt-8 pb-4'
                         : 'py-8'
                 "
@@ -466,13 +473,14 @@ onUnmounted(() => {
                     </Link>
                     <!--
                         The ways in for signed-in accounts: the Office for
-                        the people let in, and the dashboard for everybody.
+                        the people let in, and Backstage for everybody who
+                        works with the magazine.
                         Set close together, with less padding under
                         them, so they add little to the masthead's height.
                     -->
                     <div
                         v-if="
-                            office || hasDashboard || switchedFrom
+                            office || backstage || switchedFrom
                         "
                         class="ml-5 flex flex-col items-start gap-0.5"
                     >
@@ -486,15 +494,15 @@ onUnmounted(() => {
                             Office
                         </a>
                         <Link
-                            v-if="hasDashboard"
+                            v-if="backstage"
                             :href="dashboard()"
                             class="inline-flex items-center gap-1.5 font-din text-xs/4 text-tyre uppercase hover:text-black dark:hover:text-white"
                         >
-                            <ClipboardDocumentCheckIcon
+                            <IdentificationIcon
                                 class="size-4"
                                 aria-hidden="true"
                             />
-                            Dashboard
+                            Backstage
                         </Link>
                         <!-- Staff in an account switched to from the Office. -->
                         <Link
@@ -659,10 +667,16 @@ onUnmounted(() => {
                     >
                         <Link href="/subscribe">Subscribe.</Link>
                     </li>
+                    <!--
+                        The last of the menu: the dashboard, as Backstage for
+                        an account that works with the magazine and as
+                        Account for anybody else. Somebody not signed in is
+                        asked to sign in on the way.
+                    -->
                     <li
-                        class="mt-15 cursor-pointer font-haas text-xl leading-6 font-semibold text-black hover:text-gray-600 md:hidden"
+                        class="text-tighten cursor-pointer font-haas text-[30px] leading-[31px] font-semibold text-black hover:text-gray-600 md:text-xl md:font-semibold! dark:hover:text-gray-400 dark:md:text-white"
                     >
-                        <Link href="/dashboard/">Account.</Link>
+                        <Link :href="dashboard()">{{ accountName }}.</Link>
                     </li>
                     <li class="mt-auto md:hidden">
                         <p

@@ -2,7 +2,7 @@
 import { Head } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import ArticleController from '@/actions/App/Http/Controllers/Dashboard/ArticleController';
-import { dashboard } from '@/routes';
+import { useAccountCrumb } from '@/composables/useAccountName';
 import { type BreadcrumbItem } from '@/types';
 import Heading from '../../../components/Heading.vue';
 import AppLayout from '../../../layouts/AppLayout.vue';
@@ -20,7 +20,7 @@ const props = defineProps<{
 const heading = computed<string>(() => props.section ?? 'Articles');
 
 const breadcrumbs = computed<BreadcrumbItem[]>(() => [
-    { title: 'Dashboard', href: dashboard().url },
+    useAccountCrumb(),
     { title: 'Articles', href: ArticleController.index().url },
     ...(props.section ? [{ title: props.section }] : []),
 ]);

@@ -7,7 +7,7 @@
 </time>
 <span class="gop-main">
     <a class="gop-title" href="{{ $event['page'] }}" rel="noopener">{{ $event['title'] }}</a>
-    @if ($settings->showVenue && $widget->isForPromoter() && $event['venue'])
+    @if ($settings->showVenue && $widget->spansVenues() && $event['venue'])
         <span class="gop-meta">{{ $event['venue'] }}</span>
     @endif
 </span>

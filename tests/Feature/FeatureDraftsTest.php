@@ -181,3 +181,54 @@ test('a published feature stays published when edited, and can be made a draft a
 
     expect($feature->fresh()->status)->toBe(FeatureStatus::Draft);
 });
+
+/**
+ * A published feature and a private one, by the same writer under the same
+ * tag, so every page that lists one would list the other.
+ *
+ * @return array{published: Feature, private: Feature, writer: User}
+ */
+function publishedAndPrivate(): array
+{
+    $writer = User::factory()->writer()->create(['name' => 'John Seagrave']);
+    $published = Feature::factory()->for($writer)->create(['title' => 'Out Already']);
+    $private = Feature::factory()->madePrivate()->for($writer)->create(['title' => 'Kept Back', 'tag_id' => $published->tag_id]);
+
+    return ['published' => $published, 'private' => $private, 'writer' => $writer];
+}
+
+test('a private feature is left off every page, for the public and the office alike', function (Closure $url) {
+    $features = publishedAndPrivate();
+
+    expect(featureTitlesOn($this->get($url($features))->assertOk()))
+        ->toContain('Out Already')
+        ->not->toContain('Kept Back');
+
+    expect(featureTitlesOn($this->actingAs(officeStaff())->get($url($features))->assertOk()))
+        ->toContain('Out Already')
+        ->not->toContain('Kept Back');
+})->with(pagesListingFeatures());
+
+test('a private feature\'s own page is not found, by the public or the office', function () {
+    ['private' => $private] = publishedAndPrivate();
+
+    $this->get("/magazine/features/{$private->id}/{$private->slug}")->assertNotFound();
+    $this->actingAs(officeStaff())->get("/magazine/features/{$private->id}/{$private->slug}")->assertNotFound();
+});
+
+test('the office can still preview a private feature from the Office', function () {
+    ['private' => $private] = publishedAndPrivate();
+
+    $this->actingAs(officeStaff())
+        ->get(route('features.preview', $private))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->where('feature.status', 'private'));
+});
+
+test('a feature can be made private in the office without being finished', function () {
+    $this->actingAs(officeStaff());
+
+    saveFeatureInTheOffice(['status' => 'private', 'title' => 'Kept Back'])->assertCreated();
+
+    expect(Feature::where('title', 'Kept Back')->sole()->status)->toBe(FeatureStatus::Private);
+});

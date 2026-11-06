@@ -2,7 +2,7 @@
 import { Form, Head, Link } from '@inertiajs/vue3';
 import { ExternalLink } from '@lucide/vue';
 import VenueController from '@/actions/App/Http/Controllers/Dashboard/VenueController';
-import { dashboard } from '@/routes';
+import { useAccountCrumb } from '@/composables/useAccountName';
 import { type BreadcrumbItem } from '@/types';
 import BrandFields from '../../../components/dashboard/BrandFields.vue';
 import FormErrors from '../../../components/dashboard/FormErrors.vue';
@@ -34,7 +34,7 @@ type Venue = {
 const props = defineProps<{ venue: Venue; publicUrl: string }>();
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Dashboard', href: dashboard().url },
+    useAccountCrumb(),
     { title: 'Venues', href: VenueController.index().url },
     {
         title: props.venue.name,

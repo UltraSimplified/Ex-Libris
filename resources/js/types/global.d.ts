@@ -295,6 +295,19 @@ interface DividerLayout {
     layout: 'divider';
     colourway: Colourway;
 }
+interface AdvertLayout {
+    key: string;
+    layout: 'advert';
+}
+interface ListingLayout {
+    key: string;
+    layout: 'listing';
+    attributes: {
+        listing_id: number | string | null;
+        /** The listing chosen, or null once it has finished. */
+        listing: Listing | null;
+    };
+}
 interface SpacerLayout {
     key: string;
     layout: 'spacer';
@@ -319,6 +332,8 @@ type Layout =
     | DividerLayout
     | EmbedLayout
     | SpacerLayout
+    | AdvertLayout
+    | ListingLayout
     | VideoLayout
     | GalleryLayout;
 
@@ -329,7 +344,7 @@ interface Article {
     subject: string | null;
     published: string | null;
     /** A draft is only sent to the Office, and marked as one. */
-    status: 'draft' | 'published';
+    status: 'draft' | 'published' | 'private';
     /** Picked for the top of the home page. */
     featured: boolean;
     slug: string;

@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
 import OrderController from '@/actions/App/Http/Controllers/Dashboard/OrderController';
+import { useAccountCrumb } from '@/composables/useAccountName';
 import { formatPence } from '@/lib/money';
-import { dashboard, Shop } from '@/routes';
+import { Shop } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
 import Heading from '../../../components/Heading.vue';
 import AppLayout from '../../../layouts/AppLayout.vue';
@@ -27,7 +28,7 @@ defineProps<{
 }>();
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Dashboard', href: dashboard().url },
+    useAccountCrumb(),
     { title: 'Purchases', href: OrderController.index().url },
 ];
 

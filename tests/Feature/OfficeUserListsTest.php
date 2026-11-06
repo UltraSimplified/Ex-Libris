@@ -78,7 +78,7 @@ test('the lists show the avatar, name and email alone, Writers the active tick a
     'venue managers' => ['venue-managers', ['avatar', 'name', 'email']],
     'promoters' => ['promoter-accounts', ['avatar', 'name', 'email']],
     'guests' => ['guests', ['avatar', 'name', 'email']],
-    'all users' => ['users', ['avatar', 'name', 'email', 'is_venue_mgr', 'is_promoter', 'is_writer']],
+    'all users' => ['users', ['avatar', 'name', 'email', 'is_venue_mgr', 'is_promoter', 'is_writer', 'is_publisher']],
 ]);
 
 test('a role list is never more than one page', function () {
@@ -96,10 +96,10 @@ test('guests come a page at a time', function () {
 test('each role list makes a new account with its own role ticked', function (string $uriKey, array $ticked) {
     expect(rolesTickedOnCreate($uriKey))->toBe($ticked);
 })->with([
-    'writers' => ['writers', ['is_promoter' => false, 'is_venue_mgr' => false, 'is_writer' => true]],
-    'venue managers' => ['venue-managers', ['is_promoter' => false, 'is_venue_mgr' => true, 'is_writer' => false]],
-    'promoters' => ['promoter-accounts', ['is_promoter' => true, 'is_venue_mgr' => false, 'is_writer' => false]],
-    'all users' => ['users', ['is_promoter' => false, 'is_venue_mgr' => false, 'is_writer' => false]],
+    'writers' => ['writers', ['is_promoter' => false, 'is_publisher' => false, 'is_venue_mgr' => false, 'is_writer' => true]],
+    'venue managers' => ['venue-managers', ['is_promoter' => false, 'is_publisher' => false, 'is_venue_mgr' => true, 'is_writer' => false]],
+    'promoters' => ['promoter-accounts', ['is_promoter' => true, 'is_publisher' => false, 'is_venue_mgr' => false, 'is_writer' => false]],
+    'all users' => ['users', ['is_promoter' => false, 'is_publisher' => false, 'is_venue_mgr' => false, 'is_writer' => false]],
 ]);
 
 test('each role list offers to create one of its own', function (string $resource, string $button) {

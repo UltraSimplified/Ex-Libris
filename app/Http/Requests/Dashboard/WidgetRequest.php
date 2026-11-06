@@ -14,8 +14,8 @@ use Illuminate\Validation\Rule;
 class WidgetRequest extends FormRequest
 {
     /**
-     * The controller authorises against the policy, and against the venue
-     * or promoter a new widget is for.
+     * The controller authorises against the policy, and against the venue,
+     * promoter or bookmarks a new widget is for.
      */
     public function authorize(): bool
     {
@@ -60,7 +60,7 @@ class WidgetRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'owner' => [Rule::requiredIf($this->isMethod('post')), 'string', 'regex:/^(venue|promoter):\d+$/'],
+            'owner' => [Rule::requiredIf($this->isMethod('post')), 'string', 'regex:/^((venue|promoter):\d+|bookmarks)$/'],
             'name' => ['required', 'string', 'max:100'],
             'template' => ['required', Rule::enum(WidgetTemplate::class)],
             'density' => ['required', Rule::enum(WidgetDensity::class)],

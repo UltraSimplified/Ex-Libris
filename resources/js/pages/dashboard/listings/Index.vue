@@ -2,7 +2,7 @@
 import { Form, Head, Link, router, usePage } from '@inertiajs/vue3';
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import ListingController from '@/actions/App/Http/Controllers/Dashboard/ListingController';
-import { dashboard } from '@/routes';
+import { useAccountCrumb } from '@/composables/useAccountName';
 import { type BreadcrumbItem } from '@/types';
 import ListingPreview from '../../../components/dashboard/ListingPreview.vue';
 import RowLink from '../../../components/dashboard/RowLink.vue';
@@ -90,7 +90,7 @@ const scoped = (all: boolean): string =>
     });
 
 const breadcrumbs = computed<BreadcrumbItem[]>(() => [
-    { title: 'Dashboard', href: dashboard().url },
+    useAccountCrumb(),
     { title: 'Event Listings', href: ListingController.index().url },
     ...(props.venue || props.promoter
         ? [{ title: heading.value, href: scoped(props.showingAll) }]

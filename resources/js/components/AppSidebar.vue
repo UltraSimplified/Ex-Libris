@@ -221,6 +221,27 @@ const navGroups = computed<NavGroup[]>(() =>
                   ]
                 : [],
         },
+        /*
+         * A publisher's widgets, of the events they have bookmarked. Only
+         * for an account the office has made a publisher.
+         */
+        {
+            heading: 'Publishing',
+            items: page.props.auth.roles.is_publisher
+                ? [
+                      {
+                          title: 'Gig Widgets',
+                          href: WidgetController.index.url({
+                              query: { bookmarks: 1 },
+                          }),
+                          icon: PanelsTopLeft,
+                          isActive:
+                              onWidgets.value &&
+                              scope.value.get('bookmarks') === '1',
+                      },
+                  ]
+                : [],
+        },
         ...page.props.auth.promoters.map((promoter) =>
             runs(
                 promoter,

@@ -34,7 +34,7 @@ class WidgetFeed
     {
         $settings = $widget->settings();
 
-        return Listing::query()
+        return $widget->constrainListings(Listing::query())
             ->select([
                 'id', 'title', 'slug', 'thumbnail', 'start_date', 'end_date',
                 'event_time_description', 'additional_date_information', 'ticket_price',
@@ -42,7 +42,6 @@ class WidgetFeed
             ])
             ->with(['venue:id,name,town,url', 'category:id,name,slug'])
             ->current()
-            ->where($widget->listingsColumn(), $widget->owner_id)
             ->orderBy('start_date')
             ->orderBy('title')
             ->limit($settings->count + 1)

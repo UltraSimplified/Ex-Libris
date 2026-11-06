@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Feature;
 use App\Models\Listing;
 use App\Models\Tag;
+use App\Support\FeatureBodyListings;
 use App\Support\FeatureMeta;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -115,6 +116,19 @@ class FeatureController extends Controller
     }
 
     /**
+     * A feature's body as its page reads it: links tagged as Good on
+     * Paper's referrals, and each Listing block given its listing.
+     *
+     * @return array<int, object>|null
+     */
+    private static function readableBody(Feature $feature): ?array
+    {
+        return FeatureBodyListings::attach(
+            $feature->withAffiliateLinks(json_decode($feature['body']))
+        );
+    }
+
+    /**
      * A feature's page. A draft is not found, except by somebody who can
      * use the Office.
      */
@@ -126,7 +140,7 @@ class FeatureController extends Controller
             ->with(['tag', 'listing' => self::currentListing(...)])
             ->firstOrFail();
 
-        $feature['body'] = $feature->withAffiliateLinks(json_decode($feature['body']));
+        $feature['body'] = self::readableBody($feature);
 
         return Inertia::render('Magazine/Feature', [
             'title' => $feature['title'],
@@ -147,7 +161,7 @@ class FeatureController extends Controller
             ->with(['tag', 'listing' => self::currentListing(...)])
             ->firstOrFail();
 
-        $feature['body'] = $feature->withAffiliateLinks(json_decode($feature['body']));
+        $feature['body'] = self::readableBody($feature);
 
         return Inertia::render('Magazine/Feature', [
             'title' => $feature['title'],

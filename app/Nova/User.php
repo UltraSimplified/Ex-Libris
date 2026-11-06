@@ -62,14 +62,15 @@ class User extends Resource
 
     /**
      * Whether the account may go without a login. A writer may: they are
-     * credited on the magazine whether or not they ever sign in. A venue
-     * manager or promoter works through the dashboard, so keeps one.
+     * credited on the magazine whether or not they ever sign in. Every
+     * other role works through the dashboard, so keeps one.
      */
     protected function loginIsOptional(NovaRequest $request): bool
     {
         return $request->boolean('is_writer')
             && ! $request->boolean('is_promoter')
-            && ! $request->boolean('is_venue_mgr');
+            && ! $request->boolean('is_venue_mgr')
+            && ! $request->boolean('is_publisher');
     }
 
     /**
@@ -152,7 +153,7 @@ class User extends Resource
              * else - the dashboard never submits one - so this is the only
              * way somebody becomes a writer or is trusted with venues.
              *
-             * Staff hold all three whether ticked or not, so these stay
+             * Staff hold every role whether ticked or not, so these stay
              * unticked on an office account rather than being kept in step
              * with the gate by hand.
              */
@@ -170,6 +171,10 @@ class User extends Resource
             Boolean::make('Writer', 'is_writer')
                 ->default(fn (NovaRequest $request) => $request->viaResource === Feature::uriKey()
                     || static::presetRole() === 'is_writer')
+                ->showOnIndex(static::rolesOnIndex()),
+            // A friendly website, making gig widgets of its bookmarks.
+            Boolean::make('Publisher', 'is_publisher')
+                ->default(fn () => static::presetRole() === 'is_publisher')
                 ->showOnIndex(static::rolesOnIndex()),
 
             /*

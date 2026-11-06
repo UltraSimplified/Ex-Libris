@@ -62,6 +62,15 @@ class UserFactory extends Factory
     }
 
     /**
+     * An account the office has made a publisher: a friendly website that
+     * makes gig widgets of the events it has bookmarked.
+     */
+    public function publisher(): static
+    {
+        return $this->state(fn (array $attributes) => ['is_publisher' => true]);
+    }
+
+    /**
      * Indicate that the model's email address should be unverified.
      */
     public function unverified(): static

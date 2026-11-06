@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
 import WidgetController from '@/actions/App/Http/Controllers/Dashboard/WidgetController';
-import { dashboard } from '@/routes';
+import { useAccountCrumb } from '@/composables/useAccountName';
 import { type BreadcrumbItem } from '@/types';
 import RowLink from '../../../components/dashboard/RowLink.vue';
 import Heading from '../../../components/Heading.vue';
@@ -23,27 +23,42 @@ const props = defineProps<{
     widgets: Widget[];
     venue: Named;
     promoter: Named;
+    /** Narrowed to the publisher's own widgets, of their bookmarks. */
+    bookmarks: boolean;
     status?: string;
 }>();
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Dashboard', href: dashboard().url },
+    useAccountCrumb(),
     { title: 'Gig widgets', href: WidgetController.index().url },
 ];
 
 /**
  * A new widget starts out for whichever venue or promoter the list was
- * narrowed to.
+ * narrowed to, or for bookmarks.
  */
-const createUrl = WidgetController.create.url({
-    query: props.venue
-        ? { venue: props.venue.id }
-        : props.promoter
-          ? { promoter: props.promoter.id }
-          : {},
-});
+const createQuery = (): Record<string, number | number[] | string> => {
+    if (props.venue) {
+        return { venue: props.venue.id };
+    }
 
-const scopeName = props.venue?.name ?? props.promoter?.name;
+    if (props.promoter) {
+        return { promoter: props.promoter.id };
+    }
+
+    return props.bookmarks ? { bookmarks: 1 } : {};
+};
+
+const createUrl = WidgetController.create.url({ query: createQuery() });
+
+const scopeName =
+    props.venue?.name ??
+    props.promoter?.name ??
+    (props.bookmarks ? 'My bookmarks' : undefined);
+
+const description = props.bookmarks
+    ? 'The events you have bookmarked, on your own website and kept up to date from Good on Paper. Make a widget, then paste its snippet into your site.'
+    : 'Your upcoming events on your own website, kept up to date from Good on Paper. Make a widget, then paste its snippet into your site.';
 </script>
 
 <template>
@@ -55,7 +70,7 @@ const scopeName = props.venue?.name ?? props.promoter?.name;
                 <Heading
                     title="Gig widgets"
                     :subject="scopeName"
-                    description="Your upcoming events on your own website, kept up to date from Good on Paper. Make a widget, then paste its snippet into your site."
+                    :description="description"
                 />
                 <Button as-child>
                     <Link :href="createUrl">New widget</Link>

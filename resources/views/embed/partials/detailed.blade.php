@@ -29,7 +29,7 @@
         @if ($event['dates_note'])
             <p class="gop-meta">{{ $event['dates_note'] }}</p>
         @endif
-        @if ($settings->showVenue && $widget->isForPromoter() && $event['venue'])
+        @if ($settings->showVenue && $widget->spansVenues() && $event['venue'])
             <p class="gop-meta">{{ $event['venue'] }}</p>
         @endif
         @if ($settings->showPrice && $event['price'])

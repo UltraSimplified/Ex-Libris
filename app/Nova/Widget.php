@@ -70,7 +70,7 @@ class Widget extends Resource
                 ->rules('required', 'max:100')
                 ->help('For telling widgets apart, say "Home page" or "Footer". Never shown on the widget.'),
             MorphTo::make('Showing events from', 'owner')
-                ->types([Venue::class, Promoter::class])
+                ->types([Venue::class, Promoter::class, User::class])
                 ->searchable()
                 ->hideFromIndex(),
             // On the list, the venue or promoter's name opens the widget

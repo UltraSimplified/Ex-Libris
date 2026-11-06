@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Form, Head, Link } from '@inertiajs/vue3';
 import WidgetController from '@/actions/App/Http/Controllers/Dashboard/WidgetController';
-import { dashboard } from '@/routes';
+import { useAccountCrumb } from '@/composables/useAccountName';
 import { type BreadcrumbItem } from '@/types';
 import FormErrors from '../../../components/dashboard/FormErrors.vue';
 import Heading from '../../../components/Heading.vue';
@@ -21,7 +21,7 @@ defineProps<{
 }>();
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Dashboard', href: dashboard().url },
+    useAccountCrumb(),
     { title: 'Gig widgets', href: WidgetController.index().url },
     { title: 'New widget', href: WidgetController.create().url },
 ];
