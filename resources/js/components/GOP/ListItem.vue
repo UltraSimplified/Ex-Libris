@@ -9,6 +9,7 @@ import LocationPin from '@/components/GOP/LocationPin.vue';
 import OfficeEditLink from '@/components/GOP/OfficeEditLink.vue';
 import PlaceholderFlash from '@/components/GOP/PlaceholderFlash.vue';
 import SoldOutFlash from '@/components/GOP/SoldOutFlash.vue';
+import { useGenreTag } from '@/composables/useGenreTags';
 import { resolvePlaceholders } from '@/composables/usePlaceholders.js';
 import { previousPage } from '@/composables/usePreviousPage';
 import { formatListingDates } from '@/lib/listingDates';
@@ -27,6 +28,13 @@ interface Props {
 
 const page = usePage();
 const props = withDefaults(defineProps<Props>(), { preview: false });
+
+/**
+ * The genre tag leads to everything coming up in that genre.
+ */
+const { href: genreHref } = useGenreTag(
+    computed(() => props.listing.category.slug),
+);
 const lightboxOpen = ref(false);
 const currentIndex = ref(0);
 const openLightbox = (index: number) => {
@@ -218,11 +226,12 @@ const resolvedListings = computed(() =>
         >
             <!-- Categories -->
             <div class="flex items-center gap-3">
-                <button
-                    class="rounded-sm bg-tarmac px-4 py-2 text-sm font-bold text-white uppercase md:text-xs"
+                <Link
+                    :href="genreHref"
+                    class="rounded-sm bg-tarmac px-4 py-2 text-sm font-bold text-white uppercase hover:bg-hivis hover:text-tarmac md:text-xs"
                 >
                     {{ props.listing.category.name }}
-                </button>
+                </Link>
 
                 <BookmarkHeart :listing-id="props.listing.id" />
                 <OfficeEditLink :listing-id="props.listing.id" />

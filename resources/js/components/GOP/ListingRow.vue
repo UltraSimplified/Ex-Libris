@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
 import { Megaphone } from '@lucide/vue';
+import { computed } from 'vue';
 import BookmarkHeart from '@/components/GOP/BookmarkHeart.vue';
 import LocationPin from '@/components/GOP/LocationPin.vue';
 import OfficeEditLink from '@/components/GOP/OfficeEditLink.vue';
 import SoldOutFlash from '@/components/GOP/SoldOutFlash.vue';
+import { useGenreTag } from '@/composables/useGenreTags';
 import { formatListingDates } from '@/lib/listingDates';
 import type { Listing } from '@/types/global';
 
@@ -24,6 +26,10 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+
+const { href: genreHref, follow: followGenreTag } = useGenreTag(
+    computed(() => props.listing.category.slug),
+);
 
 const slugify = (str: string) => {
     return str
@@ -58,12 +64,13 @@ const slugify = (str: string) => {
             :class="{ 'md:flex md:flex-col': props.brief }"
         >
             <div class="mt-4 flex items-center gap-3 md:mt-0">
-                <Link
-                    :href="'/listings/category/' + props.listing.category.slug"
+                <a
+                    :href="genreHref"
                     class="relative z-10 rounded-sm bg-tarmac px-4 py-2 font-din text-sm text-white uppercase hover:bg-hivis hover:text-tarmac md:text-xs"
+                    @click="followGenreTag"
                 >
                     {{ props.listing.category.name }}
-                </Link>
+                </a>
 
                 <BookmarkHeart
                     :listing-id="props.listing.id"

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
 import Advert from '@/components/GOP/Advert.vue';
-import type { Listing, Promoter, Venue } from '@/types/global';
+import type { Category, Listing, Promoter, Venue } from '@/types/global';
 import Favicon from '../components/GOP/Favicon.vue';
 import ListingsIndex from '../components/GOP/ListingsIndex.vue';
 import Subscribe from '../components/GOP/Subscribe.vue';
@@ -18,6 +18,7 @@ interface Props {
     bookmarked?: boolean;
     venue: Venue;
     promoter?: Promoter | null;
+    genres?: Category[];
 }
 
 const props = defineProps<Props>();
@@ -42,6 +43,7 @@ const props = defineProps<Props>();
                 :bookmarked="props.bookmarked"
                 :venue="props.venue"
                 :promoter="props.promoter"
+                :genres="props.genres"
             />
 
             <Advert />

@@ -61,16 +61,52 @@ jobs:
       - name: Feature and unit tests
         run: php artisan test tests/Feature tests/Unit --compact
 
+  # Runs alongside the tests above rather than after them, so the slower browser
+  # tests set the pace instead of adding to it.
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: ${{ env.PHP_EXTENSIONS }}
+          coverage: none
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Prepare the application
+        run: |
+          cp .env.example .env
+          php artisan key:generate --no-interaction
+          php artisan vendor:publish --tag=cookies-consent-public --no-interaction
+
+      - name: Build the front end
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
+
+      # Without --with-deps: the runner image already has the libraries Chromium
+      # needs, and all that flag added was nine font packages (Chinese, Japanese,
+      # Thai) from an Ubuntu mirror that sometimes took ten minutes to send them.
       - name: Install the test browser
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install chromium
 
       - name: Browser tests
-        run: php artisan test tests/Browser --compact
+        run: php artisan test tests/Browser --compact --parallel
 
   # Each stays off until its repository variable is set to true. Live also needs
   # staging to have gone through, so a release that breaks there stops there.
   staging:
-    needs: test
+    needs: [test, browser]
     if: vars.DEPLOY_STAGING_ENABLED == 'true' && github.ref == 'refs/heads/main'
     uses: ./.github/workflows/deploy-to.yml
     with:

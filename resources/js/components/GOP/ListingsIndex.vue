@@ -1,7 +1,14 @@
 <script setup lang="ts">
 import { MagnifyingGlassIcon } from '@heroicons/vue/24/outline';
 import { usePage, router, Link, useRemember } from '@inertiajs/vue3';
-import { computed, defineAsyncComponent, nextTick, ref, watch } from 'vue';
+import {
+    computed,
+    defineAsyncComponent,
+    nextTick,
+    onMounted,
+    ref,
+    watch,
+} from 'vue';
 import type { Ref } from 'vue';
 import ListingAdvert from '@/components/GOP/ListingAdvert.vue';
 import ListingRow from '@/components/GOP/ListingRow.vue';
@@ -9,6 +16,8 @@ import PromoterProfile from '@/components/GOP/PromoterProfile.vue';
 import VenueProfile from '@/components/GOP/VenueProfile.vue';
 import { useAdvertLineUp } from '@/composables/useAdvertLineUp';
 import { useBookmarks } from '@/composables/useBookmarks';
+import { provideGenreTags } from '@/composables/useGenreTags';
+import type { GenreTags } from '@/composables/useGenreTags';
 import { resolvePlaceholders } from '@/composables/usePlaceholders.js';
 import { useScrollReveal } from '@/composables/useScrollReveal';
 import { collapseOnLeave } from '@/lib/collapseOnLeave';
@@ -16,6 +25,7 @@ import { formatListingDates } from '@/lib/listingDates';
 import { register } from '@/routes';
 import type {
     Advert,
+    Category,
     LineUpArtist,
     Listing,
     Promoter,
@@ -33,6 +43,7 @@ interface Props {
     bookmarked?: boolean;
     venue: Venue;
     promoter?: Promoter | null;
+    genres?: Category[];
 }
 /**
  * The date picker, fetched the first time somebody goes to choose dates.
@@ -73,7 +84,7 @@ const formatter = { date: 'YYYY-MM-DD', month: 'MMM' };
 const applyDates = () => {
     const { startDate, endDate } = dateValue.value;
     if (!startDate || !endDate) return;
-    router.visit(`/listings/dates/${startDate}/${endDate}/`);
+    router.visit(withGenre(`/listings/dates/${startDate}/${endDate}/`));
 };
 
 const page = usePage();
@@ -108,6 +119,158 @@ const resolvedListings = computed(() =>
         page.props.cdnUrl,
     ),
 );
+
+/**
+ * The genres the listings are narrowed to, if any, held in the address as
+ * ?genre=film,quiz so they go along with the reader from Today to This
+ * Week, come back with them from a listing, and can be shared. Only genres
+ * there is a pill for count, so a mistyped one narrows nothing.
+ */
+const chosenGenres = computed<Category[]>(() => {
+    const slugs = (
+        new URL(page.url, 'https://listings.invalid').searchParams.get(
+            'genre',
+        ) ?? ''
+    ).split(',');
+
+    return (props.genres ?? []).filter(({ slug }) => slugs.includes(slug));
+});
+
+const chosenSlugs = computed<string[]>(() =>
+    chosenGenres.value.map(({ slug }) => slug),
+);
+
+const isChosen = (slug: string): boolean => chosenSlugs.value.includes(slug);
+
+/**
+ * The genres as the address carries them, in the order of the row, so the
+ * same choice always makes the same address. Slugs need no escaping, and
+ * the commas between them are left as commas to be read.
+ */
+const genreQuery = (slugs: string[]): string =>
+    slugs.length > 0
+        ? `?genre=${(props.genres ?? [])
+              .map(({ slug }) => slug)
+              .filter((slug) => slugs.includes(slug))
+              .join(',')}`
+        : '';
+
+/**
+ * A link to another set of dates that keeps the genres chosen.
+ */
+const withGenre = (path: string): string =>
+    path + genreQuery(chosenSlugs.value);
+
+/**
+ * Choosing genres changes only the address: every listing for these dates
+ * is already in the page, so there is nothing to fetch.
+ */
+const chooseGenres = (slugs: string[], onChosen?: () => void): void => {
+    const path = new URL(page.url, 'https://listings.invalid').pathname;
+
+    router.replace({
+        url: path + genreQuery(slugs),
+        preserveScroll: true,
+        preserveState: true,
+        onSuccess: () => onChosen?.(),
+    });
+};
+
+/**
+ * A pill adds its genre to those chosen, or takes it away again.
+ */
+const toggleGenre = (slug: string): void =>
+    chooseGenres(
+        isChosen(slug)
+            ? chosenSlugs.value.filter((chosen) => chosen !== slug)
+            : [...chosenSlugs.value, slug],
+    );
+
+/**
+ * On a phone the genres run off the side of the screen, so the first one
+ * chosen is slid into view when the page opens with it, or a tag chooses
+ * it, rather than leaving the reader to wonder why they only see music.
+ */
+const genreRow = ref<HTMLElement | null>(null);
+
+const revealChosenGenre = (): void => {
+    const chosen = genreRow.value?.querySelector<HTMLElement>(
+        'button[aria-pressed="true"]:not(:first-child)',
+    );
+
+    if (genreRow.value && chosen) {
+        genreRow.value.scrollLeft =
+            chosen.offsetLeft - genreRow.value.offsetLeft - 20;
+    }
+};
+
+onMounted(async () => {
+    // Measured in the site's own font: the pills are wider until it arrives.
+    await document.fonts.ready;
+    revealChosenGenre();
+});
+
+/**
+ * The tag on a listing narrows the page to that genre alone, and goes back
+ * up to the row so the reader can see what they have chosen.
+ */
+const showGenreRow = computed<boolean>(
+    () => !profileOwner.value && (props.genres?.length ?? 0) > 0,
+);
+
+provideGenreTags(
+    computed<GenreTags | null>(() =>
+        showGenreRow.value
+            ? {
+                  href: (slug) =>
+                      new URL(page.url, 'https://listings.invalid').pathname +
+                      genreQuery([slug]),
+                  choose: (slug) => {
+                      chooseGenres([slug], () =>
+                          nextTick(revealChosenGenre),
+                      );
+                      window.scrollTo({
+                          top: 0,
+                          behavior: window.matchMedia(
+                              '(prefers-reduced-motion: reduce)',
+                          ).matches
+                              ? 'auto'
+                              : 'smooth',
+                      });
+                  },
+              }
+            : null,
+    ),
+);
+
+/**
+ * How the genres chosen read in a sentence: "Film", "Film or Quiz",
+ * "Dance, Film or Quiz".
+ */
+const chosenGenreNames = computed<string>(() => {
+    const names = chosenGenres.value.map(({ name }) => name);
+
+    return names.length > 1
+        ? `${names.slice(0, -1).join(', ')} or ${names.at(-1)}`
+        : (names[0] ?? '');
+});
+
+const genreListings = computed(() =>
+    chosenSlugs.value.length > 0
+        ? resolvedListings.value.filter((listing) =>
+              isChosen(listing.category?.slug ?? ''),
+          )
+        : resolvedListings.value,
+);
+
+/**
+ * Each genre is the tag a listing wears, lit as that tag is when pointed
+ * at once it is the one chosen.
+ */
+const genrePillClass = (chosen: boolean): string =>
+    chosen
+        ? 'bg-hivis text-tarmac'
+        : 'bg-tarmac text-white hover:bg-hivis hover:text-tarmac';
 
 /*
  * Kept with the page's place in history, so coming back from a listing
@@ -181,7 +344,7 @@ const lineUpNames = (listing: Listing): (string | undefined)[] => {
  * for every letter typed.
  */
 const searchable = computed(() =>
-    resolvedListings.value.map((listing) => ({
+    genreListings.value.map((listing) => ({
         listing,
         haystack: foldForSearch(
             [
@@ -214,7 +377,7 @@ const visibleListings = computed(() => {
         .filter(Boolean);
 
     if (words.length === 0) {
-        return resolvedListings.value;
+        return genreListings.value;
     }
 
     return searchable.value
@@ -278,7 +441,7 @@ watch(
  * Before the list is re-rendered, not after: the reveal's inline styles
  * have to be gone by the time the fade wants to run, or they win.
  */
-watch(search, () => revealAll());
+watch([search, chosenSlugs], () => revealAll());
 </script>
 <template>
     <!-- LISTINGS -->
@@ -308,18 +471,18 @@ watch(search, () => revealAll());
         class="border-b border-silver px-5 pt-5 pb-4 md:border-l"
     >
         <h2 class="text-l">
-            <Link href="/listings/">
+            <Link :href="withGenre('/listings/')">
                 <strong v-if="props.all">ALL</strong>
                 <span v-else>ALL</span>
             </Link>
             &nbsp;|&nbsp;
-            <Link href="/listings/today">
+            <Link :href="withGenre('/listings/today')">
                 <strong v-if="props.today">TODAY</strong>
                 <span v-else>TODAY</span>
             </Link>
             &nbsp;|&nbsp;
 
-            <Link href="/listings/thisweek/">
+            <Link :href="withGenre('/listings/thisweek/')">
                 <strong v-if="props.thisWeek">THIS WEEK</strong>
                 <span v-else>THIS WEEK</span>
             </Link>
@@ -335,7 +498,10 @@ watch(search, () => revealAll());
             <!-- Nothing saved, nothing to send anyone to. -->
             <template v-if="bookmarkCount > 0">
                 &nbsp;|&nbsp;
-                <Link href="/listings/bookmarked/" class="whitespace-nowrap">
+                <Link
+                    :href="withGenre('/listings/bookmarked/')"
+                    class="whitespace-nowrap"
+                >
                     <!--
                         Inline rather than flex: a flex container takes its
                         baseline from its first item, which would sit the
@@ -378,6 +544,45 @@ watch(search, () => revealAll());
                 </button>
             </template>
         </h2>
+    </div>
+    <!--
+        One line of genres on a phone, slid along with a thumb rather than
+        stacked four deep over the listings; wrapped where there is room.
+        Each pill turns its genre on and off, and any number can be on at
+        once; All turns them all off. Those on are lit as the tag on a
+        listing is when pointed at.
+    -->
+    <div
+        v-if="showGenreRow"
+        class="border-b border-silver py-4 md:border-l md:px-5"
+    >
+        <div
+            ref="genreRow"
+            role="group"
+            aria-label="Genre"
+            class="flex gap-2 overflow-x-auto px-5 [scrollbar-width:none] md:flex-wrap md:overflow-visible md:px-0"
+        >
+            <button
+                type="button"
+                :aria-pressed="chosenGenres.length === 0"
+                class="shrink-0 cursor-pointer rounded-sm px-4 py-2 font-din text-sm whitespace-nowrap uppercase md:text-xs"
+                :class="genrePillClass(chosenGenres.length === 0)"
+                @click="chooseGenres([])"
+            >
+                All
+            </button>
+            <button
+                v-for="choice in props.genres"
+                :key="choice.slug"
+                type="button"
+                :aria-pressed="isChosen(choice.slug)"
+                class="shrink-0 cursor-pointer rounded-sm px-4 py-2 font-din text-sm whitespace-nowrap uppercase md:text-xs"
+                :class="genrePillClass(isChosen(choice.slug))"
+                @click="toggleGenre(choice.slug)"
+            >
+                {{ choice.name }}
+            </button>
+        </div>
     </div>
     <!--
         Without an account, bookmarks live in this browser alone. An account
@@ -506,6 +711,9 @@ watch(search, () => revealAll());
     >
         <h1 v-if="filtering" class="font-bold uppercase">
             Nothing matches &ldquo;{{ search.trim() }}&rdquo;
+        </h1>
+        <h1 v-else-if="chosenGenres.length" class="font-bold uppercase">
+            No {{ chosenGenreNames }} events listed
         </h1>
         <h1 v-else-if="props.bookmarked" class="font-bold uppercase">
             No bookmarked events

@@ -13,6 +13,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
+use Inertia\OnceProp;
 use Inertia\Response;
 
 class ListingController extends Controller
@@ -38,6 +39,7 @@ class ListingController extends Controller
             'thisWeek' => false,
             'nextWeek' => false,
             'venue' => null,
+            'genres' => $this->genres(),
         ]);
 
     }
@@ -69,6 +71,7 @@ class ListingController extends Controller
             'nextWeek' => false,
             'bookmarked' => true,
             'venue' => null,
+            'genres' => $this->genres(),
         ]);
     }
 
@@ -94,6 +97,7 @@ class ListingController extends Controller
             'thisWeek' => false,
             'nextWeek' => false,
             'venue' => null,
+            'genres' => $this->genres(),
         ]);
     }
 
@@ -199,6 +203,7 @@ class ListingController extends Controller
             'thisWeek' => false,
             'nextWeek' => false,
             'venue' => null,
+            'genres' => $this->genres(),
         ]);
     }
 
@@ -225,6 +230,7 @@ class ListingController extends Controller
             'thisWeek' => false,
             'nextWeek' => false,
             'venue' => null,
+            'genres' => $this->genres(),
         ]);
     }
 
@@ -246,6 +252,7 @@ class ListingController extends Controller
             'thisWeek' => 1,
             'nextWeek' => false,
             'venue' => null,
+            'genres' => $this->genres(),
         ]);
     }
 
@@ -267,6 +274,7 @@ class ListingController extends Controller
             'thisWeek' => false,
             'nextWeek' => 1,
             'venue' => null,
+            'genres' => $this->genres(),
         ]);
     }
 
@@ -356,6 +364,20 @@ class ListingController extends Controller
     public function destroy(Listing $listing)
     {
         //
+    }
+
+    /**
+     * The genres to narrow a list of listings down by: every category that
+     * has something still to come, whatever dates are being looked at, so
+     * the row stays put as the reader moves between Today and This Week.
+     * Sent once and kept by the page from then on.
+     */
+    private function genres(): OnceProp
+    {
+        return Inertia::once(fn () => Category::query()
+            ->whereHas('listings', fn ($listings) => $listings->current())
+            ->orderBy('name')
+            ->get(['id', 'name', 'slug']));
     }
 
     public function formatDateRange(string $start, string $end): string

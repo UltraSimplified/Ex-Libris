@@ -1,2 +1,4 @@
 User-agent: *
 Disallow: /ad/
+
+Sitemap: https://goodonpaper.info/sitemap.xml

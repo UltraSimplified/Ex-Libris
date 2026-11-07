@@ -52,7 +52,7 @@ test('the tag, the heart and the venue on a listing row still go where they say'
     $listing = villageFete();
 
     visit('/listings')
-        ->assertScript(landsOn('a[href^="/listings/category/"]'), '/listings/category/music')
+        ->assertScript(landsOn('a[href*="?genre="]'), '/listings?genre=music')
         ->assertScript(landsOn('[aria-label*="bookmark"]'), 'Click to bookmark this listing')
         ->assertScript(landsOn('a[href^="/listings/venue/"]'), '/listings/venue/'.$listing->venue->id.'/stroud-brewery')
         ->click('Stroud Brewery')

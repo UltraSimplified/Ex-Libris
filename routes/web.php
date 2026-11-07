@@ -26,6 +26,7 @@ use App\Http\Controllers\ListingExportController;
 use App\Http\Controllers\PackingSlipController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ShopController;
+use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\SwitchBackController;
 use App\Http\Controllers\WriterController;
 use App\Http\Controllers\WriterStatusController;
@@ -91,6 +92,11 @@ Route::get('/magazine/features/{feature}/preview', [FeatureController::class, 'p
     ->name('features.preview');
 
 Route::get('/magazine/features/{id}/{slug}', [FeatureController::class, 'show'])->name('feature');
+
+/*
+ * Every public page worth a search engine's while, drawn up as asked for.
+ */
+Route::get('sitemap.xml', SitemapController::class)->name('sitemap');
 
 Route::get('/listings/dates/{start}/{end}', [ListingController::class, 'dates'])
     ->where(['start' => '\d{4}-\d{2}-\d{2}', 'end' => '\d{4}-\d{2}-\d{2}']);
