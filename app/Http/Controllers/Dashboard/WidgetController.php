@@ -82,7 +82,7 @@ class WidgetController extends Controller
             'widgets' => $widgets,
             'venue' => $venue?->only(['id', 'name']),
             'promoter' => $promoter?->only(['id', 'name']),
-            'bookmarks' => $owner instanceof User,
+            'forBookmarks' => $owner instanceof User,
             'status' => $request->session()->get('status'),
         ]);
     }

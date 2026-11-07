@@ -88,7 +88,7 @@ test('the list narrowed to bookmarks shows only the publisher\'s own widgets', f
     $this->actingAs($publisher)
         ->get(route('dashboard.widgets.index', ['bookmarks' => 1]))
         ->assertInertia(fn ($page) => $page
-            ->where('bookmarks', true)
+            ->where('forBookmarks', true)
             ->has('widgets', 1)
             ->where('widgets.0.id', $mine->id)
         );
@@ -96,6 +96,24 @@ test('the list narrowed to bookmarks shows only the publisher\'s own widgets', f
     $this->actingAs($publisher)
         ->get(route('dashboard.widgets.index'))
         ->assertInertia(fn ($page) => $page->has('widgets', 2));
+});
+
+/**
+ * Every page shares the ids of the events saved, and the sidebar offers
+ * My Bookmarks while there are some. The widget list narrowed to bookmarks
+ * must leave that list alone rather than put its own answer in its place.
+ */
+test('the list narrowed to bookmarks still shares the events saved', function () {
+    $publisher = User::factory()->publisher()->create();
+    $saved = Listing::factory()->create(['start_date' => today()->addDay()]);
+    $publisher->bookmarks()->attach($saved);
+
+    $this->actingAs($publisher)
+        ->get(route('dashboard.widgets.index', ['bookmarks' => 1]))
+        ->assertInertia(fn ($page) => $page
+            ->where('forBookmarks', true)
+            ->where('bookmarks', [$saved->id])
+        );
 });
 
 test('a publisher widget shows their upcoming bookmarks at every venue, with the venue named', function () {

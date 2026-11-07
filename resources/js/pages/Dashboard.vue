@@ -42,6 +42,18 @@ const user = computed<User>(() => page.props.auth.user);
 /** Backstage, or a guest's Account. */
 const accountName = useAccountName();
 
+/**
+ * A publisher's account is the thing it publishes from, so it is shown as
+ * one, with its widgets, in place of the plain account panel.
+ */
+const isPublisher = computed<boolean>(
+    () => page.props.auth.roles.is_publisher,
+);
+
+const publisherWidgetsUrl = WidgetController.index.url({
+    query: { bookmarks: 1 },
+});
+
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: accountName.value,
@@ -120,6 +132,43 @@ const eventsListedLabel = (count: number): string =>
             <!-- One column at every width, as on a phone. -->
             <div class="mx-auto flex w-full max-w-2xl flex-col gap-4">
                 <section
+                    v-if="isPublisher"
+                    data-test="publisher-panel"
+                    class="dashboard-panel rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border"
+                >
+                    <p
+                        class="text-xs font-semibold tracking-widest text-muted-foreground uppercase"
+                    >
+                        Publisher
+                    </p>
+                    <h2 class="mt-1 text-xl font-semibold">
+                        {{ account.name }}
+                    </h2>
+                    <div class="mt-4 flex flex-col items-start gap-2">
+                        <Link
+                            :href="editProfile()"
+                            class="underline underline-offset-4"
+                        >
+                            Manage account
+                        </Link>
+                        <Link
+                            :href="publisherWidgetsUrl"
+                            class="underline underline-offset-4"
+                        >
+                            Manage your website listing widgets
+                        </Link>
+                        <Link
+                            v-if="page.props.auth.hasOrders"
+                            :href="OrderController.index()"
+                            class="underline underline-offset-4"
+                        >
+                            View purchases
+                        </Link>
+                    </div>
+                </section>
+
+                <section
+                    v-else
                     class="dashboard-panel rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border"
                 >
                     <dl class="space-y-1">

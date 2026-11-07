@@ -24,7 +24,7 @@ const props = defineProps<{
     venue: Named;
     promoter: Named;
     /** Narrowed to the publisher's own widgets, of their bookmarks. */
-    bookmarks: boolean;
+    forBookmarks: boolean;
     status?: string;
 }>();
 
@@ -46,7 +46,7 @@ const createQuery = (): Record<string, number | number[] | string> => {
         return { promoter: props.promoter.id };
     }
 
-    return props.bookmarks ? { bookmarks: 1 } : {};
+    return props.forBookmarks ? { bookmarks: 1 } : {};
 };
 
 const createUrl = WidgetController.create.url({ query: createQuery() });
@@ -54,9 +54,9 @@ const createUrl = WidgetController.create.url({ query: createQuery() });
 const scopeName =
     props.venue?.name ??
     props.promoter?.name ??
-    (props.bookmarks ? 'My bookmarks' : undefined);
+    (props.forBookmarks ? 'My bookmarks' : undefined);
 
-const description = props.bookmarks
+const description = props.forBookmarks
     ? 'The events you have bookmarked, on your own website and kept up to date from Good on Paper. Make a widget, then paste its snippet into your site.'
     : 'Your upcoming events on your own website, kept up to date from Good on Paper. Make a widget, then paste its snippet into your site.';
 </script>

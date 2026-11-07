@@ -101,6 +101,9 @@ return [
             'endpoint' => env('DO_ENDPOINT'),
             'use_path_style_endpoint' => env('DO_USE_PATH_STYLE_ENDPOINT', false),
             'visibility' => 'public',
+            // Uploads are named at random or by their content and never
+            // replaced under the same name, so browsers may keep each a year.
+            'options' => ['CacheControl' => 'public, max-age=31536000, immutable'],
         ],
     ],
 

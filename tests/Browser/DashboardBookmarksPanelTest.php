@@ -360,6 +360,18 @@ test('arriving at the old address, or a link to the panel, still finds it', func
     $page->assertNoJavaScriptErrors();
 });
 
+test('My Bookmarks stays in the sidebar on a publisher\'s Gig Widgets', function () {
+    $publisher = User::factory()->publisher()->create();
+    panelListing($publisher);
+    $this->actingAs($publisher);
+
+    visit('/dashboard')
+        ->click('Gig Widgets')
+        ->assertPathIs('/dashboard/widgets')
+        ->assertVisible(MY_BOOKMARKS)
+        ->assertNoJavaScriptErrors();
+});
+
 test('My Bookmarks is not offered with nothing saved', function () {
     $this->actingAs(User::factory()->create(['is_promoter' => true]));
 
