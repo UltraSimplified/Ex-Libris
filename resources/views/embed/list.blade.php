@@ -2,9 +2,9 @@
 
 @section('content')
     @if ($events->isEmpty())
+        {{-- Only ever the dashboard's preview: on a website an empty widget switches itself off. --}}
         <p class="gop-empty">
-            No upcoming events just now.
-            <a href="{{ $ownerPage }}" rel="noopener">See what else is on</a>
+            No upcoming events just now, so this widget is hidden on your website until there is one to show.
         </p>
     @else
         <ul class="gop-events" role="list">

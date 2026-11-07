@@ -44,9 +44,20 @@ class EmbedController extends Controller
             ->header('Cache-Control', $preview ? 'no-store' : 'public, max-age=60, s-maxage=120, stale-while-revalidate=600');
     }
 
+    /**
+     * The widget with its events. With none to show it switches itself off
+     * on the owner's site, leaving the same empty frame as one switched off
+     * by hand, and comes back by itself once there is an event; the
+     * dashboard's preview still shows it, saying why.
+     */
     private function render(Widget $widget, bool $preview): string
     {
         $events = $this->feed->events($widget);
+
+        if ($events->isEmpty() && ! $preview) {
+            return view('embed.inactive')->render();
+        }
+
         $settings = $widget->settings();
 
         return view($widget->template->view(), [

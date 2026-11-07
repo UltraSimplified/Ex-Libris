@@ -86,6 +86,7 @@ test('every style renders', function (WidgetDensity $density) {
 
 test('a widget follows its owner\'s colours unless it has its own', function () {
     $venue = Venue::factory()->create(['brand_colour' => '#b00020']);
+    Listing::factory()->for($venue)->create(['start_date' => today()->addDay()]);
     $following = Widget::factory()->for($venue, 'owner')->create();
     $own = Widget::factory()->for($venue, 'owner')->create(['colours' => ['brand_colour' => '#2a7de1']]);
 
@@ -134,6 +135,34 @@ test('a switched-off widget leaves an empty frame', function () {
     $this->get(route('widgets.embed', $widget->key))
         ->assertOk()
         ->assertDontSee('Hidden Gig');
+});
+
+test('a widget with no events switches itself off, and back on when one is added', function () {
+    $venue = Venue::factory()->create();
+    $widget = Widget::factory()->for($venue, 'owner')->create();
+    Listing::factory()->for($venue)->create(['title' => 'Finished Gig', 'start_date' => today()->subDays(3)]);
+
+    $this->get(route('widgets.embed', $widget->key))
+        ->assertOk()
+        ->assertSee("type: 'gop:size', height: 0", false)
+        ->assertDontSee('gop-empty')
+        ->assertDontSee('Finished Gig');
+
+    Listing::factory()->for($venue)->create(['title' => 'New Gig', 'start_date' => today()->addDay()]);
+
+    $this->get(route('widgets.embed', $widget->key))
+        ->assertOk()
+        ->assertSee('New Gig');
+
+    expect($widget->fresh()->active)->toBeTrue();
+});
+
+test('the dashboard\'s preview of a widget with no events says why it is hidden', function () {
+    $widget = Widget::factory()->for(Venue::factory(), 'owner')->create();
+
+    $this->get(route('widgets.embed', ['widget' => $widget->key, 'preview' => 1]))
+        ->assertOk()
+        ->assertSee('hidden on your website until there is one to show');
 });
 
 test('an unknown widget is an empty 404, not a page of the site', function () {

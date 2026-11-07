@@ -7,7 +7,7 @@
     <style>html, body { margin: 0; height: 0; overflow: hidden; }</style>
 </head>
 <body>
-    {{-- Switched off by its owner: an empty frame rather than a broken one. --}}
+    {{-- Switched off by its owner, or with no events to show: an empty frame rather than a broken one. --}}
     <script>
         if (window.parent !== window) {
             window.parent.postMessage({ type: 'gop:size', height: 0, width: null, scroll: false }, '*');
