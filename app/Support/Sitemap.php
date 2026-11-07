@@ -51,11 +51,14 @@ class Sitemap
      */
     private static function listings(): array
     {
-        $listings = Listing::current()->get(['id', 'slug', 'title', 'updated_at']);
+        $listings = Listing::current()->get(['id', 'slug', 'title', 'category_id', 'updated_at']);
+
+        $latestChangeByGenre = $listings
+            ->groupBy('category_id')
+            ->map(fn (Collection $inGenre) => $inGenre->max('updated_at'));
 
         $genres = Category::query()
-            ->whereHas('listings', fn ($upcoming) => $upcoming->current())
-            ->withMax(['listings' => fn ($upcoming) => $upcoming->current()], 'updated_at')
+            ->whereKey($latestChangeByGenre->keys())
             ->orderBy('name')
             ->get(['id', 'slug']);
 
@@ -65,7 +68,7 @@ class Sitemap
             self::entry(route('ThisWeek')),
             ...$genres->map(fn (Category $genre): array => self::entry(
                 route('Category', $genre->slug),
-                $genre->listings_max_updated_at,
+                $latestChangeByGenre->get($genre->id),
             )),
             ...$listings->map(fn (Listing $listing): array => self::entry(
                 route('Listing', ['id' => $listing->id, 'slug' => $listing->slug ?: Str::slug($listing->title)]),
