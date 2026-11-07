@@ -15,7 +15,17 @@
                 goblin && /^\/(dashboard|settings)(\/|$)/.test(location.pathname)
             );
         </script>
+        {{-- The Adobe Fonts kit, linked here rather than imported from app.css so
+             the browser asks for it at once instead of after app.css arrives. --}}
+        <link rel="preconnect" href="https://use.typekit.net" crossorigin>
+        <link rel="preconnect" href="https://p.typekit.net">
+        <link rel="stylesheet" href="https://use.typekit.net/owb2ffh.css">
         @vite('resources/css/app.css')
+        {{-- The page's largest picture, which without SSR the browser would
+             only learn of once the app has run. --}}
+        @isset($preloadImage)
+            <link rel="preload" as="image" href="{{ $preloadImage }}" fetchpriority="high">
+        @endisset
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -82,9 +92,6 @@
         <link rel="icon" href="/favicon.ico" sizes="any">
         <link rel="icon" href="/favicon.svg" type="image/svg+xml">
         <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
 
         @vite(['resources/js/app.ts', "resources/js/pages/{$page['component']}.vue"])
         @inertiaHead

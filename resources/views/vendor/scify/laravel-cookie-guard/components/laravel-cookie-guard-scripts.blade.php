@@ -1,0 +1,13 @@
+{{--
+    The package's own version of this view, less its two stylesheets, which
+    app.css now bundles, and with its script deferred: it shows the banner on
+    DOMContentLoaded, which a deferred script still runs before, so neither
+    holds up the page's first paint.
+--}}
+<script>
+    window.cookies_consent_translations = {
+        read_more: "{{ __('cookies_consent::messages.read_more') }}",
+        read_less: "{{ __('cookies_consent::messages.read_less') }}"
+    };
+</script>
+<script defer src="{{ asset('vendor/scify/laravel-cookie-guard/scripts.js') }}?v={{ filemtime(public_path('vendor/scify/laravel-cookie-guard/scripts.js')) }}"></script>

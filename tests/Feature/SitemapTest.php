@@ -74,5 +74,5 @@ test('the sitemap lists published features and leaves out drafts and private one
 
 test('robots.txt points search engines at the sitemap', function () {
     expect(file_get_contents(public_path('robots.txt')))
-        ->toContain('Sitemap: https://goodonpaper.info/sitemap.xml');
+        ->toContain('Sitemap: https://www.goodonpaper.info/sitemap.xml');
 });

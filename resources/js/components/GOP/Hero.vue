@@ -17,6 +17,9 @@ const page = usePage();
         <div>
             <img
                 :src="page.props.cdnUrl + '/' + props.issue.hero_image"
+                width="800"
+                height="1000"
+                fetchpriority="high"
                 class="w-full max-w-125"
             />
         </div>

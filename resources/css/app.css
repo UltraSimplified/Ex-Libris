@@ -1,6 +1,8 @@
-@import url('https://use.typekit.net/owb2ffh.css');
 @import 'tailwindcss';
 @import 'tw-animate-css';
+/* The cookie banner's own styles, bundled so they cost no requests of their own. */
+@import '../../vendor/scify/laravel-cookie-guard/public/_variables.css';
+@import '../../vendor/scify/laravel-cookie-guard/public/styles.css';
 @source '../../node_modules/vue-tailwind-datepicker';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
@@ -496,8 +498,8 @@ body:has([data-slot='sidebar-wrapper']) [data-slot='label'] {
 
 /*
  * The cookie banner (scify/laravel-cookie-guard, added in app.blade.php)
- * in our own colours rather than its blues and greens. Its stylesheet loads
- * after this one, so the html prefix is what lets these settings win. Each
+ * in our own colours rather than its blues and greens. Its styles set the
+ * same properties, so the html prefix is what lets these settings win. Each
  * colour comes from the theme, so the banner follows the appearance chosen.
  */
 html #scify-cookies-consent-wrapper {

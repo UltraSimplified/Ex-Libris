@@ -79,6 +79,10 @@ Route::get('/', function () {
         'features' => $features,
         'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register'),
+    ])->withViewData([
+        'preloadImage' => filled($issue?->hero_image)
+            ? rtrim((string) config('filesystems.disks.do.url'), '/').'/'.$issue->hero_image
+            : null,
     ]);
 })->name('home');
 
