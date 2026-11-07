@@ -44,10 +44,12 @@ const accountName = useAccountName();
 
 /**
  * A publisher's account is the thing it publishes from, so it is shown as
- * one, with its widgets, in place of the plain account panel.
+ * one, with its widgets, in place of the plain account panel. Staff hold
+ * every role without being a publisher, so the people with the way into
+ * the Office keep the plain panel.
  */
 const isPublisher = computed<boolean>(
-    () => page.props.auth.roles.is_publisher,
+    () => page.props.auth.roles.is_publisher && !page.props.auth.office,
 );
 
 const publisherWidgetsUrl = WidgetController.index.url({

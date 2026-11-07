@@ -3,6 +3,7 @@
 use App\Models\User;
 use App\Nova\Guest;
 use App\Nova\PromoterAccount;
+use App\Nova\Publisher;
 use App\Nova\User as NovaUser;
 use App\Nova\VenueManager;
 use App\Nova\Writer;
@@ -52,6 +53,7 @@ beforeEach(function () {
     User::factory()->create(['name' => 'Abe Author', 'is_writer' => true]);
     User::factory()->create(['name' => 'Val Venue', 'is_venue_mgr' => true]);
     User::factory()->create(['name' => 'Pat Promoter', 'is_promoter' => true]);
+    User::factory()->create(['name' => 'Pip Publisher', 'is_publisher' => true]);
     User::factory()->create(['name' => 'Bea Both', 'is_writer' => true, 'is_venue_mgr' => true]);
     User::factory()->create(['name' => 'Gil Guest']);
     User::factory()->create(['name' => 'Gwen Guest']);
@@ -65,6 +67,7 @@ test('each role list holds the accounts with that role, by name', function (stri
     'writers' => ['writers', ['Abe Author', 'Bea Both', 'Wren Writer']],
     'venue managers' => ['venue-managers', ['Bea Both', 'Val Venue']],
     'promoters' => ['promoter-accounts', ['Pat Promoter']],
+    'publishers' => ['publishers', ['Pip Publisher']],
 ]);
 
 test('guests are the accounts with no role that are not the office, newest first', function () {
@@ -77,6 +80,7 @@ test('the lists show the avatar, name and email alone, Writers the active tick a
     'writers' => ['writers', ['avatar', 'name', 'email', 'is_active_writer']],
     'venue managers' => ['venue-managers', ['avatar', 'name', 'email']],
     'promoters' => ['promoter-accounts', ['avatar', 'name', 'email']],
+    'publishers' => ['publishers', ['avatar', 'name', 'email']],
     'guests' => ['guests', ['avatar', 'name', 'email']],
     'all users' => ['users', ['avatar', 'name', 'email', 'is_venue_mgr', 'is_promoter', 'is_writer', 'is_publisher']],
 ]);
@@ -99,6 +103,7 @@ test('each role list makes a new account with its own role ticked', function (st
     'writers' => ['writers', ['is_promoter' => false, 'is_publisher' => false, 'is_venue_mgr' => false, 'is_writer' => true]],
     'venue managers' => ['venue-managers', ['is_promoter' => false, 'is_publisher' => false, 'is_venue_mgr' => true, 'is_writer' => false]],
     'promoters' => ['promoter-accounts', ['is_promoter' => true, 'is_publisher' => false, 'is_venue_mgr' => false, 'is_writer' => false]],
+    'publishers' => ['publishers', ['is_promoter' => false, 'is_publisher' => true, 'is_venue_mgr' => false, 'is_writer' => false]],
     'all users' => ['users', ['is_promoter' => false, 'is_publisher' => false, 'is_venue_mgr' => false, 'is_writer' => false]],
 ]);
 
@@ -109,6 +114,7 @@ test('each role list offers to create one of its own', function (string $resourc
     'writers' => [Writer::class, 'Create Writer'],
     'venue managers' => [VenueManager::class, 'Create Venue manager'],
     'promoters' => [PromoterAccount::class, 'Create Promoter'],
+    'publishers' => [Publisher::class, 'Create Publisher'],
 ]);
 
 test('guests cannot be created in the Office', function () {

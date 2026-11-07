@@ -19,6 +19,7 @@ use App\Nova\PostageBand;
 use App\Nova\Product;
 use App\Nova\Promoter;
 use App\Nova\PromoterAccount;
+use App\Nova\Publisher;
 use App\Nova\ShopCategory;
 use App\Nova\ShopSettings;
 use App\Nova\Stockist;
@@ -95,6 +96,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                         MenuItem::resource(Writer::class),
                         MenuItem::resource(VenueManager::class),
                         MenuItem::resource(PromoterAccount::class),
+                        MenuItem::resource(Publisher::class),
                         MenuItem::resource(Guest::class),
                     ]),
                 ])->icon('adjustments')->collapsable(),
@@ -157,10 +159,10 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
     /**
      * Register the application's Nova resources.
      *
-     * The writers, venue managers, promoters and guests are each a list of
-     * users of their own, and Nova files a model under the first of its
-     * resources in the alphabet - which would make Guests the home of every
-     * account, in the search and the action log alike. Users stays it.
+     * The writers, venue managers, promoters, publishers and guests are each
+     * a list of users of their own, and Nova files a model under the first
+     * of its resources in the alphabet - which would make Guests the home of
+     * every account, in the search and the action log alike. Users stays it.
      */
     protected function resources(): void
     {

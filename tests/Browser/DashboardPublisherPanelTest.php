@@ -29,11 +29,18 @@ test('a publisher sees a Publisher panel in place of the account panel', functio
         ->assertNoJavaScriptErrors();
 });
 
-test('anybody else keeps the account panel', function () {
-    $this->actingAs(User::factory()->create(['is_promoter' => true]));
+/**
+ * Staff hold every role, publisher among them, but are not a publisher.
+ */
+test('anybody else keeps the account panel', function (array $attributes) {
+    $this->actingAs(User::factory()->create($attributes));
 
     visit('/dashboard')
         ->assertNotPresent(PUBLISHER_PANEL)
         ->assertSee('Manage profile')
         ->assertNoJavaScriptErrors();
-});
+})->with([
+    'a promoter' => [['is_promoter' => true]],
+    'staff' => [['email' => 'robin@ultrasimplified.com']],
+    'staff with the publisher role ticked' => [['email' => 'robin@ultrasimplified.com', 'is_publisher' => true]],
+]);

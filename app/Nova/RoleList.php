@@ -5,9 +5,9 @@ namespace App\Nova;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 
 /**
- * The accounts that hold one role - the writers, the venue managers or the
- * promoters - by name and all on the one page, with a Create button that
- * makes another with the role already ticked.
+ * The accounts that hold one role - the writers, the venue managers, the
+ * promoters or the publishers - by name and all on the one page, with a
+ * Create button that makes another with the role already ticked.
  */
 abstract class RoleList extends UserList
 {
