@@ -32,6 +32,7 @@
         "tightenco/ziggy": "*",
         "ultrasimplified/gallery": "@dev",
         "ultrasimplified/nova5-image-cropper": "^3.0.1",
+        "ultrasimplified/specific-days": "@dev",
         "ultrasimplified/video-embed": "@dev",
         "ultrasimplified/writers": "@dev",
         "whitecube/nova-flexible-content": "^2.0"
@@ -152,6 +153,10 @@
         {
             "type": "path",
             "url": "./nova-components/VideoEmbed"
+        },
+        {
+            "type": "path",
+            "url": "./nova-components/SpecificDays"
         }
     ]
 }

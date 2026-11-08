@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f67c4f44850ec1b1655f560d8e1dc711",
+    "content-hash": "3c693f460609dace5542958f81d19391",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -10551,6 +10551,43 @@
             "time": "2026-10-30T23:35:13+00:00"
         },
         {
+            "name": "ultrasimplified/specific-days",
+            "version": "dev-main",
+            "dist": {
+                "type": "path",
+                "url": "./nova-components/SpecificDays",
+                "reference": "d067572a6c638e5e53c6c7b8b9e6b4a047dbe8a5"
+            },
+            "require": {
+                "illuminate/support": "^11.0|^12.0|^13.0",
+                "php": "^8.2"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Ultrasimplified\\SpecificDays\\FieldServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Ultrasimplified\\SpecificDays\\": "src/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "A Laravel Nova field for ticking the days an event is on within its run, with weekday shortcuts.",
+            "keywords": [
+                "laravel",
+                "nova"
+            ],
+            "transport-options": {
+                "relative": true
+            }
+        },
+        {
             "name": "ultrasimplified/video-embed",
             "version": "dev-main",
             "dist": {
@@ -16418,6 +16455,7 @@
     "minimum-stability": "stable",
     "stability-flags": {
         "ultrasimplified/gallery": 20,
+        "ultrasimplified/specific-days": 20,
         "ultrasimplified/video-embed": 20,
         "ultrasimplified/writers": 20
     },
@@ -16427,5 +16465,5 @@
         "php": "^8.4"
     },
     "platform-dev": {},
-    "plugin-api-version": "2.9.0"
+    "plugin-api-version": "2.11.0"
 }

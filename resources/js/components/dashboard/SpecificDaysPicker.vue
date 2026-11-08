@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import { dayKey, monthTitle, monthWeeks } from '@/lib/listingCalendar';
-import { parseDay } from '@/lib/listingDates';
+import { useSpecificDays, WEEKDAYS } from '@/composables/useSpecificDays';
 import InputError from '../InputError.vue';
 
 /**
@@ -9,10 +7,10 @@ import InputError from '../InputError.vue';
  * run: a pub quiz every other Tuesday, a festival at weekends, a gallery
  * closed on Mondays (Select all, then Mon).
  *
- * Offered only once the end date comes after the start. Ticked days the
- * run no longer reaches are kept back rather than thrown away, so a date
- * mistyped on the way to the right one costs nothing, but only the days
- * inside the run are sent, and the person is told about the rest.
+ * Offered only once the end date comes after the start. Only the days
+ * inside the run are sent, and the person is told about the rest. How the
+ * calendar behaves is shared with the Office's (useSpecificDays); this is
+ * the Dashboard's look over it.
  */
 const props = withDefaults(
     defineProps<{
@@ -30,118 +28,24 @@ const props = withDefaults(
     },
 );
 
-const WEEKDAYS = [
-    'Monday',
-    'Tuesday',
-    'Wednesday',
-    'Thursday',
-    'Friday',
-    'Saturday',
-    'Sunday',
-];
-
-type PickerDay = { key: string; date: Date; inRun: boolean; isToday: boolean };
-
-const todayKey = dayKey(new Date());
-
-const enabled = ref<boolean>(props.initialDays.length > 0);
-const chosen = ref<Set<string>>(new Set(props.initialDays));
-
-/** Every day of the run in order, or none unless the end is after the start. */
-const runDays = computed<string[]>(() => {
-    const first = parseDay(props.start);
-    const last = parseDay(props.end);
-
-    if (!first || !last || last <= first) {
-        return [];
-    }
-
-    const days: string[] = [];
-
-    for (const day = new Date(first); day <= last; day.setDate(day.getDate() + 1)) {
-        days.push(dayKey(day));
-    }
-
-    return days;
-});
-
-const inRun = computed<Set<string>>(() => new Set(runDays.value));
-
-/** What is shown ticked, and what is sent. */
-const chosenInRun = computed<string[]>(() =>
-    runDays.value.filter((day) => chosen.value.has(day)),
+const {
+    enabled,
+    chosen,
+    runDays,
+    chosenInRun,
+    leftOut,
+    months,
+    runDaysOn,
+    weekdayTicked,
+    toggleDay,
+    toggleWeekday,
+    selectAll,
+    clearAll,
+} = useSpecificDays(
+    () => props.start,
+    () => props.end,
+    props.initialDays,
 );
-
-/** Ticked days the run no longer reaches. */
-const leftOut = computed<number>(
-    () => [...chosen.value].filter((day) => !inRun.value.has(day)).length,
-);
-
-/** The run's days that fall on a weekday, counted from Monday as 0. */
-const runDaysOn = (column: number): string[] =>
-    runDays.value.filter(
-        (day) => ((parseDay(day)?.getDay() ?? 0) + 6) % 7 === column,
-    );
-
-const months = computed(() =>
-    [...new Set(runDays.value.map((day) => day.slice(0, 7)))].map((key) => {
-        const [year, month] = key.split('-').map(Number);
-
-        return {
-            key,
-            title: monthTitle(year, month),
-            weeks: monthWeeks(year, month, (date): PickerDay => {
-                const dayOfMonth = dayKey(date);
-
-                return {
-                    key: dayOfMonth,
-                    date,
-                    inRun: inRun.value.has(dayOfMonth),
-                    isToday: dayOfMonth === todayKey,
-                };
-            }),
-        };
-    }),
-);
-
-const toggleDay = (day: string): void => {
-    const next = new Set(chosen.value);
-
-    if (next.has(day)) {
-        next.delete(day);
-    } else {
-        next.add(day);
-    }
-
-    chosen.value = next;
-};
-
-/**
- * Every one of a weekday in the run: ticked, or unticked when they all
- * already are.
- */
-const toggleWeekday = (column: number): void => {
-    const days = runDaysOn(column);
-    const next = new Set(chosen.value);
-    const allTicked = days.every((day) => next.has(day));
-
-    for (const day of days) {
-        if (allTicked) {
-            next.delete(day);
-        } else {
-            next.add(day);
-        }
-    }
-
-    chosen.value = next;
-};
-
-/** Whether every one of a weekday in the run is ticked, so its button is on. */
-const weekdayTicked = (column: number): boolean => {
-    const days = runDaysOn(column);
-
-    return days.length > 0 && days.every((day) => chosen.value.has(day));
-};
 
 /**
  * The listings page's genre chips: black until chosen, hi-vis when on or
@@ -151,14 +55,6 @@ const chipClass = (on: boolean): string =>
     on
         ? 'bg-hivis text-tarmac'
         : 'bg-tarmac text-white hover:bg-hivis hover:text-tarmac';
-
-const selectAll = (): void => {
-    chosen.value = new Set([...chosen.value, ...runDays.value]);
-};
-
-const clearAll = (): void => {
-    chosen.value = new Set();
-};
 
 const longDate = (date: Date): string =>
     date.toLocaleDateString('en-GB', {

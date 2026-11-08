@@ -69,13 +69,25 @@ final class ListingDays
         DB::transaction(function () use ($listing, $attributes, $days): void {
             $listing->fill($attributes)->save();
 
-            $listing->days()->delete();
-
-            ListingDay::query()->insert(array_map(
-                fn (string $day): array => ['listing_id' => $listing->getKey(), 'day' => $day],
-                $days,
-            ));
+            $this->writeDays($listing, $days);
         });
+    }
+
+    /**
+     * Replace a saved listing's days with these, already normalised. The
+     * Office calls this once Nova has saved the listing, inside Nova's own
+     * transaction, as the Dashboard does through save().
+     *
+     * @param  array<int, string>  $days  as "2026-11-03"
+     */
+    public function writeDays(Listing $listing, array $days): void
+    {
+        $listing->days()->delete();
+
+        ListingDay::query()->insert(array_map(
+            fn (string $day): array => ['listing_id' => $listing->getKey(), 'day' => $day],
+            $days,
+        ));
     }
 
     /**

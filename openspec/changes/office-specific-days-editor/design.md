@@ -23,7 +23,7 @@ See proposal.md for why, and specs/listing-dates/spec.md for the behaviour.
   - **behaviour:** run days, held-back days, Select all and Clear all, weekday toggles, the count
   - **look:** hi-vis circles, DIN chips
 - **The rules.** `App\Services\Listings\ListingDays` holds them (`normalise`, `save`, `copy`). `save` fills the listing and writes its days in one transaction, which suits the Dashboard controller but not Nova, where Nova does the saving.
-- **A test hazard.** Factory listings have no gallery or line-up. Nova's update-fields endpoint failed on such a listing with "Unable to parse incoming Flexible content" when probed during the last change, so any feature test that asks Nova for a listing's form fields has to give it an empty gallery and line-up.
+- **A test hazard.** Asking Nova for a listing's form fields with Laravel's `getJson()` fails with "Unable to parse incoming Flexible content": the helper sends a JSON body, which the gallery and line-up fields (Flexible Content) try to read as their content. Nova's own front end sends a plain GET that accepts JSON, which works, so feature tests ask the same way.
 
 ## Goals / Non-Goals
 
@@ -113,7 +113,7 @@ Goblin mode redefines these variables in green, so nothing more is needed there.
 
 - **[Nova's change-event names are a mixin helper, not documented API]** A Nova upgrade could rename them. → The browser test drives the real Office form, typing a date and checking the calendar redraws, so a rename fails CI rather than going unnoticed.
 - **[Nova's Date field may announce its value in another shape]** The composable expects `YYYY-MM-DD`. → The form component normalises what it receives with the existing `parseDay`/`dayKey` helpers, and the browser test types dates in the Office's own date field.
-- **[The Flexible content error in feature tests]** → Tests that request form fields create listings with an empty gallery and line-up. Saving is tested through the store and update endpoints, which already work in `NovaListingTest`.
+- **[The Flexible content error in feature tests]** → Tests that request form fields use a plain GET with `Accept: application/json`, as Nova does, not `getJson()`. Saving is tested through the store and update endpoints, which already work in `NovaListingTest`.
 - **[Office behaviour on Replicate changes]** Moving a copy's dates past every day now asks for days or an untick, where before it quietly saved no days. → This is deliberate, matches the Dashboard, and is written into the spec.
 - **[Two templates over one composable can still differ in markup]** → Both have browser tests asserting the same behaviour, written as separate tests against the same scenarios.
 - **[A new dependency]** `composer.json` gains a path repository and `ultrasimplified/specific-days: @dev`, and `composer.lock` changes. → Same shape as the three existing custom fields. CI's install and copy steps already handle it.

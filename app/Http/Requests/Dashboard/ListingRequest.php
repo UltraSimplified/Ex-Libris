@@ -4,6 +4,7 @@ namespace App\Http\Requests\Dashboard;
 
 use App\Models\Listing;
 use App\Rules\Embed;
+use App\Rules\SpecificDaysWithinRun;
 use App\Services\Listings\ListingLineUp;
 use Closure;
 use Illuminate\Foundation\Http\FormRequest;
@@ -142,11 +143,12 @@ class ListingRequest extends FormRequest
             'gallery.*.max' => 'Each gallery image must be 8MB or smaller.',
             'line_up.max' => 'You can add up to 6 artists to the line-up.',
             'line_up.*.playlist.required_without' => 'Add a playlist or a video for this artist.',
-            'end_date.required_if_accepted' => 'Add an end date to choose specific days.',
-            'specific_days.required' => 'Choose at least one day, or untick "Set specific days".',
-            'specific_days.*.date_format' => 'One of the chosen days is not a date.',
-            'specific_days.*.after_or_equal' => 'Each chosen day must fall between the start and end dates.',
-            'specific_days.*.before_or_equal' => 'Each chosen day must fall between the start and end dates.',
+            // Worded as the Office words them, so the two forms say the same.
+            'end_date.required_if_accepted' => SpecificDaysWithinRun::NEEDS_AN_END_DATE,
+            'specific_days.required' => SpecificDaysWithinRun::CHOOSE_A_DAY,
+            'specific_days.*.date_format' => SpecificDaysWithinRun::NOT_A_DATE,
+            'specific_days.*.after_or_equal' => SpecificDaysWithinRun::OUTSIDE_THE_RUN,
+            'specific_days.*.before_or_equal' => SpecificDaysWithinRun::OUTSIDE_THE_RUN,
         ];
     }
 

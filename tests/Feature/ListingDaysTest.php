@@ -138,3 +138,19 @@ test('a copy moved past every day keeps its dates and gets no days', function ()
         ->and($copy->fresh()->start_date->toDateString())->toBe('2027-01-05')
         ->and($copy->fresh()->end_date->toDateString())->toBe('2027-01-26');
 });
+
+test('writing days replaces whatever days a listing had', function () {
+    $listing = Listing::factory()->onDays('2026-11-05', '2026-11-12')->create();
+
+    (new ListingDays)->writeDays($listing, ['2026-11-03', '2026-11-17']);
+
+    expect(savedDays($listing))->toBe(['2026-11-03', '2026-11-17']);
+});
+
+test('writing no days clears them', function () {
+    $listing = Listing::factory()->onDays('2026-11-05', '2026-11-12')->create();
+
+    (new ListingDays)->writeDays($listing, []);
+
+    expect(savedDays($listing))->toBe([]);
+});

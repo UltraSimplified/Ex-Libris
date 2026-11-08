@@ -1,0 +1,30 @@
+{
+    "name": "ultrasimplified/specific-days",
+    "description": "A Laravel Nova field for ticking the days an event is on within its run, with weekday shortcuts.",
+    "keywords": [
+        "laravel",
+        "nova"
+    ],
+    "license": "MIT",
+    "require": {
+        "php": "^8.2",
+        "illuminate/support": "^11.0|^12.0|^13.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Ultrasimplified\\SpecificDays\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Ultrasimplified\\SpecificDays\\FieldServiceProvider"
+            ]
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

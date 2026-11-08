@@ -1,0 +1,143 @@
+/*
+ * Nova's own stylesheet only holds the utilities Nova's templates use, so
+ * the field brings its own, with Nova's colours from the variables it sets.
+ * Goblin mode redefines those variables in green, so the calendar follows
+ * it with nothing more here. Chips are the Dashboard's genre chips in the
+ * Office's palette: dark until on, primary when on or pointed at.
+ */
+
+.specific-days {
+    display: grid;
+    gap: 0.75rem;
+    max-width: 24rem;
+}
+
+.specific-days__hint,
+.specific-days__help,
+.specific-days__left-out {
+    font-size: 0.875rem;
+    color: rgba(var(--colors-gray-500), 1);
+}
+
+.specific-days__toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.specific-days__panel {
+    display: grid;
+    gap: 1rem;
+}
+
+.specific-days__controls {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.specific-days__chip {
+    cursor: pointer;
+    border-radius: 0.125rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    white-space: nowrap;
+    background: rgba(var(--colors-gray-800), 1);
+    color: rgba(var(--colors-gray-50), 1);
+}
+
+.specific-days__week .specific-days__chip {
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.specific-days__chip:hover,
+.specific-days__chip.is-on {
+    background: rgba(var(--colors-primary-500), 1);
+    color: rgba(var(--colors-gray-50), 1);
+}
+
+.specific-days__chip:disabled {
+    cursor: default;
+    opacity: 0.4;
+    background: rgba(var(--colors-gray-800), 1);
+}
+
+.specific-days__week {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 0.25rem;
+}
+
+.specific-days__month {
+    display: grid;
+    gap: 0.25rem;
+}
+
+.specific-days__month-title {
+    padding-bottom: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.specific-days__day {
+    margin: 0 auto;
+    display: flex;
+    width: 100%;
+    max-width: 2.5rem;
+    aspect-ratio: 1;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+}
+
+.specific-days__day:hover {
+    box-shadow: 0 0 0 2px rgba(var(--colors-gray-500), 1);
+}
+
+.specific-days__day.is-on {
+    background: rgba(var(--colors-primary-500), 1);
+    color: rgba(var(--colors-gray-50), 1);
+    font-weight: 700;
+}
+
+.specific-days__day.is-outside {
+    cursor: default;
+    color: rgba(var(--colors-gray-400), 1);
+}
+
+.specific-days__day.is-outside:hover {
+    box-shadow: none;
+}
+
+.specific-days__day.is-today {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 4px;
+}
+
+.specific-days__status {
+    display: grid;
+    gap: 0.25rem;
+    font-size: 0.875rem;
+}
+
+.dark .specific-days__chip,
+.dark .specific-days__chip:disabled {
+    background: rgba(var(--colors-gray-700), 1);
+}
+
+.dark .specific-days__chip:hover,
+.dark .specific-days__chip.is-on {
+    background: rgba(var(--colors-primary-500), 1);
+}
+
+.dark .specific-days__day.is-outside {
+    color: rgba(var(--colors-gray-600), 1);
+}

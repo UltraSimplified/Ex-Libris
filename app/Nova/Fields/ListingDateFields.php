@@ -4,25 +4,30 @@ namespace App\Nova\Fields;
 
 use App\Models\Listing;
 use App\Models\ListingDay;
+use App\Rules\SpecificDaysWithinRun;
+use App\Services\Listings\ListingDays;
 use Carbon\CarbonInterface;
+use Closure;
+use Illuminate\Database\Eloquent\Model;
 use Laravel\Nova\Fields\Date;
 use Laravel\Nova\Fields\Field;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Laravel\Nova\Support\Fluent;
+use Ultrasimplified\SpecificDays\SpecificDays;
 
 /**
  * When a listing is on, as the Office shows and edits it: its run, its
  * specific days and what the dates cannot say.
  *
- * Specific days are ticked in the Dashboard's calendar, which the Office has
- * no counterpart for, so here they are shown with a way there. While a
- * listing has them, its run is the first of them to the last, so the dates
- * are read-only too and cannot drift away from the days.
+ * The specific days are ticked on the same calendar as the Dashboard's and
+ * saved by the same rules (ListingDays): the run is pulled in to the first
+ * and last day ticked, and the days are written once Nova has saved the
+ * listing. The calendar comes after the dates, so it is filled after them
+ * and can move them.
  */
 final class ListingDateFields
 {
-    private const DATES_HELP = 'Set by the specific days, which are changed in the Dashboard.';
-
     public function __construct(private Listing $listing) {}
 
     /**
@@ -30,28 +35,24 @@ final class ListingDateFields
      */
     public function fields(NovaRequest $request): array
     {
-        // Only asked on the edit form, so the index does not ask it per row.
-        $datesHelp = $request->isUpdateOrUpdateAttachedRequest() && $this->datesFollowSpecificDays()
-            ? self::DATES_HELP
-            : '';
-
         return [
             Date::make('Start date')
                 ->rules('required')
-                ->readonly(fn (): bool => $this->datesFollowSpecificDays())
-                ->help($datesHelp)
                 ->sortable()
                 ->displayUsing(fn (mixed $date): string => $this->displayDate($date)),
             Date::make('End date')
                 ->nullable()
-                ->readonly(fn (): bool => $this->datesFollowSpecificDays())
-                ->help($datesHelp)
                 ->hideFromIndex()
                 ->displayUsing(fn (mixed $date): string => $this->displayDate($date)),
-            Text::make('Specific days', fn (): ?string => $this->specificDaysHtml())
-                ->asHtml()
-                ->onlyOnDetail()
-                ->showOnDetail(fn (): bool => $this->listing->days->isNotEmpty()),
+            SpecificDays::make('Specific days', 'specific_days')
+                ->resolveUsing(fn (): array => $this->chosenDays())
+                ->displayUsing(fn (): ?string => $this->daysListed())
+                ->hideFromIndex()
+                ->showOnDetail(fn (): bool => $this->listing->days->isNotEmpty())
+                ->rules(new SpecificDaysWithinRun)
+                ->fillUsing(fn (NovaRequest $request, Model|Fluent $model, string $attribute, string $requestAttribute): ?Closure => $model instanceof Listing && $request->exists($requestAttribute)
+                    ? $this->fillDays($request->input($requestAttribute), $model)
+                    : null),
             Text::make('Additional date information', 'additional_date_information')->nullable()->hideFromIndex()->help('eg. Tuesday and Thursday mornings only'),
         ];
     }
@@ -67,20 +68,25 @@ final class ListingDateFields
     }
 
     /**
-     * Whether the listing's run is set by specific days, so is not for
-     * changing here. A listing still being made has none yet.
+     * The listing's days as the calendar takes them: ticked when it has any.
+     *
+     * @return array{enabled: bool, days: list<string>}
      */
-    private function datesFollowSpecificDays(): bool
+    private function chosenDays(): array
     {
-        return $this->listing->exists && $this->listing->days()->exists();
+        $days = $this->listing->days
+            ->map(fn (ListingDay $day): string => $day->day->toDateString())
+            ->values()
+            ->all();
+
+        return ['enabled' => $days !== [], 'days' => $days];
     }
 
     /**
-     * The specific days, as "3 Nov, 17 Nov, 1 Dec, 15 Dec 2026", with a link
-     * to change them in the Dashboard. A year is given once when they all
-     * fall in it, and on each day when they do not.
+     * The specific days, as "3 Nov, 17 Nov, 1 Dec, 15 Dec 2026". A year is
+     * given once when they all fall in it, and on each day when they do not.
      */
-    private function specificDaysHtml(): ?string
+    private function daysListed(): ?string
     {
         $days = $this->listing->days->map(fn (ListingDay $day): CarbonInterface => $day->day);
 
@@ -91,12 +97,28 @@ final class ListingDateFields
         $oneYear = $days->first()->year === $days->last()->year;
         $listed = $days->map(fn (CarbonInterface $day): string => $day->format($oneYear ? 'j M' : 'j M Y'))->implode(', ');
 
-        if ($oneYear) {
-            $listed .= ' '.$days->last()->year;
-        }
+        return $oneYear ? $listed.' '.$days->last()->year : $listed;
+    }
 
-        $edit = route('dashboard.listings.edit', $this->listing);
+    /**
+     * Pull the run in to the days ticked, now, and hand Nova the writing of
+     * the days for once the listing is saved. A save that did not send the
+     * calendar at all leaves the days as they were, rather than reading its
+     * absence as unticked.
+     *
+     * @return Closure(): void
+     */
+    private function fillDays(mixed $value, Listing $model): Closure
+    {
+        $listingDays = app(ListingDays::class);
 
-        return e($listed).'<br><a class="link-default" href="'.e($edit).'" target="_blank">Edit days in the Dashboard</a>';
+        ['attributes' => $dates, 'days' => $days] = $listingDays->normalise([
+            'start_date' => $model->start_date->toDateString(),
+            'end_date' => $model->end_date?->toDateString(),
+        ], SpecificDaysWithinRun::chosen($value)['days']);
+
+        $model->forceFill($dates);
+
+        return fn () => $listingDays->writeDays($model, $days);
     }
 }

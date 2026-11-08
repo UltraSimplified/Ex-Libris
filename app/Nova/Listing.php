@@ -7,10 +7,8 @@ use App\Nova\Concerns\ShowsLayoutImages;
 use App\Nova\Fields\ListingDateFields;
 use App\Nova\Filters\ListingPeriod;
 use App\Rules\Embed;
-use App\Services\Listings\ListingDays;
 use App\Services\Listings\ListingLineUp;
 use Illuminate\Contracts\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
 use Laravel\Nova\Actions\Action;
 use Laravel\Nova\Card;
 use Laravel\Nova\Fields\BelongsTo;
@@ -125,6 +123,17 @@ class Listing extends Resource
     }
 
     /**
+     * The original a copy is made from, with its specific days loaded. A
+     * replicated model carries the relations its original had loaded, so
+     * the copy's calendar opens with the original's days ticked and saving
+     * the form copies them.
+     */
+    public static function replicateQuery(NovaRequest $request, Builder $query): Builder
+    {
+        return $query->with('days');
+    }
+
+    /**
      * Get the fields displayed by the resource.
      *
      * @return array<int, Field>
@@ -227,22 +236,6 @@ class Listing extends Resource
                 ->confirmRemove()
                 ->fullWidth(),
         ];
-    }
-
-    /**
-     * A copy made with the Office's Replicate is given the original's
-     * specific days that fall within the run it was saved with. Nova says
-     * which listing it was copied from as it saves.
-     *
-     * @param  \App\Models\Listing  $model
-     */
-    public static function afterCreate(NovaRequest $request, Model $model): void
-    {
-        $original = \App\Models\Listing::query()->find($request->input('fromResourceId'));
-
-        if ($original !== null) {
-            app(ListingDays::class)->copy($original, $model);
-        }
     }
 
     /**
