@@ -32,6 +32,7 @@ class ListingRequest extends FormRequest
         $this->merge([
             'remove_thumbnail' => $this->asBoolean($this->input('remove_thumbnail')),
             'sold_out' => $this->asBoolean($this->input('sold_out')),
+            'set_specific_days' => $this->asBoolean($this->input('set_specific_days')),
         ]);
 
         $existing = $this->input('gallery_existing');
@@ -76,7 +77,12 @@ class ListingRequest extends FormRequest
                 'You can only list events under a promoter you manage.'
             )],
             'start_date' => ['required', 'date'],
-            'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
+            'end_date' => ['nullable', 'required_if_accepted:set_specific_days', 'date', 'after_or_equal:start_date'],
+            // The days ticked in the calendar, only looked at while "Set
+            // specific days" is ticked: unticking it means every day again.
+            'set_specific_days' => ['boolean'],
+            'specific_days' => ['exclude_unless:set_specific_days,true', 'required', 'array', 'max:366'],
+            'specific_days.*' => ['exclude_unless:set_specific_days,true', 'date_format:Y-m-d', 'distinct', 'after_or_equal:start_date', 'before_or_equal:end_date'],
             'additional_date_information' => ['nullable', 'string', 'max:255'],
             'event_time_description' => ['nullable', 'string', 'max:255'],
             'ticket_price' => ['nullable', 'string', 'max:255'],
@@ -136,7 +142,23 @@ class ListingRequest extends FormRequest
             'gallery.*.max' => 'Each gallery image must be 8MB or smaller.',
             'line_up.max' => 'You can add up to 6 artists to the line-up.',
             'line_up.*.playlist.required_without' => 'Add a playlist or a video for this artist.',
+            'end_date.required_if_accepted' => 'Add an end date to choose specific days.',
+            'specific_days.required' => 'Choose at least one day, or untick "Set specific days".',
+            'specific_days.*.date_format' => 'One of the chosen days is not a date.',
+            'specific_days.*.after_or_equal' => 'Each chosen day must fall between the start and end dates.',
+            'specific_days.*.before_or_equal' => 'Each chosen day must fall between the start and end dates.',
         ];
+    }
+
+    /**
+     * The days ticked in the calendar, as "2026-11-03", or none when "Set
+     * specific days" is not ticked.
+     *
+     * @return list<string>
+     */
+    public function specificDays(): array
+    {
+        return array_values($this->validated('specific_days') ?? []);
     }
 
     /**

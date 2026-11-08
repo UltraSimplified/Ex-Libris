@@ -33,4 +33,24 @@ class ListingFactory extends Factory
             'end_date' => null,
         ];
     }
+
+    /**
+     * On the given days only, as "2026-11-03", its run reaching from the
+     * first of them to the last, as saving one from the Dashboard leaves it.
+     */
+    public function onDays(string ...$days): static
+    {
+        sort($days);
+
+        return $this
+            ->state([
+                'start_date' => $days[0],
+                'end_date' => $days[array_key_last($days)],
+            ])
+            ->afterCreating(function (Listing $listing) use ($days): void {
+                $listing->days()->createMany(
+                    array_map(fn (string $day): array => ['day' => $day], $days)
+                );
+            });
+    }
 }

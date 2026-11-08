@@ -132,7 +132,7 @@ test('the post goes to the delivery address when there is one', function () {
 });
 
 test('addresses go when the account does', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->create(['avatar' => null]);
     Address::factory()->for($user)->create();
 
     $user->delete();

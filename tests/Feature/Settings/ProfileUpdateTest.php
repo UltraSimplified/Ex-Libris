@@ -81,8 +81,12 @@ test('email verification status is unchanged when the email address is unchanged
     expect($user->refresh()->email_verified_at)->not->toBeNull();
 });
 
-test('user can delete their account', function () {
-    $user = User::factory()->create();
+test('user can delete their account, and their picture goes with it', function () {
+    Storage::fake('do');
+    Storage::disk('do')->put('avatars/face.webp', 'not really an image');
+    Storage::disk('do')->put('avatars/someone-else.webp', 'not really an image');
+
+    $user = User::factory()->create(['avatar' => 'avatars/face.webp']);
 
     $response = $this
         ->actingAs($user)
@@ -96,10 +100,15 @@ test('user can delete their account', function () {
 
     $this->assertGuest();
     expect($user->fresh())->toBeNull();
+    Storage::disk('do')->assertMissing('avatars/face.webp');
+    Storage::disk('do')->assertExists('avatars/someone-else.webp');
 });
 
 test('correct password must be provided to delete account', function () {
-    $user = User::factory()->create();
+    Storage::fake('do');
+    Storage::disk('do')->put('avatars/face.webp', 'not really an image');
+
+    $user = User::factory()->create(['avatar' => 'avatars/face.webp']);
 
     $response = $this
         ->actingAs($user)
@@ -113,6 +122,7 @@ test('correct password must be provided to delete account', function () {
         ->assertRedirect(route('profile.edit'));
 
     expect($user->fresh())->not->toBeNull();
+    Storage::disk('do')->assertExists('avatars/face.webp');
 });
 test('a profile picture can be uploaded', function () {
     Storage::fake('do');

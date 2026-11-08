@@ -113,3 +113,22 @@ test('a listing with no picture copies cleanly', function () {
 
     expect(Listing::query()->latest('id')->first()->thumbnail)->toBeNull();
 });
+
+test('a duplicated listing keeps its specific days', function () {
+    $owner = User::factory()->has(Promoter::factory())->create();
+    $quiz = Listing::factory()->onDays('2026-11-03', '2026-11-17', '2026-12-01', '2026-12-15')->create([
+        'user_id' => $owner->id,
+        'title' => 'Pub Quiz',
+    ]);
+
+    $this->actingAs($owner)
+        ->post(route('dashboard.listings.duplicate', $quiz))
+        ->assertRedirect();
+
+    $copy = Listing::query()->where('title', 'Copy of Pub Quiz')->sole();
+
+    expect($copy->start_date->toDateString())->toBe('2026-11-03')
+        ->and($copy->end_date->toDateString())->toBe('2026-12-15')
+        ->and($copy->days->map(fn ($day) => $day->day->toDateString())->all())
+        ->toBe(['2026-11-03', '2026-11-17', '2026-12-01', '2026-12-15']);
+});

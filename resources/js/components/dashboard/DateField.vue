@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { CalendarDays } from '@lucide/vue';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 
 /**
  * A date the owner can type or pick, always shown day/month/year.
@@ -64,8 +64,20 @@ const toIso = (typed: string): string | null => {
     return date.toISOString().slice(0, 10);
 };
 
+const emit = defineEmits<{
+    /** The date as YYYY-MM-DD, or empty while there is none. */
+    dateChange: [value: string];
+}>();
+
 const iso = ref<string>(props.defaultValue);
 const typed = ref<string>(toDayMonthYear(props.defaultValue));
+
+/**
+ * Told to the rest of the form as it changes, typed or picked, so what
+ * hangs off the dates - the calendar of specific days - can follow them.
+ */
+watch(iso, (value) => emit('dateChange', value));
+
 const textInput = ref<HTMLInputElement | null>(null);
 const pickerInput = ref<HTMLInputElement | null>(null);
 const invalid = ref<boolean>(false);

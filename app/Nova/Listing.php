@@ -4,10 +4,13 @@ namespace App\Nova;
 
 use App\Nova\Actions\ExportListings;
 use App\Nova\Concerns\ShowsLayoutImages;
+use App\Nova\Fields\ListingDateFields;
 use App\Nova\Filters\ListingPeriod;
 use App\Rules\Embed;
+use App\Services\Listings\ListingDays;
 use App\Services\Listings\ListingLineUp;
 use Illuminate\Contracts\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Laravel\Nova\Actions\Action;
 use Laravel\Nova\Card;
 use Laravel\Nova\Fields\BelongsTo;
@@ -134,23 +137,7 @@ class Listing extends Resource
     public function fields(NovaRequest $request): array
     {
         return [
-            Date::make('Start date')
-                ->rules('required')
-                ->sortable()
-                ->displayUsing(function ($date) {
-                    $display_date = explode(' ', $date);
-
-                    return date('d M Y', strtotime($display_date[0]));
-                }),
-            Date::make('End date')
-                ->nullable()
-                ->hideFromIndex()
-                ->displayUsing(function ($date) {
-                    $display_date = explode(' ', $date);
-
-                    return date('d M Y', strtotime($display_date[0]));
-                }),
-            Text::make('Additional date information', 'additional_date_information')->nullable()->hideFromIndex()->help('eg. Tuesday and Thursday mornings only'),
+            ...(new ListingDateFields($this->resource))->fields($request),
             Text::make('Time description', 'event_time_description')->nullable()
                 ->hideFromIndex(),
             Text::make('Title')->sortable()->rules('required'),
@@ -240,6 +227,22 @@ class Listing extends Resource
                 ->confirmRemove()
                 ->fullWidth(),
         ];
+    }
+
+    /**
+     * A copy made with the Office's Replicate is given the original's
+     * specific days that fall within the run it was saved with. Nova says
+     * which listing it was copied from as it saves.
+     *
+     * @param  \App\Models\Listing  $model
+     */
+    public static function afterCreate(NovaRequest $request, Model $model): void
+    {
+        $original = \App\Models\Listing::query()->find($request->input('fromResourceId'));
+
+        if ($original !== null) {
+            app(ListingDays::class)->copy($original, $model);
+        }
     }
 
     /**

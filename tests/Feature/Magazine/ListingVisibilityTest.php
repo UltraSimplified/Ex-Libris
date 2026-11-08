@@ -115,6 +115,20 @@ test('a finished listing is not shown on the listings page', function () {
         ->assertInertia(fn ($page) => $page->has('listings', 0));
 });
 
+test('a range catches a listing on specific days only when one of its days falls inside it', function (string $from, string $to, bool $caught) {
+    $quiz = Listing::factory()->onDays('2026-11-03', '2026-11-17', '2026-12-01', '2026-12-15')->create();
+
+    $ids = Listing::runningBetween($from, $to)->pluck('id');
+
+    expect($ids->contains($quiz->id))->toBe($caught);
+})->with([
+    'the day itself' => ['2026-11-17', '2026-11-17', true],
+    'a range ending on one of its days' => ['2026-11-10', '2026-11-17', true],
+    'a range starting on one of its days' => ['2026-11-17', '2026-11-24', true],
+    'a range between two of its days' => ['2026-11-04', '2026-11-16', false],
+    'a range inside the run with none of its days' => ['2026-11-18', '2026-11-30', false],
+]);
+
 test('a date range page includes a run that spans it', function () {
     $spanning = Listing::factory()->create([
         'start_date' => today()->subMonth()->toDateString(),

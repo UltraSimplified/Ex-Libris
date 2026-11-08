@@ -1,0 +1,68 @@
+schema: spec-driven
+
+# Constraints an agent cannot infer by reading the code. The repository is
+# public, so nothing here names hosts, addresses, credentials or people.
+context: |
+  Ex-Libris is the website of the Good on Paper magazine. The repository is
+  public: artifacts never name hosts, IP addresses, credentials or personal
+  details.
+
+  Naming. "Dashboard" is the public-facing editor that promoters and venues
+  use (resources/js/pages/dashboard, app/Http/Controllers/Dashboard). "Office"
+  is the staff back end built on Laravel Nova (app/Nova, served at /office).
+  Nova's own dashboard class is part of the Office, not the Dashboard.
+
+  Mobile first. The phone layout is the layout. Anything left off a phone is
+  left off wider screens too; wider screens get more room, never extra content
+  or a different arrangement. Do not add responsive variants (md:block,
+  hidden md:table-cell) that bring content back on desktop.
+
+  The Office has a Goblin theme: an old green-screen look in a single shade of
+  green, used for real work. Colour in Nova must not break it. Prefer Nova's
+  success (green) over warning, danger or info unless the colour carries real
+  meaning, and check new Office UI in Light, Dark and Goblin.
+
+  Data. The local .env points at a remote, shared staging database, and live
+  has its own. Read freely; never write to either without asking first. Bulk
+  data changes get a dry-run mode, and dry run is the default. The tests run
+  on in-memory SQLite and are safe.
+
+  Migrations. The maintainer runs each new migration by hand on staging and
+  live before pushing. A change that adds a migration says so and leaves
+  running it to the maintainer.
+
+  Git and deploys. Work happens on main, with no worktrees or side branches.
+  Agents never commit or push: the maintainer commits so that authorship stays
+  theirs. Every push to main that passes CI deploys to staging and then live.
+
+  Inertia SSR is deliberately off. Page meta and JSON-LD are written
+  server-side in app.blade.php. Do not propose SSR.
+
+  .env.example is boilerplate for other users of the software: blank keys, no
+  real values and no Good on Paper details. CI copies it to .env, so anything
+  the tests need goes in phpunit.xml.
+
+  Never swallow an exception: bind it, then report() or log it.
+
+  Done means CI would pass: composer test:lint, composer analyse (PHPStan and
+  Sloppy over the whole of app/, not only the diff), the Feature and Unit
+  suites, and the Browser suite when pages change.
+
+rules:
+  proposal:
+    - Say whether the change touches the Dashboard, the Office, or both.
+    - Say whether it adds a migration or needs data changed on live.
+  tasks:
+    - Add or update tests in the same task as the behaviour they cover.
+    - End with a task that runs composer test:lint, composer analyse, php artisan test tests/Feature tests/Unit --compact, and php artisan test tests/Browser --compact when pages change.
+    - No task commits, pushes, deploys or runs a migration. List those as steps for the maintainer.
+
+operations:
+  apply:
+    guidance:
+      - php artisan test refuses to run while the config is cached. Prefix test runs with APP_CONFIG_CACHE pointing at a file that does not exist.
+      - Run vendor/bin/pint --dirty after changing PHP files.
+      - Leave every change uncommitted and say which files are ready to commit.
+  archive:
+    guidance:
+      - Leave the archive uncommitted for the maintainer to commit.

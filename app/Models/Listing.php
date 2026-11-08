@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
@@ -72,16 +73,30 @@ class Listing extends Model
     private const LAST_DAY = 'DATE(COALESCE(end_date, start_date))';
 
     /**
-     * Listings running at any point between two dates, inclusive.
+     * Listings on at any point between two dates, inclusive.
      *
      * An overlap test, so a run that began before the window and finishes
      * inside it counts, as does one that starts inside and finishes after.
+     * A listing on specific days only counts when one of them falls inside
+     * the window: the pub quiz every other Tuesday is not on this week just
+     * because this week sits between two of its Tuesdays.
+     *
+     * Days are compared as dates, as the run is, since SQLite may hold them
+     * with a time of midnight on the end.
      */
     public function scopeRunningBetween(Builder $query, mixed $from, mixed $to): Builder
     {
+        $firstDay = Carbon::parse($from)->toDateString();
+        $lastDay = Carbon::parse($to)->toDateString();
+
         return $query
             ->whereDate('start_date', '<=', $to)
-            ->whereRaw(self::LAST_DAY.' >= ?', [Carbon::parse($from)->toDateString()]);
+            ->whereRaw(self::LAST_DAY.' >= ?', [$firstDay])
+            ->where(fn (Builder $query): Builder => $query
+                ->whereDoesntHave('days')
+                ->orWhereHas('days', fn (Builder $days): Builder => $days
+                    ->whereDate('day', '>=', $firstDay)
+                    ->whereDate('day', '<=', $lastDay)));
     }
 
     /**
@@ -209,6 +224,17 @@ class Listing extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * The days the listing is on, earliest first, when it is not on every
+     * day of its run. None means every day from start to end.
+     *
+     * @return HasMany<ListingDay, $this>
+     */
+    public function days(): HasMany
+    {
+        return $this->hasMany(ListingDay::class)->orderBy('day');
     }
 
     /**

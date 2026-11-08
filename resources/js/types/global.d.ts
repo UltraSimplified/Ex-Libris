@@ -438,6 +438,12 @@ interface Listing {
     gallery: string | GalleryImage[] | null;
     start_date: string;
     end_date: string;
+    /**
+     * The days it is on, when it is not on every day of its run. Sent only
+     * where they are drawn, the bookmarks calendar; absent or empty means
+     * every day from start to end.
+     */
+    days?: { day: string }[];
     additional_date_information: string | null;
     ticket_price: string;
     /** Said across the event's image rather than beside it. */

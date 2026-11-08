@@ -166,3 +166,28 @@ test('a listing is free when its price says so with no figure beside it', functi
     ['', false],
     [null, false],
 ]);
+
+test('the panel is given the specific days of a saved event, for its calendar', function () {
+    $this->travelTo('2026-11-10 12:00');
+    $user = User::factory()->create();
+    $quiz = Listing::factory()->onDays('2026-11-17', '2026-12-01')->create();
+    $user->bookmarks()->attach($quiz);
+
+    $this->actingAs($user)
+        ->get(route('dashboard'))
+        ->assertInertia(fn ($page) => $page
+            ->where('bookmarkedListings.0.days.0.day', '2026-11-17')
+            ->where('bookmarkedListings.0.days.1.day', '2026-12-01')
+        );
+});
+
+test('the listings pages are not sent specific days, which they do not draw', function () {
+    $this->travelTo('2026-11-10 12:00');
+    Listing::factory()->onDays('2026-11-17', '2026-12-01')->create();
+
+    $this->get('/listings')
+        ->assertInertia(fn ($page) => $page
+            ->has('listings', 1)
+            ->missing('listings.0.days')
+        );
+});

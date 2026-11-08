@@ -2,6 +2,7 @@
 
 use App\Models\Category;
 use App\Models\Listing;
+use App\Models\Promoter;
 use App\Models\User;
 use App\Services\Listings\ListingLineUp;
 
@@ -98,4 +99,134 @@ test('an existing listing opens with its text and keeps it when a thumbnail is c
         ->assertValue('#line_up_0_playlist', $artist['playlist'])
         ->assertValue('#line_up_0_video', $artist['video'])
         ->assertNoJavaScriptErrors();
+});
+
+/**
+ * Days ticked in the calendar of specific days, as the page has them.
+ */
+function tickedDaysScript(): string
+{
+    return "[...document.querySelectorAll('[data-day][aria-pressed=\"true\"]')].map((day) => day.dataset.day)";
+}
+
+test('the specific days checkbox only appears once the end date is after the start', function () {
+    $this->actingAs(User::factory()->agreed()->create());
+
+    visit(route('dashboard.listings.create', absolute: false))
+        ->fill('#start_date', '01/06/2026')
+        ->fill('#end_date', '01/06/2026')
+        ->assertDontSee('Set specific days')
+        ->fill('#end_date', '20/06/2026')
+        ->assertSee('Set specific days')
+        ->assertNoJavaScriptErrors();
+});
+
+test('select all then Mon leaves every day of the run but the Mondays', function () {
+    $this->actingAs(User::factory()->agreed()->create());
+
+    $page = visit(route('dashboard.listings.create', absolute: false))
+        ->fill('#start_date', '12/09/2026')
+        ->fill('#end_date', '08/11/2026')
+        ->click('Set specific days')
+        ->click('Select all')
+        ->click('[aria-label="Every Monday"]');
+
+    $page->assertSee('50 of 58 days chosen')
+        ->assertAttribute('[data-day="2026-09-14"]', 'aria-pressed', 'false')
+        ->assertAttribute('[data-day="2026-09-15"]', 'aria-pressed', 'true')
+        ->assertNoJavaScriptErrors();
+});
+
+test('a weekday button ticks every one of that day in the run and shows as on, and unticks them when all are ticked', function () {
+    $this->actingAs(User::factory()->agreed()->create());
+
+    $page = visit(route('dashboard.listings.create', absolute: false))
+        ->fill('#start_date', '01/06/2026')
+        ->fill('#end_date', '20/06/2026')
+        ->click('Set specific days')
+        ->click('[aria-label="Every Saturday"]')
+        ->click('[aria-label="Every Sunday"]');
+
+    expect($page->script(tickedDaysScript()))->toBe(['2026-06-06', '2026-06-07', '2026-06-13', '2026-06-14', '2026-06-20']);
+    $page->assertAttribute('[aria-label="Every Saturday"]', 'aria-pressed', 'true');
+
+    $page->click('[aria-label="Every Saturday"]');
+
+    expect($page->script(tickedDaysScript()))->toBe(['2026-06-07', '2026-06-14']);
+    $page->assertAttribute('[aria-label="Every Saturday"]', 'aria-pressed', 'false')
+        ->assertAttribute('[aria-label="Every Sunday"]', 'aria-pressed', 'true')
+        ->assertNoJavaScriptErrors();
+});
+
+test('shortening the run leaves out the ticked days it no longer reaches, and says so', function () {
+    $user = User::factory()->agreed()->create();
+    $quiz = Listing::factory()->for($user)->onDays('2026-11-03', '2026-11-17', '2026-12-01', '2026-12-15')->create();
+
+    $this->actingAs($user);
+
+    visit(route('dashboard.listings.edit', $quiz, absolute: false))
+        ->assertSee('4 of 43 days chosen')
+        ->fill('#end_date', '05/12/2026')
+        ->assertSee('3 of 33 days chosen')
+        ->assertSee('1 chosen day is outside the new dates, so will not be saved.')
+        ->assertNoJavaScriptErrors();
+});
+
+test('widening the run again before saving brings back the days it had left out', function () {
+    $user = User::factory()->agreed()->create();
+    $quiz = Listing::factory()->for($user)->onDays('2026-11-03', '2026-11-17', '2026-12-01', '2026-12-15')->create();
+
+    $this->actingAs($user);
+
+    visit(route('dashboard.listings.edit', $quiz, absolute: false))
+        ->fill('#end_date', '05/12/2026')
+        ->assertSee('3 of 33 days chosen')
+        ->fill('#end_date', '15/12/2026')
+        ->assertSee('4 of 43 days chosen')
+        ->assertDontSee('outside the new dates')
+        ->assertAttribute('[data-day="2026-12-15"]', 'aria-pressed', 'true')
+        ->assertNoJavaScriptErrors();
+});
+
+test('a pub quiz saved on four Tuesdays runs from the first of them to the last', function () {
+    $user = User::factory()->agreed()->create();
+    Promoter::factory()->create(['user_id' => $user->id]);
+    $category = Category::factory()->create();
+
+    $this->actingAs($user);
+
+    visit(route('dashboard.listings.create', absolute: false))
+        ->fill('#title', 'TEST ENTRY')
+        ->select('#category_id', (string) $category->id)
+        ->fill('#start_date', '01/11/2026')
+        ->fill('#end_date', '24/12/2026')
+        ->fill('#body', 'TEST ENTRY')
+        ->click('Set specific days')
+        ->click('[data-day="2026-11-03"]')
+        ->click('[data-day="2026-11-17"]')
+        ->click('[data-day="2026-12-01"]')
+        ->click('[data-day="2026-12-15"]')
+        ->press('Create listing')
+        ->assertPathIs('/dashboard/listings')
+        ->assertNoJavaScriptErrors();
+
+    $quiz = Listing::sole();
+
+    expect($quiz->start_date->toDateString())->toBe('2026-11-03')
+        ->and($quiz->end_date->toDateString())->toBe('2026-12-15')
+        ->and($quiz->days->map(fn ($day) => $day->day->toDateString())->all())
+        ->toBe(['2026-11-03', '2026-11-17', '2026-12-01', '2026-12-15']);
+});
+
+test('the calendar of specific days fits a phone without scrolling sideways', function () {
+    $this->actingAs(User::factory()->agreed()->create());
+
+    $page = visit(route('dashboard.listings.create', absolute: false))
+        ->on()->mobile()
+        ->fill('#start_date', '01/06/2026')
+        ->fill('#end_date', '20/06/2026')
+        ->click('Set specific days');
+
+    expect($page->script('document.documentElement.scrollWidth <= window.innerWidth'))->toBeTrue();
+    $page->assertNoJavaScriptErrors();
 });

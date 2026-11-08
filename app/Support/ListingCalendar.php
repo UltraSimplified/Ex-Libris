@@ -3,6 +3,8 @@
 namespace App\Support;
 
 use App\Models\Listing;
+use App\Models\ListingDay;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Str;
 
 /**
@@ -28,7 +30,7 @@ class ListingCalendar
             'PRODID:-//Good on Paper//Listings//EN',
             'CALSCALE:GREGORIAN',
             'METHOD:PUBLISH',
-            ...array_merge(...array_map(self::event(...), $listings)),
+            ...array_merge(...array_map(self::events(...), $listings)),
             'END:VCALENDAR',
         ];
 
@@ -36,24 +38,45 @@ class ListingCalendar
     }
 
     /**
-     * One event, by its lines. The UID stays the same for the life of the
-     * listing, so a calendar app can tell it is the same event.
+     * A listing's events, by their lines: one spanning its run, or for a
+     * listing on specific days one on each of them, so the pub quiz every
+     * other Tuesday does not fill six weeks of somebody's diary.
      *
-     * The standard takes an all-day event's end as the day after its last.
+     * Each UID stays the same for the life of the listing, so a calendar
+     * app can tell it is the same event: the listing's own for a run, the
+     * listing's and the day's for a specific day.
      *
      * @return list<string>
      */
-    private static function event(Listing $listing): array
+    private static function events(Listing $listing): array
     {
-        $start = $listing->start_date;
-        $lastDay = $listing->end_date?->greaterThan($start) ? $listing->end_date : $start;
+        if ($listing->days->isEmpty()) {
+            $start = $listing->start_date;
+            $lastDay = $listing->end_date?->greaterThan($start) ? $listing->end_date : $start;
+
+            return self::event($listing, 'listing-'.$listing->id, $start, $lastDay);
+        }
+
+        return array_merge(...$listing->days->map(
+            fn (ListingDay $day): array => self::event($listing, 'listing-'.$listing->id.'-'.$day->day->format('Ymd'), $day->day, $day->day)
+        )->all());
+    }
+
+    /**
+     * One all-day event, by its lines. The standard takes an all-day
+     * event's end as the day after its last.
+     *
+     * @return list<string>
+     */
+    private static function event(Listing $listing, string $uid, CarbonInterface $firstDay, CarbonInterface $lastDay): array
+    {
         $url = route('Listing', ['id' => $listing->id, 'slug' => $listing->slug]);
 
         return array_values(array_filter([
             'BEGIN:VEVENT',
-            'UID:listing-'.$listing->id.'@goodonpaper.info',
+            'UID:'.$uid.'@goodonpaper.info',
             'DTSTAMP:'.($listing->updated_at ?? now())->copy()->utc()->format('Ymd\THis\Z'),
-            'DTSTART;VALUE=DATE:'.$start->format('Ymd'),
+            'DTSTART;VALUE=DATE:'.$firstDay->format('Ymd'),
             'DTEND;VALUE=DATE:'.$lastDay->copy()->addDay()->format('Ymd'),
             'SUMMARY:'.self::escape((string) $listing->title),
             self::location($listing),

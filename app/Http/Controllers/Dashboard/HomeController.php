@@ -56,14 +56,15 @@ class HomeController extends Controller
 
     /**
      * The events this account has saved that have not finished, in the same
-     * order as the listings pages, with what the panel draws under each.
+     * order as the listings pages, with what the panel draws under each and
+     * the specific days its calendar puts them on.
      *
      * @return Collection<int, Listing>
      */
     private function bookmarkedListings(User $user): Collection
     {
         return $user->bookmarks()
-            ->with(['venue', 'category', 'promoter'])
+            ->with(['venue', 'category', 'promoter', 'days:listing_id,day'])
             ->current()
             ->finishingSoonest()
             ->get()

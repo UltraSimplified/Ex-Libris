@@ -535,3 +535,17 @@ test('every layout fits a phone without scrolling sideways', function (string $l
 
     $page->assertNoJavaScriptErrors();
 })->with(['Compact', 'Calendar']);
+
+test('the calendar puts an event on specific days on those days only', function () {
+    $user = User::factory()->create();
+    $quiz = Listing::factory()->onDays('2099-03-03', '2099-03-17')->create(['title' => 'Pub Quiz']);
+    $user->bookmarks()->attach($quiz);
+    $this->actingAs($user);
+
+    visit('/dashboard')
+        ->click('Calendar')
+        ->assertVisible('[data-day="2099-03-03"]')
+        ->assertVisible('[data-day="2099-03-17"]')
+        ->assertMissing('[data-day="2099-03-10"]')
+        ->assertNoJavaScriptErrors();
+});

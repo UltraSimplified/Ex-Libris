@@ -911,3 +911,102 @@ test('the edit form is sent a listing\'s dates as days, not as instants', functi
             ->where('listing.end_date', '2026-07-15')
         );
 });
+
+function chosenDaysOf(Listing $listing): array
+{
+    return $listing->fresh()->days->map(fn ($day) => $day->day->toDateString())->all();
+}
+
+test('saving a listing on specific days pulls its run in to the first and last of them', function () {
+    $user = User::factory()->agreed()->create();
+
+    $this->actingAs($user)
+        ->post(route('dashboard.listings.store'), listingPayload([
+            'start_date' => '2026-11-01',
+            'end_date' => '2026-12-24',
+            'set_specific_days' => 'on',
+            'specific_days' => ['2026-11-03', '2026-11-17', '2026-12-01', '2026-12-15'],
+        ]))
+        ->assertRedirect(route('dashboard.listings.index'));
+
+    $listing = Listing::sole();
+
+    expect($listing->start_date->toDateString())->toBe('2026-11-03')
+        ->and($listing->end_date->toDateString())->toBe('2026-12-15')
+        ->and(chosenDaysOf($listing))->toBe(['2026-11-03', '2026-11-17', '2026-12-01', '2026-12-15']);
+});
+
+test('ticking specific days with none chosen is refused', function () {
+    $user = User::factory()->agreed()->create();
+
+    $this->actingAs($user)
+        ->post(route('dashboard.listings.store'), listingPayload([
+            'start_date' => '2026-06-01',
+            'end_date' => '2026-06-20',
+            'set_specific_days' => 'on',
+        ]))
+        ->assertSessionHasErrors(['specific_days' => 'Choose at least one day, or untick "Set specific days".']);
+
+    expect(Listing::count())->toBe(0);
+});
+
+test('ticking specific days needs an end date', function () {
+    $user = User::factory()->agreed()->create();
+
+    $this->actingAs($user)
+        ->post(route('dashboard.listings.store'), listingPayload([
+            'start_date' => '2026-06-01',
+            'end_date' => '',
+            'set_specific_days' => 'on',
+            'specific_days' => ['2026-06-06'],
+        ]))
+        ->assertSessionHasErrors(['end_date' => 'Add an end date to choose specific days.']);
+
+    expect(Listing::count())->toBe(0);
+});
+
+test('a chosen day that is not a day within the run is refused', function (string $day, string $message) {
+    $user = User::factory()->agreed()->create();
+
+    $this->actingAs($user)
+        ->post(route('dashboard.listings.store'), listingPayload([
+            'start_date' => '2026-06-01',
+            'end_date' => '2026-06-20',
+            'set_specific_days' => 'on',
+            'specific_days' => ['2026-06-06', $day],
+        ]))
+        ->assertSessionHasErrors(['specific_days.1' => $message]);
+
+    expect(Listing::count())->toBe(0);
+})->with([
+    'before the start' => ['2026-05-31', 'Each chosen day must fall between the start and end dates.'],
+    'after the end' => ['2026-06-21', 'Each chosen day must fall between the start and end dates.'],
+    'not a date' => ['next Saturday', 'One of the chosen days is not a date.'],
+]);
+
+test('unticking specific days puts the listing back on every day, whatever days arrive', function () {
+    $user = User::factory()->agreed()->create();
+    $quiz = Listing::factory()->for($user)->onDays('2026-11-03', '2026-11-17')->create();
+
+    $this->actingAs($user)
+        ->put(route('dashboard.listings.update', $quiz), listingPayload([
+            'start_date' => '2026-11-03',
+            'end_date' => '2026-11-17',
+            'specific_days' => ['2026-11-10'],
+        ]))
+        ->assertRedirect(route('dashboard.listings.index'));
+
+    expect(chosenDaysOf($quiz))->toBe([])
+        ->and($quiz->fresh()->start_date->toDateString())->toBe('2026-11-03')
+        ->and($quiz->fresh()->end_date->toDateString())->toBe('2026-11-17');
+});
+
+test('the edit form is given the listing\'s specific days', function () {
+    $user = User::factory()->agreed()->create();
+    $quiz = Listing::factory()->for($user)->onDays('2026-11-17', '2026-11-03')->create();
+
+    $this->actingAs($user)
+        ->get(route('dashboard.listings.edit', $quiz))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->where('specificDays', ['2026-11-03', '2026-11-17']));
+});

@@ -5,6 +5,7 @@ import InputError from '../InputError.vue';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import DateField from './DateField.vue';
+import SpecificDaysPicker from './SpecificDaysPicker.vue';
 import VenueSelect from './VenueSelect.vue';
 
 type Option = { id: number; name: string; town?: string | null };
@@ -54,6 +55,8 @@ const props = withDefaults(
         gallery?: GalleryImage[];
         /** The artists on the bill, each with a playlist, a video or both. */
         lineUp?: LineUpArtist[];
+        /** The days the event is on, YYYY-MM-DD, when not every day. */
+        specificDays?: string[];
     }>(),
     {
         promoters: () => [],
@@ -62,6 +65,7 @@ const props = withDefaults(
         listing: null,
         gallery: () => [],
         lineUp: () => [],
+        specificDays: () => [],
     },
 );
 
@@ -128,6 +132,22 @@ const moveArtist = (index: number, by: -1 | 1): void => {
 /** Trim an ISO date string down to the YYYY-MM-DD a date input expects. */
 const toDateInput = (value?: string | null): string =>
     value ? value.slice(0, 10) : '';
+
+/** The run as it stands, followed as the dates are typed or picked. */
+const startDate = ref<string>(toDateInput(props.listing?.start_date));
+const endDate = ref<string>(toDateInput(props.listing?.end_date));
+
+/**
+ * What the server said about the specific days: the list as a whole, or
+ * the first day it turned down, shown once under the calendar.
+ */
+const specificDaysError = computed<string | undefined>(
+    () =>
+        props.errors.specific_days ??
+        Object.entries(props.errors).find(([field]) =>
+            field.startsWith('specific_days.'),
+        )?.[1],
+);
 
 const fieldClass =
     'border-input dark:bg-input/30 focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-md border bg-transparent px-3 py-2 text-base shadow-xs outline-none transition-[color,box-shadow] focus-visible:ring-[3px] md:text-sm';
@@ -330,6 +350,7 @@ const pickerButtonClass =
                     name="start_date"
                     :default-value="toDateInput(listing?.start_date)"
                     required
+                    @date-change="startDate = $event"
                 />
                 <InputError :message="errors.start_date" />
             </div>
@@ -340,6 +361,7 @@ const pickerButtonClass =
                     id="end_date"
                     name="end_date"
                     :default-value="toDateInput(listing?.end_date)"
+                    @date-change="endDate = $event"
                 />
                 <InputError :message="errors.end_date" />
             </div>
@@ -357,6 +379,13 @@ const pickerButtonClass =
                     placeholder="e.g. Tuesday and Thursday mornings only"
                 />
                 <InputError :message="errors.additional_date_information" />
+
+                <SpecificDaysPicker
+                    :start="startDate"
+                    :end="endDate"
+                    :initial-days="specificDays"
+                    :error="specificDaysError"
+                />
             </div>
 
             <div class="grid gap-2">

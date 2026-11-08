@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\Images\UserAvatar;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Scope;
@@ -362,6 +363,16 @@ class User extends Authenticatable implements MustVerifyEmail
                 ->orWhereIn('listings.promoter_id', $this->promoters()->select('promoters.id'))
                 ->orWhereIn('listings.venue_id', $this->venues()->select('venues.id'));
         });
+    }
+
+    /**
+     * An account's picture goes with it, however the account is deleted:
+     * nothing else points at the file, and a deleted person's face should not
+     * stay on the CDN.
+     */
+    protected static function booted(): void
+    {
+        static::deleted(fn (User $user) => app(UserAvatar::class)->delete($user->avatar));
     }
 
     /**

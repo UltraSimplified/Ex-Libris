@@ -4,7 +4,9 @@ use App\Models\Category;
 use App\Models\Listing;
 use App\Models\User;
 use App\Nova\Filters\ListingPeriod;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Testing\TestResponse;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
 /**
@@ -133,4 +135,119 @@ test('a listing saves from the office with its button text left blank', function
         ->assertSuccessful();
 
     expect(Listing::sole()->button_text)->toBeNull();
+});
+
+/**
+ * The fields the Office shows on a listing's own page.
+ *
+ * @return Collection<int, array<string, mixed>>
+ */
+function officeDetailFields(Listing $listing): Collection
+{
+    return collect(test()->actingAs(staffUser())
+        ->getJson('/nova-api/listings/'.$listing->id)
+        ->assertOk()
+        ->json('resource.fields'));
+}
+
+test('the office lists a listing\'s specific days, with a way to change them in the dashboard', function () {
+    $quiz = Listing::factory()->onDays('2026-11-03', '2026-11-17', '2026-12-01', '2026-12-15')->create();
+
+    $field = officeDetailFields($quiz)->firstWhere('name', 'Specific days');
+
+    expect($field['value'])->toBe(
+        '3 Nov, 17 Nov, 1 Dec, 15 Dec 2026<br><a class="link-default" href="'.route('dashboard.listings.edit', $quiz).'" target="_blank">Edit days in the Dashboard</a>'
+    );
+});
+
+test('specific days running into another year each carry their year in the office', function () {
+    $listing = Listing::factory()->onDays('2026-12-15', '2027-01-05')->create();
+
+    $field = officeDetailFields($listing)->firstWhere('name', 'Specific days');
+
+    expect($field['value'])->toStartWith('15 Dec 2026, 5 Jan 2027<br>');
+});
+
+test('a listing on every day of its run has no specific days in the office', function () {
+    $listing = Listing::factory()->create(['start_date' => '2026-11-02', 'end_date' => '2026-11-30']);
+
+    expect(officeDetailFields($listing)->firstWhere('name', 'Specific days'))->toBeNull();
+});
+
+/**
+ * An Office save of a listing, as Nova's edit form sends it.
+ */
+function officeUpdate(Listing $listing, array $changes): TestResponse
+{
+    return test()->actingAs(staffUser())->putJson('/nova-api/listings/'.$listing->id.'?editing=true&editMode=update', [
+        'title' => $listing->title,
+        'category' => $listing->category_id,
+        'body' => $listing->body,
+        'start_date' => $listing->start_date->toDateString(),
+        'end_date' => $listing->end_date?->toDateString(),
+        ...$changes,
+    ]);
+}
+
+test('an office save leaves the dates of a listing on specific days as they are', function () {
+    $quiz = Listing::factory()->onDays('2026-11-03', '2026-12-15')->create();
+
+    officeUpdate($quiz, ['title' => 'Pub Quiz, renamed', 'start_date' => '2026-10-01', 'end_date' => '2026-12-31'])
+        ->assertOk();
+
+    $quiz->refresh();
+
+    expect($quiz->title)->toBe('Pub Quiz, renamed')
+        ->and($quiz->start_date->toDateString())->toBe('2026-11-03')
+        ->and($quiz->end_date->toDateString())->toBe('2026-12-15')
+        ->and($quiz->days)->toHaveCount(2);
+});
+
+test('an office save still changes the dates of a listing on every day of its run', function () {
+    $listing = Listing::factory()->create(['start_date' => '2026-11-02', 'end_date' => '2026-11-30']);
+
+    officeUpdate($listing, ['start_date' => '2026-11-09', 'end_date' => '2026-12-06'])
+        ->assertOk();
+
+    expect($listing->fresh()->start_date->toDateString())->toBe('2026-11-09')
+        ->and($listing->fresh()->end_date->toDateString())->toBe('2026-12-06');
+});
+
+/**
+ * A copy saved from the Office's Replicate form, which says which listing
+ * it was copied from.
+ */
+function officeReplicate(Listing $original, string $startDate, string $endDate): Listing
+{
+    test()->actingAs(staffUser())
+        ->postJson('/nova-api/listings', [
+            'title' => 'Copy of '.$original->title,
+            'category' => $original->category_id,
+            'body' => $original->body,
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+            'fromResourceId' => $original->id,
+        ])
+        ->assertSuccessful();
+
+    return Listing::query()->latest('id')->first();
+}
+
+test('a copy replicated in the office keeps the original\'s specific days', function () {
+    $quiz = Listing::factory()->onDays('2026-11-03', '2026-11-17', '2026-12-01', '2026-12-15')->create();
+
+    $copy = officeReplicate($quiz, '2026-11-03', '2026-12-15');
+
+    expect($copy->days->map(fn ($day) => $day->day->toDateString())->all())
+        ->toBe(['2026-11-03', '2026-11-17', '2026-12-01', '2026-12-15']);
+});
+
+test('a copy replicated in the office and moved past every specific day keeps its dates and has none', function () {
+    $quiz = Listing::factory()->onDays('2026-11-03', '2026-11-17', '2026-12-01', '2026-12-15')->create();
+
+    $copy = officeReplicate($quiz, '2027-01-05', '2027-01-26');
+
+    expect($copy->days)->toBeEmpty()
+        ->and($copy->start_date->toDateString())->toBe('2027-01-05')
+        ->and($copy->end_date->toDateString())->toBe('2027-01-26');
 });

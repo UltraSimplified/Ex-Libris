@@ -133,3 +133,22 @@ test('a listing that is not there is a plain not found', function (string $path)
     'no such listing' => '/calendar/listings/999999.ics',
     'not a listing at all' => '/calendar/listings/nonsense.ics',
 ]);
+
+test('a listing on specific days holds one all-day event on each, each with a UID of its own', function () {
+    $quiz = Listing::factory()->onDays('2026-11-03', '2026-11-17', '2026-12-01', '2026-12-15')->create();
+
+    $lines = unfoldedLines(calendarFileFor($quiz)->getContent());
+
+    expect(array_count_values($lines)['BEGIN:VEVENT'])->toBe(4)
+        ->and($lines)->toContain(
+            'UID:listing-'.$quiz->id.'-20261103@goodonpaper.info',
+            'UID:listing-'.$quiz->id.'-20261117@goodonpaper.info',
+            'UID:listing-'.$quiz->id.'-20261201@goodonpaper.info',
+            'UID:listing-'.$quiz->id.'-20261215@goodonpaper.info',
+            'DTSTART;VALUE=DATE:20261103', 'DTEND;VALUE=DATE:20261104',
+            'DTSTART;VALUE=DATE:20261117', 'DTEND;VALUE=DATE:20261118',
+            'DTSTART;VALUE=DATE:20261201', 'DTEND;VALUE=DATE:20261202',
+            'DTSTART;VALUE=DATE:20261215', 'DTEND;VALUE=DATE:20261216',
+        )
+        ->and($lines)->not->toContain('UID:listing-'.$quiz->id.'@goodonpaper.info');
+});

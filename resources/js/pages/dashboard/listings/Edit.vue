@@ -23,6 +23,8 @@ const props = defineProps<{
     listing: Record<string, never> & { id: number; title: string };
     gallery: GalleryImage[];
     lineUp: { name: string; playlist: string | null; video: string | null }[];
+    /** The days the event is on, YYYY-MM-DD, when not every day. */
+    specificDays: string[];
     categories: Option[];
     venues: Option[];
     promoters: Option[];
@@ -79,6 +81,7 @@ const confirmDelete = (): boolean =>
                     :listing="listing"
                     :gallery="gallery"
                     :line-up="lineUp"
+                    :specific-days="specificDays"
                 />
 
                 <div class="flex items-center gap-4">

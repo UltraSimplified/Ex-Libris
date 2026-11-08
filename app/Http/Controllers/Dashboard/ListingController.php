@@ -7,11 +7,13 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Dashboard\ListingRequest;
 use App\Models\Category;
 use App\Models\Listing;
+use App\Models\ListingDay;
 use App\Models\Promoter;
 use App\Models\User;
 use App\Models\Venue;
 use App\Services\Images\ListingGallery;
 use App\Services\Images\ListingThumbnail;
+use App\Services\Listings\ListingDays;
 use App\Services\Listings\ListingLineUp;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -27,6 +29,7 @@ class ListingController extends Controller
         private ListingThumbnail $thumbnails,
         private ListingGallery $gallery,
         private ListingLineUp $lineUps,
+        private ListingDays $days,
     ) {}
 
     /**
@@ -112,6 +115,7 @@ class ListingController extends Controller
         );
 
         $copy->save();
+        $this->days->copy($listing, $copy);
 
         ListingCreated::dispatch($copy);
 
@@ -150,7 +154,8 @@ class ListingController extends Controller
 
         $attributes['gallery'] = $this->gallery->encode($this->addedGalleryImages($request));
 
-        $listing = $request->user()->listings()->create($attributes);
+        $listing = $request->user()->listings()->make();
+        $this->days->save($listing, $attributes, $request->specificDays());
 
         ListingCreated::dispatch($listing);
 
@@ -166,6 +171,7 @@ class ListingController extends Controller
 
         return Inertia::render('dashboard/listings/Edit', [
             'listing' => $listing,
+            'specificDays' => $listing->days->map(fn (ListingDay $day): string => $day->day->toDateString()),
             'gallery' => $this->gallery->parse($listing->gallery),
             'lineUp' => $this->lineUps->artists($listing->line_up),
             'categories' => $this->categories(),
@@ -197,7 +203,7 @@ class ListingController extends Controller
             array_merge($keptImages, $this->addedGalleryImages($request))
         );
 
-        $listing->update($attributes);
+        $this->days->save($listing, $attributes, $request->specificDays());
 
         // Files are only unlinked once the row has saved, so a failure here
         // leaves the listing pointing at images that still exist.
@@ -242,6 +248,8 @@ class ListingController extends Controller
             'gallery',
             'gallery_captions',
             'gallery_existing',
+            'set_specific_days',
+            'specific_days',
         ]);
 
         $attributes['line_up'] = json_encode($this->lineUps->fromForm($request->validated('line_up')));
