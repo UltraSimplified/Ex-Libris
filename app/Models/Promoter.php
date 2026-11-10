@@ -12,6 +12,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
+/**
+ * The owner column was added in a loop over two tables, which Larastan
+ * cannot follow when it reads the migrations, so it is declared here.
+ *
+ * @property int|null $user_id
+ */
 class Promoter extends Model
 {
     use HasBrand, HasFactory;

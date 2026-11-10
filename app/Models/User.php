@@ -19,6 +19,14 @@ use Laravel\Cashier\Billable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Nova\Auth\Impersonatable;
 
+/**
+ * The role columns were renamed in a loop over a constant, which Larastan
+ * cannot follow when it reads the migrations, so they are declared here.
+ *
+ * @property bool $is_venue_mgr
+ * @property bool $is_promoter
+ * @property bool $is_writer
+ */
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */

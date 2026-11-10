@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Dashboard;
 
-use App\Events\Dashboard\ListingCreated;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Dashboard\ListingRequest;
 use App\Models\Category;
@@ -117,8 +116,6 @@ class ListingController extends Controller
         $copy->save();
         $this->days->copy($listing, $copy);
 
-        ListingCreated::dispatch($copy);
-
         return to_route('dashboard.listings.edit', $copy)
             ->with('status', 'Listing duplicated. This is the copy.');
     }
@@ -156,8 +153,6 @@ class ListingController extends Controller
 
         $listing = $request->user()->listings()->make();
         $this->days->save($listing, $attributes, $request->specificDays());
-
-        ListingCreated::dispatch($listing);
 
         return to_route('dashboard.listings.index')->with('status', 'Listing created.');
     }

@@ -4,6 +4,7 @@ use App\Models\User;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Testing\TestResponse;
+use Laravel\Nova\Notifications\NovaNotification;
 
 test('registration screen can be rendered', function () {
     $response = $this->get(route('register'));
@@ -107,4 +108,32 @@ test('somebody already logged in still cannot register', function () {
     registerFrom('203.0.113.1')->assertRedirect(route('dashboard', absolute: false));
 
     expect(User::where('email', 'test@example.com')->exists())->toBeFalse();
+});
+
+test('the office is told of a new registration, with a link to edit the account', function () {
+    $office = collect(User::OFFICE_EMAILS)
+        ->map(fn (string $email) => User::factory()->create(['email' => $email]));
+    Notification::fake();
+
+    registerFrom('203.0.113.1', ['name' => 'Ana Ruiz', 'email' => 'ana@example.com']);
+
+    $account = User::where('email', 'ana@example.com')->sole();
+
+    foreach ($office as $staff) {
+        $told = Notification::sent($staff, NovaNotification::class)->map->toNova();
+
+        expect($told)->toHaveCount(1);
+        expect($told->first()['message'])->toBe('New registration: Ana Ruiz (ana@example.com)');
+        expect((string) $told->first()['actionText'])->toBe('Edit user');
+        expect((string) $told->first()['actionUrl'])->toEndWith("/resources/users/{$account->id}/edit");
+    }
+});
+
+test('nobody outside the office is told of a new registration', function () {
+    $member = User::factory()->create();
+    Notification::fake();
+
+    registerFrom('203.0.113.1');
+
+    Notification::assertNotSentTo($member, NovaNotification::class);
 });

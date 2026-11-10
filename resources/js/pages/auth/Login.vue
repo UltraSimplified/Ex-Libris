@@ -102,8 +102,11 @@ defineProps<{
                 class="text-center text-sm text-muted-foreground"
                 v-if="canRegister"
             >
-                Don't have an account?
-                <TextLink :href="register()" :tabindex="5">Sign up</TextLink>
+              <h2 style="font-size: 24px; font-weight: 700; margin-top:40px; color: #212121">Reader Account</h2>
+              <p style="margin-bottom: 40px; color: #212121;"><TextLink :href="register()" :tabindex="5">Click here</TextLink> to sign up for your own free <strong>Good On Paper</strong> account enabling you to bookmark events and receive notifications of forthcoming events!</p>
+              <h2 style="font-size: 24px; font-weight: 700; color: #212121">Venue / Promoter Account</h2>
+              <p style="color: #212121;">Don't have an account? Email <a href="mailto:info@goodonpaper.info" style="text-decoration: underline;" tabindex="6">info@goodonpaper.info</a> and we will set you up with one so you can add your listing to <strong>Good On Paper</strong></p>
+
             </div>
         </Form>
     </AuthBase>
