@@ -4,7 +4,7 @@ use App\Models\Listing;
 use App\Models\User;
 use App\Services\Bookmarks\GuestBookmarks;
 
-test('the panel is given the account\'s saved events, the soonest to finish first', function () {
+test('the panel is given the account\'s saved events, the soonest on first', function () {
     $promoter = User::factory()->create(['is_promoter' => true]);
     $later = Listing::factory()->create(['start_date' => today()->addWeek()]);
     $sooner = Listing::factory()->create(['start_date' => today()->addDay()]);
@@ -17,6 +17,28 @@ test('the panel is given the account\'s saved events, the soonest to finish firs
             ->has('bookmarkedListings', 2)
             ->where('bookmarkedListings.0.id', $sooner->id)
             ->where('bookmarkedListings.1.id', $later->id)
+        );
+});
+
+test('the panel lists saved events by the next day each is on, then by how soon its run ends', function () {
+    $this->travelTo('2026-11-12 12:00');
+    $reader = User::factory()->create();
+    $gig = Listing::factory()->create(['start_date' => '2026-11-20']);
+    $play = Listing::factory()->create(['start_date' => '2026-11-14', 'end_date' => '2026-11-15']);
+    $exhibition = Listing::factory()->create(['start_date' => '2026-11-01', 'end_date' => '2026-11-30']);
+    $reader->bookmarks()->attach([$gig->id, $play->id]);
+    $reader->bookmarks()->attach($exhibition, ['attending' => true]);
+
+    $this->actingAs($reader)
+        ->get(route('dashboard'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->has('bookmarkedListings', 3)
+            ->where('bookmarkedListings.0.id', $exhibition->id)
+            ->where('bookmarkedListings.0.title', $exhibition->title)
+            ->where('bookmarkedListings.0.pivot.attending', fn (mixed $attending) => (bool) $attending)
+            ->where('bookmarkedListings.1.id', $play->id)
+            ->where('bookmarkedListings.2.id', $gig->id)
         );
 });
 

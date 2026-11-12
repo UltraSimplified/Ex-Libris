@@ -6,13 +6,14 @@ use App\Models\Venue;
 
 /**
  * Where a click in the middle of the first listing's row element would go:
- * the link it lands on, or the label of the button.
+ * the link it lands on, or the label of the button. The first row holding
+ * a listing's title, as a day's heading now comes before it.
  */
 function landsOn(string $selector): string
 {
     return <<<JS
         (() => {
-            const row = document.querySelector('.divide-silver > div');
+            const row = document.querySelector('.divide-silver > div:has(h1)');
             const target = row.querySelector('{$selector}');
             target.scrollIntoView({ block: 'center', behavior: 'instant' });
             const box = target.getBoundingClientRect();
@@ -41,8 +42,8 @@ test('the whole of a listing row leads to the listing, and shades when pointed a
         ->assertScript(landsOn('img'), $address)
         ->assertScript(landsOn('h1 + h2'), $address)
         ->assertScript(landsOn('h1'), $address)
-        ->hover('.divide-silver > div > div')
-        ->assertScript("getComputedStyle(document.querySelector('.divide-silver > div > div')).backgroundColor", 'rgb(247, 247, 247)')
+        ->hover('.divide-silver > div:has(h1) > div')
+        ->assertScript("getComputedStyle(document.querySelector('.divide-silver > div:has(h1) > div')).backgroundColor", 'rgb(247, 247, 247)')
         ->click('Village Fete')
         ->assertPathIs($address)
         ->assertNoJavaScriptErrors();

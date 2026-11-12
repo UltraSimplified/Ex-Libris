@@ -100,15 +100,45 @@ class Listing extends Model
     }
 
     /**
-     * Listings in the order they finish: what ends today first, a run that
-     * goes on to the end of the month last. Ties go to whatever started
-     * first, then by title.
+     * SQL for the next day a listing is on, counting from a given day: its
+     * first chosen day from then on when it has specific days, otherwise
+     * its start date if that is still to come, and otherwise the day itself.
+     *
+     * A CASE rather than GREATEST(), which SQLite, where the tests run, does
+     * not have. All three placeholders take the same day.
      */
-    public function scopeFinishingSoonest(Builder $query): Builder
+    private const NEXT_DAY = 'COALESCE('
+        .'(SELECT MIN(DATE(listing_days.day)) FROM listing_days'
+        .' WHERE listing_days.listing_id = listings.id AND DATE(listing_days.day) >= ?),'
+        .' CASE WHEN DATE(listings.start_date) > ? THEN DATE(listings.start_date) ELSE ? END'
+        .')';
+
+    /**
+     * Listings in the order they are next on, counting from the first day
+     * the page shows: a show opening on Saturday is listed with Saturday,
+     * not with the day it closes, and a run already under way is listed
+     * with that first day. Listings on the same day go by how soon their
+     * run ends, so tonight's gig comes before an exhibition with a month
+     * left, and then by title.
+     *
+     * The day each one was put on comes along with it as next_day, so the
+     * page can head the list with the same days it was ordered by. Selecting
+     * it would stop Eloquent selecting every column by default, so the
+     * listing's own columns are asked for too, unless the query already
+     * chose its columns.
+     */
+    public function scopeByNextDay(Builder $query, mixed $from = null): Builder
     {
+        $firstDay = Carbon::parse($from ?? today())->toDateString();
+
+        if ($query->getQuery()->columns === null) {
+            $query->select('listings.*');
+        }
+
         return $query
+            ->selectRaw(self::NEXT_DAY.' as next_day', [$firstDay, $firstDay, $firstDay])
+            ->orderBy('next_day')
             ->orderByRaw(self::LAST_DAY.' asc')
-            ->orderBy('start_date')
             ->orderBy('title');
     }
 

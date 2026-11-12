@@ -19,6 +19,9 @@ interface Props {
     venue: Venue;
     promoter?: Promoter | null;
     genres?: Category[];
+    currentDay: string;
+    firstDay: string;
+    dayHeadings: boolean;
 }
 
 const props = defineProps<Props>();
@@ -44,6 +47,9 @@ const props = defineProps<Props>();
                 :venue="props.venue"
                 :promoter="props.promoter"
                 :genres="props.genres"
+                :current-day="props.currentDay"
+                :first-day="props.firstDay"
+                :day-headings="props.dayHeadings"
             />
 
             <Advert />

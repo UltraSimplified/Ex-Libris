@@ -6,7 +6,7 @@ export interface CalendarDay<T> {
     date: Date;
     isToday: boolean;
     isPast: boolean;
-    /** What is on, soonest finishing first as they arrived. */
+    /** What is on, in the order they arrived: soonest on first. */
     listings: T[];
 }
 

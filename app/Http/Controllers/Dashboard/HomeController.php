@@ -66,7 +66,7 @@ class HomeController extends Controller
         return $user->bookmarks()
             ->with(['venue', 'category', 'promoter', 'days:listing_id,day'])
             ->current()
-            ->finishingSoonest()
+            ->byNextDay(today())
             ->get()
             ->each->append(['ticket_link', 'is_free']);
     }

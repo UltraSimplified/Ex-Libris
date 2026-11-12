@@ -23,10 +23,10 @@ class WidgetFeed
      * The owner's events that have not finished, soonest first,
      * as many as the widget is set to show.
      *
-     * Soonest to start rather than the listings pages' soonest to finish:
-     * a widget is "what's on next", and a month-long exhibition ending today
-     * should not sit above tonight's gig. One already under way shows as
-     * running until its last day.
+     * Soonest to start rather than the listings pages' order, which puts
+     * a run already under way with today and then goes by how soon each
+     * one ends: a widget is "what's on next". One already under way shows
+     * as running until its last day.
      *
      * @return Collection<int, array<string, mixed>>
      */

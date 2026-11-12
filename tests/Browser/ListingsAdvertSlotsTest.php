@@ -29,11 +29,18 @@ function liveAdvertsWithCreatives(int $count): void
 }
 
 /*
- * The rows of the listings grid, as "listing" or "advert", in order.
+ * The rows of the listings grid, as "heading", "listing" or "advert", in
+ * order.
  */
 const LISTING_ROWS = <<<'JS'
     [...document.querySelector('.divide-silver').children]
-        .map((row) => (row.querySelector('.listing-advert') ? 'advert' : 'listing'))
+        .map((row) => {
+            if (row.querySelector('.listing-heading')) {
+                return 'heading';
+            }
+
+            return row.querySelector('.listing-advert') ? 'advert' : 'listing';
+        })
         .join(',')
     JS;
 
@@ -62,11 +69,28 @@ test('an advert from the live line-up goes in after every so many listings, neve
     visit('/listings')
         ->assertCount('.listing-advert', 2)
         ->assertScript(LISTING_ROWS, implode(',', [
+            'heading',
             ...array_fill(0, 5, 'listing'), 'advert',
             ...array_fill(0, 5, 'listing'), 'advert',
             'listing', 'listing',
         ]))
         ->assertSee('Paid advertisement')
+        ->assertNoJavaScriptErrors();
+});
+
+test('an advert due at the end of a day goes in before the next day\'s heading, not after it', function () {
+    $this->travelTo('2026-11-12 12:00');
+    config(['adverts.listings_every' => 5]);
+    liveAdvertsWithCreatives(1);
+    Listing::factory()->count(5)->create(['start_date' => '2026-11-13']);
+    Listing::factory()->count(2)->create(['start_date' => '2026-11-14']);
+
+    visit('/listings')
+        ->assertScript(LISTING_ROWS, implode(',', [
+            'heading', ...array_fill(0, 5, 'listing'),
+            'advert',
+            'heading', 'listing', 'listing',
+        ]))
         ->assertNoJavaScriptErrors();
 });
 

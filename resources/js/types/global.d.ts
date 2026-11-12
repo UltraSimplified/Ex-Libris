@@ -444,6 +444,12 @@ interface Listing {
      * every day from start to end.
      */
     days?: { day: string }[];
+    /**
+     * The day a listings page put it on, as "2026-11-14": the next day it
+     * is on, counting from the page's first day. Sent only by the pages
+     * that order by it, which head their lists with the same days.
+     */
+    next_day?: string;
     additional_date_information: string | null;
     ticket_price: string;
     /** Said across the event's image rather than beside it. */

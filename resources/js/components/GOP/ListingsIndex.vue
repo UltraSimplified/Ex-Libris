@@ -21,7 +21,8 @@ import type { GenreTags } from '@/composables/useGenreTags';
 import { resolvePlaceholders } from '@/composables/usePlaceholders.js';
 import { useScrollReveal } from '@/composables/useScrollReveal';
 import { collapseOnLeave } from '@/lib/collapseOnLeave';
-import { formatListingDates } from '@/lib/listingDates';
+import { formatListingDates, listingHeading } from '@/lib/listingDates';
+import type { ListingHeading } from '@/lib/listingDates';
 import { register } from '@/routes';
 import type {
     Advert,
@@ -44,6 +45,12 @@ interface Props {
     venue: Venue;
     promoter?: Promoter | null;
     genres?: Category[];
+    /** The server's today, as "2026-11-12". */
+    currentDay: string;
+    /** The day this page's order counts from. */
+    firstDay: string;
+    /** Whether to head the list by day, which a page about one day is not. */
+    dayHeadings: boolean;
 }
 /**
  * The date picker, fetched the first time somebody goes to choose dates.
@@ -389,14 +396,37 @@ const visibleListings = computed(() => {
 
 const filtering = computed<boolean>(() => search.value.trim().length > 0);
 
+/**
+ * The heading a listing goes under, when this page heads its list by day:
+ * none on a page about a single day, nor for a listing sent without the
+ * day it was ordered by.
+ */
+function headingFor(listing: Listing): ListingHeading | null {
+    if (!props.dayHeadings || !listing.next_day) {
+        return null;
+    }
+
+    return listingHeading(listing.next_day, props.currentDay, props.firstDay);
+}
+
 /*
- * The listings as they are laid out: an advert from the live line-up after
- * every so many of them (advertEvery, from LISTINGS_ADVERT_EVERY), though
- * never as the last row. The adverts go in turn from the one after the
- * advert this page was given, so none is shown twice running and, as the
- * page's own advert rotates, the slots share out evenly.
+ * The listings as they are laid out.
+ *
+ * A heading goes in over the first listing of each day, or of each month
+ * further out, from what is left after search, genres and emptied hearts,
+ * so a day with nothing to show has no heading either. Its key is its day,
+ * so it fades out with the last of its listings and back in with the first.
+ *
+ * An advert from the live line-up goes in after every so many listings
+ * (advertEvery, from LISTINGS_ADVERT_EVERY), counting listings alone, and
+ * never as the last row. Coming after a listing, it can stand before a
+ * heading but never between a heading and its first listing. The adverts
+ * go in turn from the one after the advert this page was given, so none
+ * is shown twice running and, as the page's own advert rotates, the slots
+ * share out evenly.
  */
 type Row =
+    | { kind: 'heading'; key: string; label: string }
     | { kind: 'listing'; key: string; listing: Listing }
     | { kind: 'advert'; key: string; advert: Advert };
 
@@ -408,8 +438,20 @@ const rows = computed<Row[]>(() => {
     const listings = visibleListings.value;
     const laidOut: Row[] = [];
     let slot = 0;
+    let headedBy: string | null = null;
 
     listings.forEach((listing, index) => {
+        const heading = headingFor(listing);
+
+        if (heading && heading.key !== headedBy) {
+            laidOut.push({
+                kind: 'heading',
+                key: `heading-${heading.key}`,
+                label: heading.label,
+            });
+            headedBy = heading.key;
+        }
+
         laidOut.push({
             kind: 'listing',
             key: `listing-${listing.id}`,
@@ -699,6 +741,12 @@ watch([search, chosenSlugs], () => revealAll());
                         v-if="row.kind === 'advert'"
                         :advert="row.advert"
                     />
+                    <h2
+                        v-else-if="row.kind === 'heading'"
+                        class="listing-heading px-5 pt-6 pb-4 font-din text-xl font-bold uppercase"
+                    >
+                        {{ row.label }}
+                    </h2>
                     <ListingRow v-else :listing="row.listing" />
                 </div>
             </TransitionGroup>

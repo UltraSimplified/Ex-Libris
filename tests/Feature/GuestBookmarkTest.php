@@ -110,7 +110,7 @@ test('a guest with nothing saved is sent no cookie', function () {
         ->assertCookieMissing(GuestBookmarks::COOKIE);
 });
 
-test('a guest\'s bookmarked events page lists what their browser saved, soonest finishing first', function () {
+test('a guest\'s bookmarked events page lists what their browser saved, soonest on first', function () {
     $later = Listing::factory()->create(['start_date' => today()->addWeek()]);
     $sooner = Listing::factory()->create(['start_date' => today()->addDay()]);
     upcomingForGuests(1);

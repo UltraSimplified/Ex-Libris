@@ -62,7 +62,7 @@ const DATE_CHOOSER = <<<'JS'
     JS;
 
 const LISTING_DATE_SIZE = <<<'JS'
-    getComputedStyle(document.querySelector('.divide-silver > div h2')).fontSize
+    getComputedStyle(document.querySelector('.divide-silver > div:has(h1) h2')).fontSize
     JS;
 
 test('the subscribe block on the listings page sits beside its cover and goes dark, before and after the date picker loads', function () {
