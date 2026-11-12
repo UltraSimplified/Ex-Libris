@@ -201,13 +201,17 @@ class Listing extends Resource
                 ->hideFromIndex(),
 
             /*
-             * The artists on the bill, each with a playlist, a video or
-             * both, shown in this order. The listing cleans every embed as
-             * it saves, keeping only named artists with something to play.
+             * Trailers, playlists, or the artists on the bill, each with a
+             * playlist, a video or both, shown in this order. Called items,
+             * as the Dashboard calls them; the layout stays "artist", the
+             * name every stored line-up already uses. The listing cleans
+             * every embed as it saves, keeping only named items with
+             * something to play.
              */
-            Flexible::make('Line-up', 'line_up')
-                ->button('Add artist')
-                ->addLayout('Artist', 'artist', [
+            Flexible::make('Additional Media / Playlists / Videos', 'line_up')
+                ->help('Here you can add video trailers for films, artist playlists. If you have a multi performer event you can create a line up that will appear on your event listing.')
+                ->button('Add item')
+                ->addLayout('Item', 'artist', [
                     Text::make('Name')
                         ->rules('required', 'max:'.ListingLineUp::MAX_NAME),
                     Textarea::make('Playlist embed', 'playlist')
@@ -217,7 +221,7 @@ class Listing extends Resource
                     Textarea::make('Video embed', 'video')
                         ->nullable()
                         ->rules('nullable', Embed::video())
-                        ->help('A YouTube or Vimeo embed code or link. An artist needs a playlist, a video or both.'),
+                        ->help('A YouTube or Vimeo embed code or link. An item needs a playlist, a video or both.'),
                 ])
                 ->limit(ListingLineUp::MAX_ARTISTS)
                 ->confirmRemove()

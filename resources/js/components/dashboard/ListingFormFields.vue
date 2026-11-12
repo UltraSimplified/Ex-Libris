@@ -718,11 +718,14 @@ const pickerButtonClass =
                 </div>
 
                 <fieldset class="grid gap-4">
-                    <legend class="text-sm font-medium">Line-up</legend>
+                    <legend class="text-sm font-medium">
+                        Additional Media / Playlists / Videos
+                    </legend>
                     <p class="text-xs text-muted-foreground">
-                        Each artist on the bill, with a playlist, a video or
-                        both, in the order they should appear. Up to
-                        {{ MAX_ARTISTS }} artists.
+                        Here you can add video trailers for films, artist
+                        playlists. If you have a multi performer event you can
+                        create a line up that will appear on your event
+                        listing. Up to {{ MAX_ARTISTS }} items.
                     </p>
 
                     <div
@@ -732,7 +735,7 @@ const pickerButtonClass =
                     >
                         <div class="flex items-center justify-between gap-2">
                             <p class="text-sm font-medium">
-                                Artist {{ index + 1 }}
+                                Item {{ index + 1 }}
                             </p>
                             <div class="flex gap-3 text-xs">
                                 <button
@@ -763,7 +766,7 @@ const pickerButtonClass =
 
                         <div class="grid gap-2">
                             <Label :for="`line_up_${artist.uid}_name`"
-                                >Artist name</Label
+                                >Item name</Label
                             >
                             <Input
                                 :id="`line_up_${artist.uid}_name`"
@@ -820,7 +823,7 @@ const pickerButtonClass =
                             class="rounded-md border px-4 py-2 text-sm font-medium"
                             @click="addArtist"
                         >
-                            Add artist
+                            Add item
                         </button>
                     </div>
 

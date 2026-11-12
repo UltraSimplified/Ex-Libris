@@ -1,9 +1,5 @@
 <script setup lang="ts">
-import {
-    ArrowUturnLeftIcon,
-    CubeIcon,
-    IdentificationIcon,
-} from '@heroicons/vue/24/outline';
+import { ArrowUturnLeftIcon, CubeIcon } from '@heroicons/vue/24/outline';
 import { Link, usePage } from '@inertiajs/vue3';
 import { ref, computed, nextTick, onMounted, onUnmounted, watch } from 'vue';
 import type { Ref } from 'vue';
@@ -30,12 +26,6 @@ const basketCount = computed(() => page.props.basket?.count ?? 0);
 
 /** Who switched to this account from the Office, while they are in it. */
 const switchedFrom = computed(() => page.props.auth?.switchedFrom ?? null);
-
-/**
- * Whether this account works with the magazine, and so has Backstage under
- * the brandmark. A guest reaches their Account from the menu alone.
- */
-const backstage = computed(() => !!page.props.auth?.backstage);
 
 /** The menu's last entry: Backstage, or a guest's Account. */
 const accountName = useAccountName();
@@ -459,7 +449,7 @@ onUnmounted(() => {
         <nav class="sm:h-full md:flex md:items-center">
             <div
                 :class="
-                    office || backstage || switchedFrom
+                    office || switchedFrom
                         ? 'pt-8 pb-4'
                         : 'py-8'
                 "
@@ -472,15 +462,16 @@ onUnmounted(() => {
                         >GOOD<br />ON<br />PAPER
                     </Link>
                     <!--
-                        The ways in for signed-in accounts: the Office for
-                        the people let in, and Backstage for everybody who
-                        works with the magazine.
+                        The ways back to the Office for the people let in:
+                        the Office itself, and Switch back for staff in an
+                        account switched to from it. Backstage is reached
+                        from the menu, as a guest's Account is.
                         Set close together, with less padding under
                         them, so they add little to the masthead's height.
                     -->
                     <div
                         v-if="
-                            office || backstage || switchedFrom
+                            office || switchedFrom
                         "
                         class="ml-5 flex flex-col items-start gap-0.5"
                     >
@@ -493,17 +484,6 @@ onUnmounted(() => {
                             <CubeIcon class="size-4" aria-hidden="true" />
                             Office
                         </a>
-                        <Link
-                            v-if="backstage"
-                            :href="dashboard()"
-                            class="inline-flex items-center gap-1.5 font-din text-xs/4 text-tyre uppercase hover:text-black dark:hover:text-white"
-                        >
-                            <IdentificationIcon
-                                class="size-4"
-                                aria-hidden="true"
-                            />
-                            Backstage
-                        </Link>
                         <!-- Staff in an account switched to from the Office. -->
                         <Link
                             v-if="switchedFrom"

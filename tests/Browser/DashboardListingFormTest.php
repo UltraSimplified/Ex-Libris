@@ -51,7 +51,7 @@ test('choosing a thumbnail leaves the text areas as they were typed', function (
         // Opening the panel renders the component too, so the embeds are
         // typed after it and have to survive both that and the thumbnail.
         ->click('Additional media')
-        ->click('Add artist')
+        ->click('Add item')
         ->fill('#line_up_0_name', 'Sun Ra Arkestra')
         ->fill('#line_up_0_playlist', '<iframe src="https://bandcamp.com/EmbeddedPlayer/album=1"></iframe>')
         ->fill('#line_up_0_video', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ');
