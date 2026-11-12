@@ -807,7 +807,7 @@ const pickerButtonClass =
                                 :name="`line_up[${index}][video]`"
                                 rows="3"
                                 :class="`${fieldClass} font-mono text-xs`"
-                                placeholder="Paste a YouTube or Vimeo embed code, or just the link to the video"
+                                placeholder="Video link"
                             ></textarea>
                             <InputError
                                 :message="errors[`line_up.${index}.video`]"

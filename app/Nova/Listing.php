@@ -153,13 +153,6 @@ class Listing extends Resource
             BelongsTo::make('Category')
                 ->required()
                 ->hideFromIndex(),
-            ImageCropper::make('Cover photo')
-                ->croppable(1246 / 758)
-                ->resize(1246, 758)
-                ->convert('webp')
-                ->disk('do')
-                ->prunable()
-                ->hideFromIndex(),
             ImageCropper::make('Thumbnail')
                 ->croppable(548 / 462)
                 ->resize(548, 462)
