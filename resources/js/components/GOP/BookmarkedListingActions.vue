@@ -115,9 +115,7 @@ watch(
                     :model-value="attending"
                     @update:model-value="setAttending($event === true)"
                 />
-                <span>{{
-                    listing.is_free ? 'Going' : 'Tickets purchased'
-                }}</span>
+                <span>Going</span>
             </Label>
 
             <a
