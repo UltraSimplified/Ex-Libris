@@ -11,6 +11,9 @@ import type { Advert } from '@/types/global';
  * larger than it was uploaded. Its impression is counted, like the
  * panel's, once it has been half in view for a second. An advert saved
  * without one of its creatives leaves the row out at that size.
+ *
+ * It sits on the sponsorship panel's grey, so that on a phone it is not
+ * taken for one of the listings around it.
  */
 interface Props {
     advert: Advert;
@@ -45,7 +48,7 @@ useAdImpression(
 <template>
     <div
         v-if="props.advert.mobile_image || props.advert.desktop_image"
-        class="listing-advert px-5 py-5"
+        class="listing-advert bg-gray-200 bg-[url('@/../img/rectangle.png')] bg-cover bg-center px-5 py-5"
         :class="{
             'max-md:hidden': !props.advert.mobile_image,
             'md:hidden': !props.advert.desktop_image,
@@ -55,7 +58,7 @@ useAdImpression(
             Shown and hidden on the images, as the advert panel does: a
             display class on the links would outrank md:hidden and show both.
         -->
-        <p class="pb-3 font-din text-xs text-tyre uppercase">
+        <p class="pb-3 font-din text-xs text-tarmac uppercase">
             Paid advertisement
         </p>
         <a
