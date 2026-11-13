@@ -60,18 +60,18 @@ test('the panel shows a saved event, and shows nothing with none saved', functio
     visitFullLayout()
         ->assertSee('Bookmarked listings.')
         ->assertSee('Village Fete')
-        ->assertSee('Tickets purchased')
+        ->assertSee('Going')
         ->assertNoJavaScriptErrors();
 });
 
 test('a free event asks whether you are going', function () {
     $user = User::factory()->create();
-    panelListing($user, ['ticket_price' => 'Free']);
+    $listing = panelListing($user, ['ticket_price' => 'Free']);
     $this->actingAs($user);
 
     visitFullLayout()
         ->assertSee('Going')
-        ->assertDontSee('Tickets purchased')
+        ->assertVisible('#attending-'.$listing->id)
         ->assertNoJavaScriptErrors();
 });
 
@@ -394,9 +394,9 @@ test('compact shows the picture, title and date, and a click opens the event', f
     $this->actingAs($user);
 
     visitFullLayout()
-        ->assertSee('Tickets purchased')
+        ->assertSee('Going')
         ->click('Compact')
-        ->assertDontSee('Tickets purchased')
+        ->assertDontSee('Going')
         ->assertDontSee('Add to calendar')
         ->assertSee('Village Fete')
         ->assertSee('THURS 5 MAR')
@@ -413,7 +413,7 @@ test('the panel starts compact, until something else is chosen', function () {
 
     visit('/dashboard')
         ->assertSee('Village Fete')
-        ->assertDontSee('Tickets purchased')
+        ->assertDontSee('Going')
         ->assertNoJavaScriptErrors();
 });
 
@@ -423,10 +423,10 @@ test('the chosen layout is still chosen after a reload', function () {
     $this->actingAs($user);
 
     visitFullLayout()
-        ->assertSee('Tickets purchased')
+        ->assertSee('Going')
         ->refresh()
         ->assertSee('Village Fete')
-        ->assertSee('Tickets purchased')
+        ->assertSee('Going')
         ->assertNoJavaScriptErrors();
 });
 
