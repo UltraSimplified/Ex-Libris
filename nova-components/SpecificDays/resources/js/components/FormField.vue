@@ -1,5 +1,11 @@
 <template>
+    <!--
+        Left out altogether, label and all, until the run is more than a
+        day: with no end date, or an end on the start, there are no days to
+        choose between. It still fills the form, as not ticked.
+    -->
     <DefaultField
+        v-if="runDays.length"
         :field="field"
         :errors="errors"
         :show-help-text="showHelpText"
@@ -7,135 +13,128 @@
     >
         <template #field>
             <div class="specific-days" :dusk="`${field.attribute}-specific-days`">
-                <p v-if="!runDays.length" class="specific-days__hint">
-                    Give the listing an end date after its start to choose the
-                    days it is on.
-                </p>
+                <label class="specific-days__toggle">
+                    <input
+                        v-model="enabled"
+                        type="checkbox"
+                        class="checkbox"
+                        dusk="set-specific-days"
+                    />
+                    Set specific days
+                </label>
 
-                <template v-else>
-                    <label class="specific-days__toggle">
-                        <input
-                            v-model="enabled"
-                            type="checkbox"
-                            class="checkbox"
-                            dusk="set-specific-days"
-                        />
-                        Set specific days
-                    </label>
+                <div
+                    v-if="enabled"
+                    role="group"
+                    :aria-labelledby="`${field.uniqueKey}-help`"
+                    class="specific-days__panel"
+                >
+                    <p
+                        :id="`${field.uniqueKey}-help`"
+                        class="specific-days__help"
+                    >
+                        Tick the days the event is on, or tap Mon, Tue and
+                        so on to tick every one of that weekday. When you
+                        save, the start and end dates move to the first and
+                        last day you tick.
+                    </p>
+
+                    <div class="specific-days__controls">
+                        <button
+                            type="button"
+                            class="specific-days__chip"
+                            @click="selectAll"
+                        >
+                            Select all
+                        </button>
+                        <button
+                            type="button"
+                            class="specific-days__chip"
+                            @click="clearAll"
+                        >
+                            Clear all
+                        </button>
+                    </div>
+
+                    <div class="specific-days__week">
+                        <button
+                            v-for="(weekday, column) in WEEKDAYS"
+                            :key="weekday"
+                            type="button"
+                            class="specific-days__chip"
+                            :class="{ 'is-on': weekdayTicked(column) }"
+                            :aria-label="`Every ${weekday}`"
+                            :aria-pressed="weekdayTicked(column)"
+                            :disabled="runDaysOn(column).length === 0"
+                            @click="toggleWeekday(column)"
+                        >
+                            {{ weekday.slice(0, 3) }}
+                        </button>
+                    </div>
 
                     <div
-                        v-if="enabled"
-                        role="group"
-                        :aria-labelledby="`${field.uniqueKey}-help`"
-                        class="specific-days__panel"
+                        v-for="month in months"
+                        :key="month.key"
+                        class="specific-days__month"
                     >
-                        <p
-                            :id="`${field.uniqueKey}-help`"
-                            class="specific-days__help"
-                        >
-                            Tick the days the event is on, or tap Mon, Tue and
-                            so on to tick every one of that weekday. When you
-                            save, the start and end dates move to the first and
-                            last day you tick.
+                        <p class="specific-days__month-title">
+                            {{ month.title }}
                         </p>
-
-                        <div class="specific-days__controls">
-                            <button
-                                type="button"
-                                class="specific-days__chip"
-                                @click="selectAll"
-                            >
-                                Select all
-                            </button>
-                            <button
-                                type="button"
-                                class="specific-days__chip"
-                                @click="clearAll"
-                            >
-                                Clear all
-                            </button>
-                        </div>
-
-                        <div class="specific-days__week">
-                            <button
-                                v-for="(weekday, column) in WEEKDAYS"
-                                :key="weekday"
-                                type="button"
-                                class="specific-days__chip"
-                                :class="{ 'is-on': weekdayTicked(column) }"
-                                :aria-label="`Every ${weekday}`"
-                                :aria-pressed="weekdayTicked(column)"
-                                :disabled="runDaysOn(column).length === 0"
-                                @click="toggleWeekday(column)"
-                            >
-                                {{ weekday.slice(0, 3) }}
-                            </button>
-                        </div>
-
                         <div
-                            v-for="month in months"
-                            :key="month.key"
-                            class="specific-days__month"
+                            v-for="(week, row) in month.weeks"
+                            :key="row"
+                            class="specific-days__week"
                         >
-                            <p class="specific-days__month-title">
-                                {{ month.title }}
-                            </p>
-                            <div
-                                v-for="(week, row) in month.weeks"
-                                :key="row"
-                                class="specific-days__week"
+                            <template
+                                v-for="(day, column) in week"
+                                :key="day?.key ?? column"
                             >
-                                <template
-                                    v-for="(day, column) in week"
-                                    :key="day?.key ?? column"
+                                <button
+                                    v-if="day?.inRun"
+                                    type="button"
+                                    class="specific-days__day"
+                                    :class="{
+                                        'is-on': chosen.has(day.key),
+                                        'is-today': day.isToday,
+                                    }"
+                                    :data-day="day.key"
+                                    :aria-label="longDate(day.date)"
+                                    :aria-pressed="chosen.has(day.key)"
+                                    :aria-current="
+                                        day.isToday ? 'date' : undefined
+                                    "
+                                    @click="toggleDay(day.key)"
                                 >
-                                    <button
-                                        v-if="day?.inRun"
-                                        type="button"
-                                        class="specific-days__day"
-                                        :class="{
-                                            'is-on': chosen.has(day.key),
-                                            'is-today': day.isToday,
-                                        }"
-                                        :data-day="day.key"
-                                        :aria-label="longDate(day.date)"
-                                        :aria-pressed="chosen.has(day.key)"
-                                        :aria-current="
-                                            day.isToday ? 'date' : undefined
-                                        "
-                                        @click="toggleDay(day.key)"
-                                    >
-                                        {{ day.date.getDate() }}
-                                    </button>
-                                    <span
-                                        v-else-if="day"
-                                        aria-hidden="true"
-                                        class="specific-days__day is-outside"
-                                        :class="{ 'is-today': day.isToday }"
-                                    >
-                                        {{ day.date.getDate() }}
-                                    </span>
-                                    <span v-else />
-                                </template>
-                            </div>
-                        </div>
-
-                        <div class="specific-days__status" aria-live="polite">
-                            <p data-chosen-count>
-                                {{ chosenInRun.length }} of
-                                {{ runDays.length }} days chosen
-                            </p>
-                            <p v-if="leftOut" class="specific-days__left-out">
-                                {{
-                                    leftOut === 1
-                                        ? '1 chosen day is'
-                                        : `${leftOut} chosen days are`
-                                }}
-                                outside the new dates, so will not be saved.
-                            </p>
+                                    {{ day.date.getDate() }}
+                                </button>
+                                <span
+                                    v-else-if="day"
+                                    aria-hidden="true"
+                                    class="specific-days__day is-outside"
+                                    :class="{ 'is-today': day.isToday }"
+                                >
+                                    {{ day.date.getDate() }}
+                                </span>
+                                <span v-else />
+                            </template>
                         </div>
                     </div>
-                </template>
+
+                    <div class="specific-days__status" aria-live="polite">
+                        <p data-chosen-count>
+                            {{ chosenInRun.length }} of
+                            {{ runDays.length }} days chosen
+                        </p>
+                        <p v-if="leftOut" class="specific-days__left-out">
+                            {{
+                                leftOut === 1
+                                    ? '1 chosen day is'
+                                    : `${leftOut} chosen days are`
+                            }}
+                            outside the new dates, so will not be saved.
+                        </p>
+                    </div>
+                </div>
             </div>
         </template>
     </DefaultField>

@@ -14,11 +14,12 @@ function describedListing(string $body): Listing
 }
 
 /**
- * The link a reader is shown for an address in the description, or null.
- * The description is drawn twice, for phones and for wider screens, and
- * only one of the two is ever shown.
+ * The link a reader is shown for an address in the description, or null:
+ * all of its text, screen readers' included, and whether it carries an
+ * icon. The description is drawn twice, for phones and for wider screens,
+ * and only one of the two is ever shown.
  *
- * @return array{href: ?string, target: ?string, rel: ?string}|null
+ * @return array{href: ?string, target: ?string, rel: ?string, text: string, icon: bool}|null
  */
 function shownDescriptionLink(object $page, string $address): ?array
 {
@@ -27,16 +28,22 @@ function shownDescriptionLink(object $page, string $address): ?array
     return $page->script(<<<JS
         (() => {
             const link = [...document.querySelectorAll('a')]
-                .find((a) => a.offsetParent !== null && a.textContent === {$text});
+                .find((a) => a.offsetParent !== null && a.textContent.startsWith({$text}));
 
             return link
-                ? { href: link.getAttribute('href'), target: link.getAttribute('target'), rel: link.getAttribute('rel') }
+                ? {
+                    href: link.getAttribute('href'),
+                    target: link.getAttribute('target'),
+                    rel: link.getAttribute('rel'),
+                    text: link.textContent,
+                    icon: link.querySelector('svg[aria-hidden="true"]') !== null,
+                }
                 : null;
         })()
         JS);
 }
 
-test('an address in the description opens in a new tab, tagged as the listing\'s referral', function () {
+test('an address in the description opens in a new tab, tagged as the listing\'s referral and marked as leaving the site', function () {
     $listing = describedListing('Tickets at https://example.com/fete?id=42&day=sat. Doors at seven.');
 
     $page = visit(route('Listing', [$listing->id, $listing->slug], absolute: false))
@@ -46,6 +53,8 @@ test('an address in the description opens in a new tab, tagged as the listing\'s
         'href' => "https://example.com/fete?id=42&day=sat&utm_source=goodonpaper&utm_medium=affiliate&utm_campaign=listing-{$listing->id}",
         'target' => '_blank',
         'rel' => 'nofollow noreferrer',
+        'text' => 'https://example.com/fete?id=42&day=sat (opens in a new tab)',
+        'icon' => true,
     ]);
 
     $page->assertNoJavaScriptErrors();
@@ -64,7 +73,7 @@ test('what is typed around and inside an address is shown as typed, never run', 
     $page->assertNoJavaScriptErrors();
 });
 
-test('an address on this site opens in place', function () {
+test('an address on this site opens in place, with no mark of leaving it', function () {
     $address = rtrim((string) config('app.url'), '/').'/features';
     $listing = describedListing("Read our interview at {$address}");
 
@@ -74,6 +83,8 @@ test('an address on this site opens in place', function () {
         'href' => $address,
         'target' => null,
         'rel' => null,
+        'text' => $address,
+        'icon' => false,
     ]);
 
     $page->assertNoJavaScriptErrors();

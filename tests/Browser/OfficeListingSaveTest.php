@@ -104,3 +104,44 @@ test('changing the end date in the Office redraws the calendar and leaves out th
         ->assertSee('1 chosen day is outside the new dates, so will not be saved.')
         ->assertNoJavaScriptErrors();
 });
+
+test('the Office leaves specific days off the form until the run is more than a day', function () {
+    $this->actingAs(User::factory()->create(['email' => 'robin@ultrasimplified.com']));
+    $fete = Listing::factory()->create([
+        'title' => 'Village Fete',
+        'category_id' => Category::factory(),
+        'start_date' => '2026-11-03',
+        'end_date' => null,
+    ]);
+
+    visit("/office/resources/listings/{$fete->id}/edit")
+        ->assertSee('Additional date information')
+        ->assertDontSee('Specific days')
+        ->fill('[dusk="end_date"]', '2026-11-03')
+        ->assertDontSee('Specific days')
+        ->fill('[dusk="end_date"]', '2026-11-10')
+        ->assertSee('Set specific days')
+        ->fill('[dusk="end_date"]', '')
+        ->assertDontSee('Specific days')
+        ->assertNoJavaScriptErrors();
+});
+
+test('a listing cut to one day in the Office keeps none of its specific days', function () {
+    $this->actingAs(User::factory()->create(['email' => 'robin@ultrasimplified.com']));
+    $quiz = Listing::factory()->onDays('2026-11-03', '2026-11-17')->create([
+        'title' => 'Pub Quiz',
+        'category_id' => Category::factory(),
+    ]);
+
+    visit("/office/resources/listings/{$quiz->id}/edit")
+        ->assertSee('2 of 15 days chosen')
+        ->fill('[dusk="end_date"]', '2026-11-03')
+        ->assertDontSee('Specific days')
+        ->click('Update & Continue Editing')
+        ->assertNoJavaScriptErrors();
+
+    $quiz->refresh();
+
+    expect($quiz->days)->toBeEmpty()
+        ->and($quiz->start_date->toDateString())->toBe('2026-11-03');
+});

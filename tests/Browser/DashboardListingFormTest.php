@@ -114,10 +114,13 @@ test('the specific days checkbox only appears once the end date is after the sta
 
     visit(route('dashboard.listings.create', absolute: false))
         ->fill('#start_date', '01/06/2026')
+        ->assertDontSee('Set specific days')
         ->fill('#end_date', '01/06/2026')
         ->assertDontSee('Set specific days')
         ->fill('#end_date', '20/06/2026')
         ->assertSee('Set specific days')
+        ->fill('#end_date', '')
+        ->assertDontSee('Set specific days')
         ->assertNoJavaScriptErrors();
 });
 

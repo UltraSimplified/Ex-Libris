@@ -130,17 +130,40 @@ const bodyLinkPattern = computed((): RegExp | null => {
 });
 
 /**
+ * Lucide's external-link icon, the one the Dashboard puts beside a link that
+ * leaves the site, written out as markup as the description is.
+ */
+const EXTERNAL_LINK_ICON =
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="ml-1 inline size-3.5"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>';
+
+/**
+ * An address leading elsewhere, with the icon after it: held to its last
+ * character, so the icon never wraps onto a line of its own, and said in
+ * words to a screen reader, which is not shown the icon.
+ */
+const withExternalLinkIcon = (address: string): string => {
+    const characters = Array.from(address);
+    const last = characters.pop() ?? '';
+
+    return `${escapeHtml(characters.join(''))}<span class="whitespace-nowrap">${escapeHtml(last)}${EXTERNAL_LINK_ICON}</span><span class="sr-only"> (opens in a new tab)</span>`;
+};
+
+/**
  * An address from the description as a link. One elsewhere opens in a tab
- * of its own, as the ticket button does; one on this site opens in place,
- * except in a preview, which nothing should lead on from inside the frame.
+ * of its own, as the ticket button does, and is marked as leaving the site.
+ * One on this site opens in place, except in a preview, which nothing
+ * should lead on from inside the frame.
  */
 const bodyLinkHtml = (link: ListingBodyLink): string => {
     const newTab =
         link.external || props.preview
             ? ' target="_blank" rel="nofollow noreferrer"'
             : '';
+    const text = link.external
+        ? withExternalLinkIcon(link.text)
+        : escapeHtml(link.text);
 
-    return `<a href="${escapeHtml(link.href)}"${newTab} class="underline underline-offset-2 wrap-anywhere">${escapeHtml(link.text)}</a>`;
+    return `<a href="${escapeHtml(link.href)}"${newTab} class="underline underline-offset-2 wrap-anywhere">${text}</a>`;
 };
 
 /**
