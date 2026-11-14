@@ -304,7 +304,7 @@ class ListingController extends Controller
 
         return Inertia::render('Listing', [
             'title' => $listing->title,
-            'listing' => $listing,
+            'listing' => $listing->append('body_links'),
             'meta' => ListingMeta::for($listing)->toArray(),
             'preview' => true,
         ]);
@@ -324,7 +324,7 @@ class ListingController extends Controller
 
         return Inertia::render('Listing', [
             'title' => $listing['title'],
-            'listing' => $listing->append('ticket_link'),
+            'listing' => $listing->append(['ticket_link', 'body_links']),
             'meta' => ListingMeta::for($listing)->toArray(),
         ]);
     }

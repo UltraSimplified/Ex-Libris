@@ -13,7 +13,12 @@ import { useGenreTag } from '@/composables/useGenreTags';
 import { resolvePlaceholders } from '@/composables/usePlaceholders.js';
 import { previousPage } from '@/composables/usePreviousPage';
 import { formatListingDates } from '@/lib/listingDates';
-import type { GalleryImage, LineUpArtist, Listing } from '@/types/global';
+import type {
+    GalleryImage,
+    LineUpArtist,
+    Listing,
+    ListingBodyLink,
+} from '@/types/global';
 
 interface Props {
     title: string;
@@ -57,13 +62,9 @@ const escapeHtml = (text: string): string =>
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
+const escapeRegExp = (text: string): string =>
+    text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-/**
- * The description as typed: a blank line starts a paragraph and a single
- * one breaks the line. Text pasted from Windows or a word processor ends
- * its lines with \r\n, which is read the same way, and anything that looks
- * like markup is shown as typed rather than run.
- */
 /*
  * Back to wherever the listing was opened from - a venue, a category, a
  * search - by stepping back through history, so the page comes back with
@@ -96,13 +97,77 @@ const emboldenTitle = (escaped: string): string => {
     }
 
     const pattern = new RegExp(
-        `(?<![\\p{L}\\p{N}])${title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\p{L}\\p{N}])`,
+        `(?<![\\p{L}\\p{N}])${escapeRegExp(title)}(?![\\p{L}\\p{N}])`,
         'giu',
     );
 
     return escaped.replace(pattern, (name) => `<strong>${name}</strong>`);
 };
 
+/**
+ * The web addresses the server found in the description, by what was
+ * typed, and a pattern that finds them again: longest first, so an address
+ * that begins a longer one is not found inside it, and captured, so
+ * splitting a paragraph on it keeps the addresses between its pieces.
+ */
+const bodyLinks = computed(
+    () =>
+        new Map(
+            (props.listing.body_links ?? []).map((link) => [link.text, link]),
+        ),
+);
+
+const bodyLinkPattern = computed((): RegExp | null => {
+    if (bodyLinks.value.size === 0) {
+        return null;
+    }
+
+    const addresses = [...bodyLinks.value.keys()]
+        .sort((a, b) => b.length - a.length)
+        .map(escapeRegExp);
+
+    return new RegExp(`(${addresses.join('|')})`);
+});
+
+/**
+ * An address from the description as a link. One elsewhere opens in a tab
+ * of its own, as the ticket button does; one on this site opens in place,
+ * except in a preview, which nothing should lead on from inside the frame.
+ */
+const bodyLinkHtml = (link: ListingBodyLink): string => {
+    const newTab =
+        link.external || props.preview
+            ? ' target="_blank" rel="nofollow noreferrer"'
+            : '';
+
+    return `<a href="${escapeHtml(link.href)}"${newTab} class="underline underline-offset-2 wrap-anywhere">${escapeHtml(link.text)}</a>`;
+};
+
+/**
+ * A paragraph as markup: its addresses as links, and the text between them
+ * escaped, with the listing's name in bold.
+ */
+const paragraphHtml = (paragraph: string): string => {
+    const pattern = bodyLinkPattern.value;
+    const pieces = pattern ? paragraph.split(pattern) : [paragraph];
+
+    return pieces
+        .map((piece, index) => {
+            const link =
+                index % 2 === 1 ? bodyLinks.value.get(piece) : undefined;
+
+            return link ? bodyLinkHtml(link) : emboldenTitle(escapeHtml(piece));
+        })
+        .join('');
+};
+
+/**
+ * The description as typed: a blank line starts a paragraph and a single
+ * one breaks the line. Text pasted from Windows or a word processor ends
+ * its lines with \r\n, which is read the same way, and anything that looks
+ * like markup is shown as typed rather than run. A web address becomes a
+ * link.
+ */
 const formattedBody = computed(() => {
     if (!props.listing.body) return '';
     return props.listing.body
@@ -112,7 +177,7 @@ const formattedBody = computed(() => {
         .filter(Boolean)
         .map(
             (paragraph) =>
-                `<p>${emboldenTitle(escapeHtml(paragraph)).replace(/\n/g, '<br />')}</p>`,
+                `<p>${paragraphHtml(paragraph).replace(/\n/g, '<br />')}</p>`,
         )
         .join('');
 });
@@ -314,8 +379,7 @@ const resolvedListings = computed(() =>
                         props.listing.venue.url
                     "
                     target="_blank"
-                    noreferrer
-                    nofollow
+                    rel="nofollow noreferrer"
                     class="flex"
                 >
                     <button

@@ -156,6 +156,16 @@ interface LineUpArtist {
     video: string | null;
 }
 
+/**
+ * A web address written out in a listing's description, as typed, and the
+ * link it leads to: one elsewhere tagged as Good on Paper's referral.
+ */
+interface ListingBodyLink {
+    text: string;
+    href: string;
+    external: boolean;
+}
+
 /** A line-up artist as stored, in Nova Flexible Content's shape. */
 interface LineUpGroup {
     layout: string;
@@ -424,6 +434,11 @@ interface Listing {
      * referral. Sent only to the listing's own page.
      */
     ticket_link?: string | null;
+    /**
+     * The web addresses in the body, each once. Sent only to the listing's
+     * own page and its preview.
+     */
+    body_links?: ListingBodyLink[];
     /**
      * The artists on the bill, in Nova Flexible Content's shape like the
      * gallery: each group's attributes hold a name and a playlist and/or a

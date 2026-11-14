@@ -73,6 +73,15 @@ test('the links sit level with the button', function (string $link) {
         ->assertNoJavaScriptErrors();
 })->with(['copy link' => 'button.underline', 'whatsapp' => 'a[href^="https://wa.me/"]']);
 
+test('the button opens the event in a new tab, followed by nothing and passing on no referrer', function () {
+    $listing = shareableListing();
+
+    visit(route('Listing', [$listing->id, $listing->slug], absolute: false))
+        ->assertAttribute('a[href*="tickets.example.com"]', 'target', '_blank')
+        ->assertAttribute('a[href*="tickets.example.com"]', 'rel', 'nofollow noreferrer')
+        ->assertNoJavaScriptErrors();
+});
+
 test('an event with no button can still be passed on', function () {
     $listing = shareableListing(['button_text' => null]);
 

@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Services\Listings\ListingLineUp;
 use App\Services\Widgets\WidgetCache;
 use App\Support\AffiliateLink;
+use App\Support\LinksInText;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -213,6 +214,20 @@ class Listing extends Model
 
             return AffiliateLink::tag($link, 'listing-'.$this->id) ?? $link;
         });
+    }
+
+    /**
+     * The web addresses written out in the description, each with where it
+     * leads: one elsewhere tagged as Good on Paper's referral, crediting the
+     * listing as its ticket button does.
+     *
+     * Appended only where the description is drawn, the listing's own page.
+     */
+    protected function bodyLinks(): Attribute
+    {
+        return Attribute::get(
+            fn (): array => LinksInText::find((string) $this->body, 'listing-'.$this->id)
+        );
     }
 
     /**
