@@ -1,0 +1,3 @@
+# Changes to the deploy workflows, and to this file, need Robin's approval
+# before they can reach main (the "Protect main" ruleset requires it).
+/.github/ @UltraSimplified
