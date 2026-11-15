@@ -62,7 +62,7 @@ Originally developed to complement the Good on Paper printed magazine for Stroud
 | Layer | Built with |
 | --- | --- |
 | Back end | [Laravel 13](https://laravel.com), [Fortify](https://laravel.com/docs/fortify) for authentication, [Cashier](https://laravel.com/docs/billing) for Stripe |
-| Admin | [Laravel Nova 5](https://nova.laravel.com) with [Flexible Content](https://github.com/whitecube/nova-flexible-content) |
+| Admin | [Laravel Nova 5](https://nova.laravel.com) with [Flexible Content](https://github.com/whitecube/nova-flexible-content) and [Nova 5 Image Cropper](https://github.com/UltraSimplified/nova5-image-cropper) |
 | Front end | [Inertia.js 2](https://inertiajs.com), [Vue 3](https://vuejs.org), TypeScript, [Tailwind CSS 4](https://tailwindcss.com), [Wayfinder](https://github.com/laravel/wayfinder) |
 | Media | [Intervention Image 4](https://image.intervention.io), Digital Ocean Spaces (S3-compatible storage behind a CDN) |
 | Testing | [Pest 4](https://pestphp.com) with browser tests run in Playwright |
