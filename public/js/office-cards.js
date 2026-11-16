@@ -267,7 +267,7 @@ Nova.booting((app) => {
         },
     })
 
-    /** A feature in the most-read list: its time, then its readers. */
+    /** A feature in the most-read list: its readers, then its time. */
     const readingRow = (row) =>
         h('div', { style: { padding: '0.35rem 0' } }, [
             h('div', { style: { display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '1rem' } }, [
@@ -283,10 +283,10 @@ Nova.booting((app) => {
                     },
                     row.name
                 ),
-                h('span', { class: 'text-sm font-bold gop-strong', style: { whiteSpace: 'nowrap' } }, duration(row.seconds)),
+                h('span', { class: 'text-sm font-bold gop-strong', style: { whiteSpace: 'nowrap' } }, `${row.reads} ${row.reads === 1 ? 'read' : 'reads'}`),
             ]),
             h('div', { class: 'text-xs gop-muted' }, [
-                `${row.reads} ${row.reads === 1 ? 'read' : 'reads'}`,
+                `${duration(row.seconds)} in all`,
                 row.averageRead === null ? null : ` · ${duration(row.averageRead)} each`,
                 row.reachedEnd === null ? null : ` · ${row.reachedEnd}% reached the end`,
             ].filter(Boolean).join('')),
@@ -294,7 +294,7 @@ Nova.booting((app) => {
 
     /*
      * Reading time over the last month: a donut of the time each category
-     * took, and the features that held readers longest beneath it.
+     * took, and the features the most people read beneath it.
      */
     app.component('gop-features-by-category', {
         props: ['card'],

@@ -10,8 +10,8 @@ use Laravel\Nova\Card;
 
 /**
  * What people spent their time reading over the last month: the time
- * divided across the magazine's categories, and the features that held
- * readers longest. Only what was read in the period appears, so the card
+ * divided across the magazine's categories, and the features the most
+ * people read. Only what was read in the period appears, so the card
  * stays the same size however many features the archive holds.
  *
  * Features carry a tag rather than a category, which is what the front end
@@ -91,8 +91,9 @@ class FeaturesByCategory extends Card
     }
 
     /**
-     * The features read longest, with how many began them, the average
-     * time a read lasted, and the share of readers who reached the end.
+     * The features the most people began, with the time they spent on
+     * them, the average time a read lasted, and the share of readers who
+     * reached the end. Of two read as often, the one read longer leads.
      *
      * @return array<int, array{name: string, seconds: int, reads: int, averageRead: ?int, reachedEnd: ?int, link: string}>
      */
@@ -101,6 +102,7 @@ class FeaturesByCategory extends Card
         return $this->readingSince($from)
             ->selectRaw('feature_id, sum(seconds_read) as seconds, sum(read_count) as read_total, sum(reached_end_count) as reached_end_total')
             ->groupBy('feature_id')
+            ->orderByDesc('read_total')
             ->orderByDesc('seconds')
             ->limit(self::LEADERS)
             ->with('feature:id,title')

@@ -93,10 +93,13 @@ test('every slice gets a colour, even past the end of the palette', function () 
         ->and($colours->filter())->toHaveCount(8);
 });
 
-test('the most read are the features read longest, with their readers and how many finished', function () {
-    $longest = Feature::factory()->create(['title' => 'Longest']);
-    FeatureRead::factory()->create(['feature_id' => $longest->id, 'read_count' => 3, 'seconds_read' => 600, 'reached_end_count' => 2]);
-    FeatureRead::factory()->create(['feature_id' => $longest->id, 'read_count' => 1, 'seconds_read' => 200, 'reached_end_count' => 0, 'read_on' => today()->subDay()]);
+test('the most read are the features the most people read, the longer read first among equals', function () {
+    $mostRead = Feature::factory()->create(['title' => 'Most read']);
+    FeatureRead::factory()->create(['feature_id' => $mostRead->id, 'read_count' => 3, 'seconds_read' => 600, 'reached_end_count' => 2]);
+    FeatureRead::factory()->create(['feature_id' => $mostRead->id, 'read_count' => 1, 'seconds_read' => 200, 'reached_end_count' => 0, 'read_on' => today()->subDay()]);
+
+    $lingered = Feature::factory()->create(['title' => 'Lingered over']);
+    FeatureRead::factory()->create(['feature_id' => $lingered->id, 'read_count' => 1, 'seconds_read' => 5000]);
 
     Feature::factory()->count(5)->create()->each(fn (Feature $feature, int $index) => FeatureRead::factory()->create([
         'feature_id' => $feature->id,
@@ -110,14 +113,15 @@ test('the most read are the features read longest, with their readers and how ma
     expect($leaders)->toHaveCount(FeaturesByCategory::LEADERS)
         ->and(collect($leaders)->pluck('name'))->not->toContain('Never read')
         ->and($leaders[0])->toBe([
-            'name' => 'Longest',
+            'name' => 'Most read',
             'seconds' => 800,
             'reads' => 4,
             'averageRead' => 200,
             'reachedEnd' => 50,
-            'link' => '/resources/features/'.$longest->id,
+            'link' => '/resources/features/'.$mostRead->id,
         ])
-        ->and($leaders[1]['seconds'])->toBe(104);
+        ->and($leaders[1]['name'])->toBe('Lingered over')
+        ->and(collect($leaders)->slice(2)->pluck('seconds')->all())->toBe([104, 103, 102]);
 });
 
 test('with nothing read, the card says so', function () {

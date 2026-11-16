@@ -36,6 +36,7 @@ test('the Features card shows the reading time by category and the most read', f
         ->assertSee('Archives · 2h 5m (100%)')
         ->assertSee('Most read')
         ->assertSee('From the archive')
-        ->assertSee('30 reads · 4m 10s each · 40% reached the end')
+        ->assertSee('30 reads')
+        ->assertSee('2h 5m in all · 4m 10s each · 40% reached the end')
         ->assertNoJavaScriptErrors();
 });
