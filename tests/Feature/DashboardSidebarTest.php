@@ -105,8 +105,8 @@ test('the sidebar names what the account runs rather than counting it', function
     expect($sidebar)
         ->toContain('page.props.auth.venues.map')
         ->toContain('page.props.auth.promoters.map')
-        ->toContain("'promoter',\n                'Promoters',")
-        ->toContain("'venue',\n                'Venues',")
+        ->toContain("'promoter',\n                'Promoter',")
+        ->toContain("'venue',\n                'Venue',")
         ->not->toContain('Manager')
         ->not->toContain("title: 'Venues'")
         ->not->toContain("title: 'Promoter Pages'");

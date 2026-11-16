@@ -248,7 +248,7 @@ const navGroups = computed<NavGroup[]>(() =>
                 Megaphone,
                 PromoterController.edit(promoter.id).url,
                 'promoter',
-                'Promoters',
+                'Promoter',
             ),
         ),
         ...page.props.auth.venues.map((venue) =>
@@ -257,7 +257,7 @@ const navGroups = computed<NavGroup[]>(() =>
                 House,
                 VenueController.edit(venue.id).url,
                 'venue',
-                'Venues',
+                'Venue',
             ),
         ),
     ].filter((group): boolean => group.items.length > 0),
