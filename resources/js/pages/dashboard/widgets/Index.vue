@@ -23,6 +23,7 @@ const props = defineProps<{
     widgets: Widget[];
     venue: Named;
     promoter: Named;
+    festival?: Named;
     /** Narrowed to the publisher's own widgets, of their bookmarks. */
     forBookmarks: boolean;
     status?: string;
@@ -34,8 +35,8 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 /**
- * A new widget starts out for whichever venue or promoter the list was
- * narrowed to, or for bookmarks.
+ * A new widget starts out for whichever venue, promoter or festival the
+ * list was narrowed to, or for bookmarks.
  */
 const createQuery = (): Record<string, number | number[] | string> => {
     if (props.venue) {
@@ -46,6 +47,10 @@ const createQuery = (): Record<string, number | number[] | string> => {
         return { promoter: props.promoter.id };
     }
 
+    if (props.festival) {
+        return { festival: props.festival.id };
+    }
+
     return props.forBookmarks ? { bookmarks: 1 } : {};
 };
 
@@ -54,6 +59,7 @@ const createUrl = WidgetController.create.url({ query: createQuery() });
 const scopeName =
     props.venue?.name ??
     props.promoter?.name ??
+    props.festival?.name ??
     (props.forBookmarks ? 'My bookmarks' : undefined);
 
 const description = props.forBookmarks

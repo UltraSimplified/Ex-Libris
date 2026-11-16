@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { usePage } from '@inertiajs/vue3';
-import { computed, onBeforeUnmount, ref } from 'vue';
+import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import InputError from '../InputError.vue';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
@@ -9,6 +9,9 @@ import SpecificDaysPicker from './SpecificDaysPicker.vue';
 import VenueSelect from './VenueSelect.vue';
 
 type Option = { id: number; name: string; town?: string | null };
+
+/** A promoter, with the festivals a listing under it may be put in. */
+type PromoterOption = Option & { festivals?: Option[] };
 
 type GalleryImage = {
     key: string;
@@ -25,6 +28,8 @@ type LineUpArtist = {
 type Listing = {
     title?: string;
     promoter_id?: number | null;
+    festival_id?: number | null;
+    show_festival_mark?: boolean;
     body?: string;
     meta_description?: string | null;
     event_link?: string | null;
@@ -44,8 +49,11 @@ const props = withDefaults(
     defineProps<{
         categories: Option[];
         venues: Option[];
-        /** Only the promoters this account manages; empty for most people. */
-        promoters?: Option[];
+        /**
+         * Only the promoters this account manages; empty for most people.
+         * Each carries the festivals it may put the listing in.
+         */
+        promoters?: PromoterOption[];
         /** Whether this account also speaks for a venue. */
         managesVenue?: boolean;
         /** Whether this account may put a new venue on the books. */
@@ -80,6 +88,35 @@ const props = withDefaults(
 const onlyPromoter = computed<boolean>(
     () => props.promoters.length === 1 && !props.managesVenue,
 );
+
+/** The promoter chosen, followed so the festivals offered can follow it. */
+const promoterId = ref<string>(
+    String(
+        (onlyPromoter.value
+            ? props.promoters[0]?.id
+            : props.listing?.promoter_id) ?? '',
+    ),
+);
+
+/** The festival chosen, if any. */
+const festivalId = ref<string>(String(props.listing?.festival_id ?? ''));
+
+/**
+ * The chosen promoter's festivals, for an account the office has let run
+ * festivals. Nobody else is offered the choice at all.
+ */
+const festivalChoices = computed<Option[]>(() =>
+    usePage().props.auth.roles.runs_festivals
+        ? (props.promoters.find(
+              (promoter) => String(promoter.id) === promoterId.value,
+          )?.festivals ?? [])
+        : [],
+);
+
+// A festival is its promoter's, so another promoter means no festival.
+watch(promoterId, () => {
+    festivalId.value = '';
+});
 
 /**
  * Whether the media panel starts open. A listing that already has some
@@ -325,22 +362,83 @@ const pickerButtonClass =
 
             <div v-if="promoters.length" class="grid gap-2">
                 <Label for="promoter_id">Promoter</Label>
-                <select id="promoter_id" name="promoter_id" :class="fieldClass">
+                <select
+                    id="promoter_id"
+                    v-model="promoterId"
+                    name="promoter_id"
+                    :class="fieldClass"
+                >
                     <option v-if="!onlyPromoter" value="">No promoter</option>
                     <option
                         v-for="promoter in promoters"
                         :key="promoter.id"
-                        :value="promoter.id"
-                        :selected="
-                            onlyPromoter || listing?.promoter_id === promoter.id
-                        "
+                        :value="String(promoter.id)"
                     >
                         {{ promoter.name }}
                     </option>
                 </select>
                 <InputError :message="errors.promoter_id" />
             </div>
+
+            <div v-if="festivalChoices.length" class="grid gap-2">
+                <Label for="festival_id">Festival</Label>
+                <select
+                    id="festival_id"
+                    v-model="festivalId"
+                    name="festival_id"
+                    :class="fieldClass"
+                >
+                    <option value="">Not in a festival</option>
+                    <option
+                        v-for="festival in festivalChoices"
+                        :key="festival.id"
+                        :value="String(festival.id)"
+                    >
+                        {{ festival.name }}
+                    </option>
+                </select>
+                <InputError :message="errors.festival_id" />
+            </div>
+            <!--
+                With nothing to choose from, an account that runs festivals
+                still says "none", so moving a listing to a promoter without
+                festivals takes it out of the one it was in.
+            -->
+            <input
+                v-else-if="page.props.auth.roles.runs_festivals"
+                type="hidden"
+                name="festival_id"
+                value=""
+            />
         </div>
+
+        <!--
+            Kept in the form while no festival is chosen, only hidden, so the
+            setting survives choosing a festival, clearing it and choosing
+            again. Ticked unless somebody has turned it off.
+        -->
+        <label
+            v-if="page.props.auth.roles.runs_festivals"
+            v-show="festivalId !== ''"
+            class="-mt-3 flex items-start gap-2 text-sm"
+        >
+            <input type="hidden" name="show_festival_mark" value="0" />
+            <input
+                type="checkbox"
+                name="show_festival_mark"
+                value="1"
+                :checked="listing?.show_festival_mark ?? true"
+                class="mt-0.5 size-4 rounded border-input"
+            />
+            <span>
+                Show the festival mark on the cover
+                <span class="block text-muted-foreground">
+                    The festival's logo, in the bottom right of your cover
+                    image. Untick it if it would hide something on your
+                    poster.
+                </span>
+            </span>
+        </label>
 
         <div class="grid items-start gap-6 md:grid-cols-2">
             <div class="grid gap-2">

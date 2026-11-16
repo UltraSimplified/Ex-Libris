@@ -8,6 +8,8 @@ use App\Nova\Advert;
 use App\Nova\Category;
 use App\Nova\Dashboards\Main;
 use App\Nova\Feature;
+use App\Nova\Festival;
+use App\Nova\FestivalRunner;
 use App\Nova\Guest;
 use App\Nova\Issue;
 use App\Nova\Lenses\OrdersForCollection;
@@ -68,6 +70,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 MenuSection::make('Events', [
                     MenuItem::resource(Listing::class),
                     MenuItem::resource(Promoter::class),
+                    MenuItem::resource(Festival::class),
                     MenuItem::resource(Venue::class),
                     MenuItem::resource(Advert::class),
                     MenuItem::resource(Widget::class),
@@ -97,6 +100,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                         MenuItem::resource(VenueManager::class),
                         MenuItem::resource(PromoterAccount::class),
                         MenuItem::resource(Publisher::class),
+                        MenuItem::resource(FestivalRunner::class),
                         MenuItem::resource(Guest::class),
                     ]),
                 ])->icon('adjustments')->collapsable(),

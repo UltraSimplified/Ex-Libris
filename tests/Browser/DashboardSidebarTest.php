@@ -1,6 +1,8 @@
 <?php
 
+use App\Models\Festival;
 use App\Models\Listing;
+use App\Models\Promoter;
 use App\Models\User;
 use App\Models\Venue;
 
@@ -47,3 +49,45 @@ test('Support is not offered to a writer, or to somebody who only keeps bookmark
         ->assertNotPresent(SUPPORT_LINK)
         ->assertNoJavaScriptErrors();
 })->with(['a writer' => true, 'a reader' => false]);
+
+/*
+ * Festivals hang off the promoter that puts them on, and each one has a
+ * section of its own, for an account the office has let run festivals.
+ */
+test('a promoter with a festival has Festivals under it and a section for the festival', function () {
+    $user = User::factory()->runsFestivals()->create();
+    $promoter = Promoter::factory()->for($user)->create(['name' => 'Northgate Promotions']);
+    $festival = Festival::factory()->for($promoter)->create(['name' => 'Riverside Fest 2027']);
+    $this->actingAs($user);
+
+    visit('/dashboard')
+        ->assertPresent('[data-sidebar="content"] a[href$="/dashboard/festivals?promoter='.$promoter->id.'"]')
+        ->assertSeeIn('[data-sidebar="content"]', 'Riverside Fest 2027')
+        ->assertPresent('[data-sidebar="content"] a[href$="/dashboard/listings?festival='.$festival->id.'"]')
+        ->assertPresent('[data-sidebar="content"] a[href$="/dashboard/widgets?festival='.$festival->id.'"]')
+        ->assertNoJavaScriptErrors();
+});
+
+test('a promoter with no festivals still has Festivals under it, and no festival sections', function () {
+    $user = User::factory()->runsFestivals()->create();
+    $promoter = Promoter::factory()->for($user)->create();
+    $this->actingAs($user);
+
+    visit('/dashboard')
+        ->assertPresent('[data-sidebar="content"] a[href$="/dashboard/festivals?promoter='.$promoter->id.'"]')
+        ->assertNotPresent('[data-sidebar="content"] a[href*="festival="]')
+        ->assertNoJavaScriptErrors();
+});
+
+test('a promoter without Runs Festivals sees nothing of festivals in the menu', function () {
+    $user = User::factory()->create();
+    $promoter = Promoter::factory()->for($user)->create();
+    Festival::factory()->for($promoter)->create(['name' => 'Riverside Fest 2027']);
+    $this->actingAs($user);
+
+    visit('/dashboard')
+        ->assertNotPresent('[data-sidebar="content"] a[href*="/dashboard/festivals"]')
+        ->assertNotPresent('[data-sidebar="content"] a[href*="festival="]')
+        ->assertDontSeeIn('[data-sidebar="content"]', 'Riverside Fest 2027')
+        ->assertNoJavaScriptErrors();
+});

@@ -2,6 +2,7 @@
 import { usePage, Link } from '@inertiajs/vue3';
 import placeholder from '@/../img/listings-placeholder.webp';
 import BookmarkHeart from '@/components/GOP/BookmarkHeart.vue';
+import FestivalMark from '@/components/GOP/FestivalMark.vue';
 import LocationPin from '@/components/GOP/LocationPin.vue';
 import { formatListingDates } from '@/lib/listingDates';
 import type { Listing, Venue } from '@/types/global';
@@ -39,15 +40,19 @@ const props = defineProps<Props>();
                 v-for="listing in props.listings"
                 :key="listing.id"
             >
-                <Link :href="'/listings/' + listing.id + '/' + listing.slug">
+                <Link
+                    :href="'/listings/' + listing.id + '/' + listing.slug"
+                    class="relative block"
+                >
                     <img
                         :src="
                             listing.thumbnail
                                 ? page.props.cdnUrl + '/' + listing.thumbnail
                                 : placeholder
                         "
-                        class="w-full rounded"
+                        class="block w-full rounded"
                     />
+                    <FestivalMark :listing="listing" />
                 </Link>
 
                 <div class="mt-4 flex items-center gap-3">

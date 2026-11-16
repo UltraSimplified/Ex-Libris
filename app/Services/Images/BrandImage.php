@@ -2,6 +2,9 @@
 
 namespace App\Services\Images;
 
+use App\Models\Festival;
+use App\Models\Promoter;
+use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -64,6 +67,72 @@ final class BrandImage
     }
 
     /**
+     * Save a promoter or a festival with the logo and banner its form sent:
+     * a new upload replaces the picture, a ticked remove box clears it, and
+     * anything else leaves it be.
+     *
+     * The pictures replaced only go once the row pointing at the new ones
+     * has saved, so a failure leaves nothing broken.
+     */
+    public function saveWithPictures(Promoter|Festival $owner, Request $request): void
+    {
+        $previous = ['logo' => $owner->logo, 'banner' => $owner->banner];
+
+        if ($request->hasFile('logo')) {
+            $owner->logo = $this->logo($request->file('logo'));
+        } elseif ($request->boolean('remove_logo')) {
+            $owner->logo = null;
+        }
+
+        if ($request->hasFile('banner')) {
+            $owner->banner = $this->banner($request->file('banner'));
+        } elseif ($request->boolean('remove_banner')) {
+            $owner->banner = null;
+        }
+
+        $owner->save();
+
+        foreach ($previous as $field => $filename) {
+            if ($owner->wasChanged($field)) {
+                $this->delete($filename);
+            }
+        }
+    }
+
+    /**
+     * Give a new festival its own copies of the logo and banner of the one
+     * it was started from, for each the form neither replaced nor removed.
+     *
+     * Copies rather than the same filenames: deleting a festival deletes
+     * its pictures, which would strip them off the other one.
+     */
+    public function copyPicturesFrom(Festival $earlier, Festival $festival, Request $request): void
+    {
+        foreach (['logo', 'banner'] as $picture) {
+            if (! $request->hasFile($picture) && ! $request->boolean('remove_'.$picture)) {
+                $festival->{$picture} = $this->copy($earlier->{$picture});
+            }
+        }
+    }
+
+    /**
+     * Copy a stored picture to a file of its own and return the new name,
+     * or null when there is nothing there to copy.
+     *
+     * Anything absolute is not deleted from here, so it is safe to share.
+     */
+    public function copy(?string $filename): ?string
+    {
+        if (blank($filename) || $this->isElsewhere($filename)) {
+            return $filename;
+        }
+
+        $contents = Storage::disk(self::DISK)->get($filename);
+
+        return $contents === null ? null : $this->put($contents);
+    }
+
+    /**
      * Remove a previously stored image, ignoring one that has already gone.
      *
      * Anything absolute was put somewhere else by somebody else and is left
@@ -71,11 +140,20 @@ final class BrandImage
      */
     public function delete(?string $filename): void
     {
-        if (blank($filename) || preg_match('#^(https?:)?//#i', $filename) === 1) {
+        if (blank($filename) || $this->isElsewhere($filename)) {
             return;
         }
 
         Storage::disk(self::DISK)->delete($filename);
+    }
+
+    /**
+     * Whether a stored value is a full address rather than a file on the
+     * disk.
+     */
+    private function isElsewhere(string $filename): bool
+    {
+        return preg_match('#^(https?:)?//#i', $filename) === 1;
     }
 
     private function store(UploadedFile $file, int $width, int $height): string

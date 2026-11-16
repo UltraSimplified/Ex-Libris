@@ -25,6 +25,7 @@ test('a new account holds none of them', function () {
         'is_promoter' => false,
         'is_writer' => false,
         'is_publisher' => false,
+        'runs_festivals' => false,
     ]);
 });
 
@@ -33,8 +34,11 @@ test('a new account holds none of them', function () {
  * addresses - hence the real one here. Somebody who can reach the Office
  * can already do anything a role permits, so ticking three boxes on every
  * staff account would only be something else to keep in step.
+ *
+ * All but Runs Festivals, which adds festivals to an account's own
+ * Backstage: staff hold it only once they tick it for themselves.
  */
-test('being staff grants all of them without being granted any', function () {
+test('being staff grants all of them but Runs Festivals without being granted any', function () {
     $staff = User::factory()->create(['email' => 'robin@ultrasimplified.com']);
 
     expect($staff->roles())->toBe([
@@ -42,6 +46,7 @@ test('being staff grants all of them without being granted any', function () {
         'is_promoter' => true,
         'is_writer' => true,
         'is_publisher' => true,
+        'runs_festivals' => false,
     ]);
 
     // The columns themselves are untouched: the permission is inferred.
@@ -88,6 +93,7 @@ test('a guest is told they may be nothing rather than nothing at all', function 
             'is_promoter' => false,
             'is_writer' => false,
             'is_publisher' => false,
+            'runs_festivals' => false,
         ]));
 });
 

@@ -62,36 +62,9 @@ class PromoterController extends Controller
     {
         Gate::authorize('update', $promoter);
 
-        $previous = ['logo' => $promoter->logo, 'banner' => $promoter->banner];
+        $promoter->fill($request->profile());
 
-        $promoter->fill($request->safe()->except([
-            'logo',
-            'banner',
-            'remove_logo',
-            'remove_banner',
-        ]));
-
-        if ($request->hasFile('logo')) {
-            $promoter->logo = $this->images->logo($request->file('logo'));
-        } elseif ($request->boolean('remove_logo')) {
-            $promoter->logo = null;
-        }
-
-        if ($request->hasFile('banner')) {
-            $promoter->banner = $this->images->banner($request->file('banner'));
-        } elseif ($request->boolean('remove_banner')) {
-            $promoter->banner = null;
-        }
-
-        $promoter->save();
-
-        // The pictures they replaced only go once the row pointing at the
-        // new ones has saved, so a failure here leaves nothing broken.
-        foreach ($previous as $field => $filename) {
-            if ($promoter->wasChanged($field)) {
-                $this->images->delete($filename);
-            }
-        }
+        $this->images->saveWithPictures($promoter, $request);
 
         return to_route('dashboard.promoters.index')
             ->with('status', 'Promoter updated.');

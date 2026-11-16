@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Festival;
 use App\Models\Promoter;
 use App\Models\User;
 use App\Models\Venue;
@@ -42,6 +43,17 @@ class WidgetFactory extends Factory
         return $this->state(fn (): array => [
             'owner_type' => Promoter::class,
             'owner_id' => $promoter?->id ?? Promoter::factory(),
+        ]);
+    }
+
+    /**
+     * Showing a festival's events.
+     */
+    public function forFestival(?Festival $festival = null): static
+    {
+        return $this->state(fn (): array => [
+            'owner_type' => Festival::class,
+            'owner_id' => $festival->id ?? Festival::factory(),
         ]);
     }
 

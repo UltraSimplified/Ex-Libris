@@ -7,10 +7,10 @@ use App\Models\Listing;
 use App\Models\Promoter;
 use App\Models\Venue;
 use App\Services\Bookmarks\Bookmarks;
+use App\Support\ListingDayHeadings;
 use App\Support\ListingMeta;
 use App\Support\SiteMeta;
 use Carbon\Carbon;
-use Carbon\CarbonInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
@@ -24,9 +24,7 @@ class ListingController extends Controller
      */
     public function all()
     {
-        $listings = Listing::with('venue')
-            ->with('category')
-            ->with('promoter')
+        $listings = Listing::withCardDetails()
             ->current()
             ->byNextDay(today())
             ->get();
@@ -41,7 +39,7 @@ class ListingController extends Controller
             'nextWeek' => false,
             'venue' => null,
             'genres' => $this->genres(),
-            ...$this->listingDays(today()),
+            ...ListingDayHeadings::for(today()),
         ]);
 
     }
@@ -58,7 +56,7 @@ class ListingController extends Controller
     {
         $listings = Bookmarks::for($request)
             ->listings()
-            ->with(['venue', 'category', 'promoter'])
+            ->withCardDetails()
             ->current()
             ->byNextDay(today())
             ->get();
@@ -74,7 +72,7 @@ class ListingController extends Controller
             'bookmarked' => true,
             'venue' => null,
             'genres' => $this->genres(),
-            ...$this->listingDays(today()),
+            ...ListingDayHeadings::for(today()),
         ]);
     }
 
@@ -84,9 +82,7 @@ class ListingController extends Controller
     public function dates($start_date = null, $end_date = null)
     {
         $title = 'Listings for '.$this->formatDateRange($start_date, $end_date).'.';
-        $listings = Listing::with('venue')
-            ->with('category')
-            ->with('promoter')
+        $listings = Listing::withCardDetails()
             ->runningBetween($start_date, $end_date)
             ->byNextDay($start_date)
             ->get();
@@ -101,7 +97,7 @@ class ListingController extends Controller
             'nextWeek' => false,
             'venue' => null,
             'genres' => $this->genres(),
-            ...$this->listingDays(Carbon::parse($start_date), headed: ! Carbon::parse($start_date)->isSameDay($end_date)),
+            ...ListingDayHeadings::for(Carbon::parse($start_date), headed: ! Carbon::parse($start_date)->isSameDay($end_date)),
         ]);
     }
 
@@ -114,7 +110,7 @@ class ListingController extends Controller
     {
         $venue = Venue::findOrFail($id);
 
-        $listings = Listing::with(['venue', 'category', 'promoter'])
+        $listings = Listing::withCardDetails()
             ->where('venue_id', $venue->id)
             ->current()
             ->byNextDay(today())
@@ -129,7 +125,7 @@ class ListingController extends Controller
             'nextWeek' => false,
             'venue' => $venue->append('website_link'),
             'meta' => SiteMeta::venue($venue)->toArray(),
-            ...$this->listingDays(today()),
+            ...ListingDayHeadings::for(today()),
         ]);
     }
 
@@ -142,7 +138,7 @@ class ListingController extends Controller
     {
         $promoter = Promoter::findOrFail($id);
 
-        $listings = Listing::with(['venue', 'category', 'promoter'])
+        $listings = Listing::withCardDetails()
             ->where('promoter_id', $promoter->id)
             ->current()
             ->byNextDay(today())
@@ -157,8 +153,15 @@ class ListingController extends Controller
             'nextWeek' => false,
             'venue' => null,
             'promoter' => $promoter->append('website_link'),
+            // Its festivals with something still to come; finished ones keep
+            // their own pages, but are not offered from here.
+            'festivals' => $promoter->festivals()
+                ->whereHas('listings', fn ($listings) => $listings->current())
+                ->orderBy('name')
+                ->get(['id', 'name'])
+                ->map->only(['id', 'name']),
             'meta' => SiteMeta::promoter($promoter)->toArray(),
-            ...$this->listingDays(today()),
+            ...ListingDayHeadings::for(today()),
         ]);
     }
 
@@ -169,9 +172,7 @@ class ListingController extends Controller
     {
         $category = Category::where('slug', $slug)->firstOrFail();
 
-        $listings = Listing::with('venue')
-            ->with('category')
-            ->with('promoter')
+        $listings = Listing::withCardDetails()
             ->where('category_id', $category['id'])
             ->current()
             ->byNextDay(today())
@@ -185,7 +186,7 @@ class ListingController extends Controller
             'thisWeek' => false,
             'nextWeek' => false,
             'venue' => null,
-            ...$this->listingDays(today()),
+            ...ListingDayHeadings::for(today()),
         ]);
     }
 
@@ -194,9 +195,7 @@ class ListingController extends Controller
      */
     public function today()
     {
-        $listings = Listing::with('venue')
-            ->with('category')
-            ->with('promoter')
+        $listings = Listing::withCardDetails()
             ->runningOn(today())
             ->byNextDay(today())
             ->get();
@@ -211,7 +210,7 @@ class ListingController extends Controller
             'nextWeek' => false,
             'venue' => null,
             'genres' => $this->genres(),
-            ...$this->listingDays(today(), headed: false),
+            ...ListingDayHeadings::for(today(), headed: false),
         ]);
     }
 
@@ -220,9 +219,7 @@ class ListingController extends Controller
      */
     public function tomorrow()
     {
-        $listings = Listing::with('venue')
-            ->with('category')
-            ->with('promoter')
+        $listings = Listing::withCardDetails()
             ->runningOn(today()->addDay())
             ->byNextDay(today()->addDay())
             ->get();
@@ -239,15 +236,13 @@ class ListingController extends Controller
             'nextWeek' => false,
             'venue' => null,
             'genres' => $this->genres(),
-            ...$this->listingDays(today()->addDay(), headed: false),
+            ...ListingDayHeadings::for(today()->addDay(), headed: false),
         ]);
     }
 
     public function thisweek()
     {
-        $listings = Listing::with('venue')
-            ->with('category')
-            ->with('promoter')
+        $listings = Listing::withCardDetails()
             ->runningBetween(today(), today()->endOfWeek())
             ->byNextDay(today())
             ->get();
@@ -262,15 +257,13 @@ class ListingController extends Controller
             'nextWeek' => false,
             'venue' => null,
             'genres' => $this->genres(),
-            ...$this->listingDays(today()),
+            ...ListingDayHeadings::for(today()),
         ]);
     }
 
     public function nextweek()
     {
-        $listings = Listing::with('venue')
-            ->with('category')
-            ->with('promoter')
+        $listings = Listing::withCardDetails()
             ->runningBetween(today()->addWeek()->startOfWeek(), today()->addWeek()->endOfWeek())
             ->byNextDay(today()->addWeek()->startOfWeek())
             ->get();
@@ -285,7 +278,7 @@ class ListingController extends Controller
             'nextWeek' => 1,
             'venue' => null,
             'genres' => $this->genres(),
-            ...$this->listingDays(today()->addWeek()->startOfWeek()),
+            ...ListingDayHeadings::for(today()->addWeek()->startOfWeek()),
         ]);
     }
 
@@ -300,7 +293,7 @@ class ListingController extends Controller
     {
         Gate::authorize('view', $listing);
 
-        $listing->load(['venue', 'category', 'promoter']);
+        $listing->load(Listing::CARD_RELATIONS);
 
         return Inertia::render('Listing', [
             'title' => $listing->title,
@@ -316,9 +309,7 @@ class ListingController extends Controller
             return redirect()->route('listings');
         }
 
-        $listing = Listing::with('venue')
-            ->with('category')
-            ->with('promoter')
+        $listing = Listing::withCardDetails()
             ->where('id', $id)
             ->firstOrFail();
 
@@ -389,24 +380,6 @@ class ListingController extends Controller
             ->whereHas('listings', fn ($listings) => $listings->current())
             ->orderBy('name')
             ->get(['id', 'name', 'slug']));
-    }
-
-    /**
-     * What the page needs to head its listings with the days they were
-     * ordered by: the server's own today, so that TODAY over the list means
-     * what it meant to the query whatever the reader's clock says; the day
-     * the order counted from; and whether to head the list at all, which a
-     * page about a single day has no need of.
-     *
-     * @return array{currentDay: string, firstDay: string, dayHeadings: bool}
-     */
-    private function listingDays(CarbonInterface $firstDay, bool $headed = true): array
-    {
-        return [
-            'currentDay' => today()->toDateString(),
-            'firstDay' => $firstDay->toDateString(),
-            'dayHeadings' => $headed,
-        ];
     }
 
     public function formatDateRange(string $start, string $end): string

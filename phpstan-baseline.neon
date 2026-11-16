@@ -61,30 +61,6 @@ parameters:
 			path: app/Http/Controllers/ShopController.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Middleware/HandleInertiaRequests.php
-
-		-
-			message: '#^Parameter \#1 \$relation of method App\\Http\\Middleware\\HandleInertiaRequests\:\:named\(\) expects Illuminate\\Database\\Eloquent\\Relations\\HasMany\<Illuminate\\Database\\Eloquent\\Model, App\\Models\\User\>\|null, Illuminate\\Database\\Eloquent\\Relations\\HasMany\<App\\Models\\Promoter, App\\Models\\User\>\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Http/Middleware/HandleInertiaRequests.php
-
-		-
-			message: '#^Parameter \#1 \$relation of method App\\Http\\Middleware\\HandleInertiaRequests\:\:named\(\) expects Illuminate\\Database\\Eloquent\\Relations\\HasMany\<Illuminate\\Database\\Eloquent\\Model, App\\Models\\User\>\|null, Illuminate\\Database\\Eloquent\\Relations\\HasMany\<App\\Models\\Venue, App\\Models\\User\>\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Http/Middleware/HandleInertiaRequests.php
-
-		-
-			message: '#^Method App\\Http\\Requests\\Dashboard\\ListingRequest\:\:rules\(\) should return array\<string, array\<int, string\>\> but returns array\<string, list\<App\\Rules\\Embed\|Closure\|string\>\>\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Http/Requests/Dashboard/ListingRequest.php
-
-		-
 			message: '#^Access to an undefined property Illuminate\\Contracts\\Auth\\Authenticatable\:\:\$email\.$#'
 			identifier: property.notFound
 			count: 2

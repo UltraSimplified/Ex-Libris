@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Festival;
 use App\Models\Listing;
 use App\Models\Promoter;
 use Inertia\Testing\AssertableInertia;
@@ -86,4 +87,19 @@ test('a listing\'s own page is given its promoter', function () {
             ->where('listing.promoter.id', $promoter->id)
             ->where('listing.promoter.name', 'Stroud Sounds')
         );
+});
+
+test('a promoter\'s page links to its festivals still to come, not those that have been or are empty', function () {
+    $this->travelTo('2027-05-01 10:00');
+    $promoter = Promoter::factory()->create();
+    $past = Festival::factory()->for($promoter)->create(['name' => 'Riverside Fest 2026']);
+    $coming = Festival::factory()->for($promoter)->create(['name' => 'Riverside Fest 2027']);
+    Festival::factory()->for($promoter)->create(['name' => 'Riverside Fest 2028']);
+    Listing::factory()->create(['promoter_id' => $promoter->id, 'festival_id' => $past->id, 'start_date' => '2026-06-05']);
+    Listing::factory()->create(['promoter_id' => $promoter->id, 'festival_id' => $coming->id, 'start_date' => '2027-06-04']);
+
+    $this->get(route('Promoter', [$promoter->id, 'any']))
+        ->assertInertia(fn (AssertableInertia $page) => $page->where('festivals', [
+            ['id' => $coming->id, 'name' => 'Riverside Fest 2027'],
+        ]));
 });

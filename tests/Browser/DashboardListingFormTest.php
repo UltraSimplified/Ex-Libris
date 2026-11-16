@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Category;
+use App\Models\Festival;
 use App\Models\Listing;
 use App\Models\Promoter;
 use App\Models\User;
@@ -232,4 +233,63 @@ test('the calendar of specific days fits a phone without scrolling sideways', fu
 
     expect($page->script('document.documentElement.scrollWidth <= window.innerWidth'))->toBeTrue();
     $page->assertNoJavaScriptErrors();
+});
+
+/*
+ * The Festival choice follows the promoter: it offers that promoter's
+ * festivals, clears when the promoter changes, and brings the festival
+ * mark setting with it.
+ */
+test('the festival choice follows the promoter and clears when it changes', function () {
+    Category::factory()->create();
+    $account = User::factory()->runsFestivals()->create();
+    $northgate = Promoter::factory()->for($account)->create(['name' => 'Northgate Promotions']);
+    $avon = Promoter::factory()->for($account)->create(['name' => 'Avon Sounds']);
+    $riverside = Festival::factory()->for($northgate)->create(['name' => 'Riverside Fest 2027']);
+    $weekender = Festival::factory()->for($avon)->create(['name' => 'Avon Weekender']);
+    $this->actingAs($account);
+
+    visit(route('dashboard.listings.create', absolute: false))
+        ->resize(390, 900)
+        ->assertNotPresent('#festival_id')
+        ->select('promoter_id', (string) $northgate->id)
+        ->assertPresent('#festival_id option[value="'.$riverside->id.'"]')
+        ->assertNotPresent('#festival_id option[value="'.$weekender->id.'"]')
+        ->assertDontSee('Show the festival mark on the cover')
+        ->select('festival_id', (string) $riverside->id)
+        ->assertSee('Show the festival mark on the cover')
+        ->assertChecked('input[type="checkbox"][name="show_festival_mark"]')
+        ->select('promoter_id', (string) $avon->id)
+        ->assertSelected('festival_id', '')
+        ->assertDontSee('Show the festival mark on the cover')
+        ->assertNoJavaScriptErrors();
+});
+
+test('a listing added from a festival starts in it', function () {
+    Category::factory()->create();
+    $account = User::factory()->runsFestivals()->create();
+    $northgate = Promoter::factory()->for($account)->create();
+    Promoter::factory()->for($account)->create();
+    $riverside = Festival::factory()->for($northgate)->create();
+    $this->actingAs($account);
+
+    visit(route('dashboard.listings.create', ['promoter' => $northgate->id, 'festival' => $riverside->id], false))
+        ->assertSelected('promoter_id', (string) $northgate->id)
+        ->assertSelected('festival_id', (string) $riverside->id)
+        ->assertSee('Show the festival mark on the cover')
+        ->assertNoJavaScriptErrors();
+});
+
+test('an account without Runs Festivals is offered no festival on the form', function () {
+    Category::factory()->create();
+    $account = User::factory()->create();
+    $northgate = Promoter::factory()->for($account)->create();
+    Festival::factory()->for($northgate)->create();
+    $this->actingAs($account);
+
+    visit(route('dashboard.listings.create', absolute: false))
+        ->assertNotPresent('#festival_id')
+        ->assertNotPresent('[name="festival_id"]')
+        ->assertNotPresent('[name="show_festival_mark"]')
+        ->assertNoJavaScriptErrors();
 });

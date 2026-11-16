@@ -1,7 +1,13 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
 import Advert from '@/components/GOP/Advert.vue';
-import type { Category, Listing, Promoter, Venue } from '@/types/global';
+import type {
+    Category,
+    Festival,
+    Listing,
+    Promoter,
+    Venue,
+} from '@/types/global';
 import Favicon from '../components/GOP/Favicon.vue';
 import ListingsIndex from '../components/GOP/ListingsIndex.vue';
 import Subscribe from '../components/GOP/Subscribe.vue';
@@ -18,6 +24,11 @@ interface Props {
     bookmarked?: boolean;
     venue: Venue;
     promoter?: Promoter | null;
+    /** The promoter's festivals still to come, on its own page. */
+    festivals?: { id: number; name: string }[];
+    festival?: Festival | null;
+    /** Whether everything in the festival has been. */
+    finished?: boolean;
     genres?: Category[];
     currentDay: string;
     firstDay: string;
@@ -46,6 +57,9 @@ const props = defineProps<Props>();
                 :bookmarked="props.bookmarked"
                 :venue="props.venue"
                 :promoter="props.promoter"
+                :festivals="props.festivals"
+                :festival="props.festival"
+                :finished="props.finished"
                 :genres="props.genres"
                 :current-day="props.currentDay"
                 :first-day="props.firstDay"

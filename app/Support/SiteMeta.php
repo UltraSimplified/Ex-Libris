@@ -2,11 +2,14 @@
 
 namespace App\Support;
 
+use App\Models\Festival;
 use App\Models\Issue;
+use App\Models\Listing;
 use App\Models\Promoter;
 use App\Models\ShopCategory;
 use App\Models\ShopSettings;
 use App\Models\Venue;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -136,13 +139,7 @@ class SiteMeta
      */
     public static function promoter(Promoter $promoter): PageMeta
     {
-        $about = (string) Str::of((string) $promoter->about)->squish();
-        $description = $about !== ''
-            ? Str::limit($about, 200)
-            : "What's on from {$promoter->name}, listed by Good on Paper.";
-
-        $picture = collect([$promoter->banner, $promoter->logo])->first(fn (?string $path): bool => filled($path));
-        $image = $picture !== null ? Storage::disk('do')->url($picture) : null;
+        ['description' => $description, 'image' => $image] = self::profile($promoter, "What's on from {$promoter->name}, listed by Good on Paper.");
         $url = url()->current();
 
         return new PageMeta(
@@ -160,6 +157,54 @@ class SiteMeta
                 'image' => $image,
                 'logo' => filled($promoter->logo) ? Storage::disk('do')->url($promoter->logo) : null,
                 'sameAs' => filled($promoter->website) ? $promoter->website : null,
+            ]),
+        );
+    }
+
+    /**
+     * A festival's page: its banner or logo and what it says about itself,
+     * as a promoter's, and a Festival record made up of its events - when
+     * it runs, where, who puts it on, and each event within it.
+     *
+     * @param  Collection<int, Listing>  $listings  its events, with their venues
+     */
+    public static function festival(Festival $festival, Collection $listings): PageMeta
+    {
+        ['description' => $description, 'image' => $image] = self::profile($festival, "{$festival->name}: the festival's events, listed by Good on Paper.");
+        $url = url()->current();
+        $promoter = $festival->promoter;
+
+        return new PageMeta(
+            title: $festival->name,
+            description: $description,
+            image: $image ?? self::defaultImage(),
+            url: $url,
+            type: 'website',
+            jsonLd: array_filter([
+                '@context' => 'https://schema.org',
+                '@type' => 'Festival',
+                'name' => $festival->name,
+                'description' => $description,
+                'url' => $url,
+                'image' => $image,
+                'startDate' => $listings->min(fn (Listing $listing): string => $listing->start_date->toDateString()),
+                'endDate' => $listings->max(fn (Listing $listing): string => ($listing->end_date ?? $listing->start_date)->toDateString()),
+                'eventAttendanceMode' => 'https://schema.org/OfflineEventAttendanceMode',
+                'location' => $listings->pluck('venue')->filter(fn (?Venue $venue): bool => (bool) $venue?->id)->unique('id')
+                    ->map(fn (Venue $venue): array => ['@type' => 'Place', 'name' => $venue->name, 'address' => $venue->address ?? $venue->name])
+                    ->values()->all() ?: null,
+                'organizer' => $promoter ? [
+                    '@type' => 'Organization',
+                    'name' => $promoter->name,
+                    'url' => route('Promoter', ['id' => $promoter->id, 'slug' => Str::slug($promoter->name)]),
+                ] : null,
+                'sameAs' => filled($festival->website) ? $festival->website : null,
+                'subEvent' => $listings->map(fn (Listing $listing): array => [
+                    '@type' => 'Event',
+                    'name' => $listing->title,
+                    'url' => route('Listing', ['id' => $listing->id, 'slug' => $listing->slug]),
+                    'startDate' => $listing->start_date->toDateString(),
+                ])->values()->all() ?: null,
             ]),
         );
     }
@@ -214,6 +259,25 @@ class SiteMeta
     {
         self::$defaultImage = null;
         self::$defaultImageLooked = false;
+    }
+
+    /**
+     * How a promoter or a festival describes itself, and the picture it is
+     * best known by: what it says about itself, cut to a sentence or two,
+     * or the given line where it says nothing; its banner, or failing that
+     * its logo.
+     *
+     * @return array{description: string, image: string|null}
+     */
+    private static function profile(Promoter|Festival $owner, string $otherwise): array
+    {
+        $about = (string) Str::of((string) $owner->about)->squish();
+        $picture = collect([$owner->banner, $owner->logo])->first(fn (?string $path): bool => filled($path));
+
+        return [
+            'description' => $about !== '' ? Str::limit($about, 200) : $otherwise,
+            'image' => $picture !== null ? Storage::disk('do')->url($picture) : null,
+        ];
     }
 
     /**

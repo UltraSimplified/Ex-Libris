@@ -2,6 +2,7 @@
 
 namespace App\Services\Widgets;
 
+use App\Models\Festival;
 use App\Models\Listing;
 use App\Models\Promoter;
 use App\Models\Venue;
@@ -49,11 +50,11 @@ class WidgetCache
 
     /**
      * Let go of every widget showing this listing, at the venue and for the
-     * promoter it has now and at any it has just been moved from.
+     * promoter and festival it has now and any it has just been moved from.
      */
     public function forgetListing(Listing $listing): void
     {
-        foreach (['venue_id' => Venue::class, 'promoter_id' => Promoter::class] as $column => $type) {
+        foreach (['venue_id' => Venue::class, 'promoter_id' => Promoter::class, 'festival_id' => Festival::class] as $column => $type) {
             collect([$listing->{$column}, $listing->getOriginal($column)])
                 ->filter()
                 ->unique()

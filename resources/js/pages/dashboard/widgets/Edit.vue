@@ -24,6 +24,7 @@ type Widget = {
     name: string;
     owner: string | null;
     for_promoter: boolean;
+    for_festival: boolean;
     /** A publisher's widget, showing the events they have bookmarked. */
     for_bookmarks: boolean;
     /** Whether its events may be at more than one venue. */
@@ -94,6 +95,15 @@ const settings = reactive({
             ? props.ownerColours
             : props.widget.colours),
     },
+});
+
+/** Whose colours the widget can follow, as the tickbox names it. */
+const ownerNoun = computed<string>(() => {
+    if (props.widget.for_festival) {
+        return 'the festival';
+    }
+
+    return props.widget.for_promoter ? 'the promoter' : 'the venue';
 });
 
 const colourFields = [
@@ -378,12 +388,7 @@ const confirmDelete = (): boolean =>
                                 value="1"
                                 class="size-4 rounded border-input"
                             />
-                            Use
-                            {{
-                                widget.for_promoter
-                                    ? 'the promoter'
-                                    : 'the venue'
-                            }}'s brand colours
+                            Use {{ ownerNoun }}'s brand colours
                         </label>
                         <p
                             v-if="settings.useBrand && ownerEditUrl"

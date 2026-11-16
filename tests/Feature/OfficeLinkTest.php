@@ -47,6 +47,7 @@ test('an account kept only for bookmarks holds no role, so gets no dashboard lin
             'is_promoter' => false,
             'is_writer' => false,
             'is_publisher' => false,
+            'runs_festivals' => false,
         ]));
 });
 

@@ -45,6 +45,8 @@ const props = defineProps<{
     venue?: Narrowed;
     /** The promoter this is narrowed to, likewise. */
     promoter?: Narrowed;
+    /** The festival this is narrowed to, with the promoter putting it on. */
+    festival?: (Narrowed & { promoter_id: number }) | null;
     status?: string;
     /**
      * Whether this account may add and edit listings: only those the
@@ -60,7 +62,11 @@ const props = defineProps<{
  * rather than leaving the heading to claim all of them.
  */
 const heading = computed<string>(
-    () => props.venue?.name ?? props.promoter?.name ?? 'Event Listings',
+    () =>
+        props.venue?.name ??
+        props.promoter?.name ??
+        props.festival?.name ??
+        'Event Listings',
 );
 
 const description = computed<string>(() => {
@@ -70,6 +76,10 @@ const description = computed<string>(() => {
 
     if (props.promoter) {
         return `Everything you have added under ${props.promoter.name}.`;
+    }
+
+    if (props.festival) {
+        return `Everything in ${props.festival.name}.`;
     }
 
     return 'Everything you have added to Good on Paper.';
@@ -85,14 +95,32 @@ const scoped = (all: boolean): string =>
         query: {
             ...(props.venue ? { venue: props.venue.id } : {}),
             ...(props.promoter ? { promoter: props.promoter.id } : {}),
+            ...(props.festival ? { festival: props.festival.id } : {}),
             ...(all ? { all: 1 } : {}),
         },
     });
 
+/**
+ * Where Add a listing goes: from a festival's own listings, the new one
+ * starts in that festival, under the promoter putting it on.
+ */
+const createHref = computed<string>(() =>
+    ListingController.create.url(
+        props.festival
+            ? {
+                  query: {
+                      promoter: props.festival.promoter_id,
+                      festival: props.festival.id,
+                  },
+              }
+            : undefined,
+    ),
+);
+
 const breadcrumbs = computed<BreadcrumbItem[]>(() => [
     useAccountCrumb(),
     { title: 'Event Listings', href: ListingController.index().url },
-    ...(props.venue || props.promoter
+    ...(props.venue || props.promoter || props.festival
         ? [{ title: heading.value, href: scoped(props.showingAll) }]
         : []),
 ]);
@@ -184,7 +212,7 @@ const formatDate = (value: string | null): string =>
             <div class="flex items-start justify-between gap-4">
                 <Heading :title="heading" :description="description" />
                 <Button v-if="canPublish" as-child>
-                    <Link :href="ListingController.create()">
+                    <Link :href="createHref">
                         Add a listing
                     </Link>
                 </Button>
@@ -363,7 +391,7 @@ const formatDate = (value: string | null): string =>
                     You have not added any listings yet.
                 </p>
                 <Button v-if="canPublish" as-child class="mt-4">
-                    <Link :href="ListingController.create()">
+                    <Link :href="createHref">
                         Add your first listing
                     </Link>
                 </Button>

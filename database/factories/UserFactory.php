@@ -71,6 +71,15 @@ class UserFactory extends Factory
     }
 
     /**
+     * An account the office has let manage its promoters' festivals from
+     * Backstage.
+     */
+    public function runsFestivals(): static
+    {
+        return $this->state(fn (array $attributes) => ['runs_festivals' => true]);
+    }
+
+    /**
      * Indicate that the model's email address should be unverified.
      */
     public function unverified(): static

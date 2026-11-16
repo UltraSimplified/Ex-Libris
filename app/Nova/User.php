@@ -5,6 +5,7 @@ namespace App\Nova;
 use App\Models\Issue as IssueModel;
 use App\Models\User as UserModel;
 use App\Nova\Fields\ActiveWriterToggle;
+use App\Nova\Fields\RoleFields;
 use App\Nova\Filters\UserRole;
 use App\Services\Images\UserAvatar;
 use App\Support\InitialsAvatar;
@@ -70,7 +71,8 @@ class User extends Resource
         return $request->boolean('is_writer')
             && ! $request->boolean('is_promoter')
             && ! $request->boolean('is_venue_mgr')
-            && ! $request->boolean('is_publisher');
+            && ! $request->boolean('is_publisher')
+            && ! $request->boolean('runs_festivals');
     }
 
     /**
@@ -148,34 +150,7 @@ class User extends Resource
                     : $this->passwordRules())
                 ->updateRules($this->optionalPasswordRules()),
 
-            /*
-             * What this account is allowed to be. Granted here and nowhere
-             * else - the dashboard never submits one - so this is the only
-             * way somebody becomes a writer or is trusted with venues.
-             *
-             * Staff hold every role whether ticked or not, so these stay
-             * unticked on an office account rather than being kept in step
-             * with the gate by hand.
-             */
-            Boolean::make('Venue manager', 'is_venue_mgr')
-                ->default(fn () => static::presetRole() === 'is_venue_mgr')
-                ->showOnIndex(static::rolesOnIndex()),
-            Boolean::make('Promoter', 'is_promoter')
-                ->default(fn () => static::presetRole() === 'is_promoter')
-                ->showOnIndex(static::rolesOnIndex()),
-            /*
-             * A writer made from a feature's writer field is a writer from
-             * the start: that field only offers writers, so one left unticked
-             * would vanish from it the moment it was saved.
-             */
-            Boolean::make('Writer', 'is_writer')
-                ->default(fn (NovaRequest $request) => $request->viaResource === Feature::uriKey()
-                    || static::presetRole() === 'is_writer')
-                ->showOnIndex(static::rolesOnIndex()),
-            // A friendly website, making gig widgets of its bookmarks.
-            Boolean::make('Publisher', 'is_publisher')
-                ->default(fn () => static::presetRole() === 'is_publisher')
-                ->showOnIndex(static::rolesOnIndex()),
+            ...(new RoleFields(static::presetRole(), static::rolesOnIndex()))->fields(),
 
             /*
              * Whether a writer is still writing for the magazine. An active
