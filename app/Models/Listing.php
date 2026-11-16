@@ -39,38 +39,12 @@ class Listing extends Model
         'button_text',
         'venue_id',
         'promoter_id',
-        'festival_id',
-        'show_festival_mark',
         'sold_out',
         'category_id',
         'start_date',
         'end_date',
         'event_time_description',
         'additional_date_information',
-    ];
-
-    /**
-     * What a listing's card needs beside the listing: where it is, what
-     * kind of event, who puts it on, and the festival it is part of - only
-     * as much of that as its mark and its "Part of" line draw on.
-     *
-     * @var list<string>
-     */
-    public const CARD_RELATIONS = [
-        'venue',
-        'category',
-        'promoter',
-        'festival:id,name,logo,brand_background_colour,promoter_id',
-    ];
-
-    /**
-     * A listing in a festival carries the festival's mark unless somebody
-     * turns it off, before it is first saved as much as after.
-     *
-     * @var array<string, mixed>
-     */
-    protected $attributes = [
-        'show_festival_mark' => true,
     ];
 
     /**
@@ -85,8 +59,6 @@ class Listing extends Model
     {
         return [
             'sold_out' => 'boolean',
-            'festival_id' => 'integer',
-            'show_festival_mark' => 'boolean',
             'start_date' => 'date:Y-m-d',
             'end_date' => 'date:Y-m-d',
         ];
@@ -212,18 +184,6 @@ class Listing extends Model
     }
 
     /**
-     * Listings with everything their cards draw, fetched alongside them
-     * rather than one listing at a time.
-     *
-     * @param  Builder<Listing>  $query
-     * @return Builder<Listing>
-     */
-    public function scopeWithCardDetails(Builder $query): Builder
-    {
-        return $query->with(self::CARD_RELATIONS);
-    }
-
-    /**
      * @return BelongsTo<Venue, $this>
      */
     public function venue(): BelongsTo
@@ -304,17 +264,6 @@ class Listing extends Model
     }
 
     /**
-     * The festival the listing is part of, which is always one of its
-     * promoter's.
-     *
-     * @return BelongsTo<Festival, $this>
-     */
-    public function festival(): BelongsTo
-    {
-        return $this->belongsTo(Festival::class);
-    }
-
-    /**
      * @return BelongsTo<User, $this>
      */
     public function user(): BelongsTo
@@ -354,14 +303,6 @@ class Listing extends Model
             // Office, the dashboard, a duplicate - only a clean one is kept.
             if ($listing->isDirty('line_up')) {
                 $listing->line_up = app(ListingLineUp::class)->clean($listing->line_up);
-            }
-
-            // A festival is always its listings' promoter's. Moving a listing
-            // to another promoter takes it out of a festival that is not the
-            // new promoter's, whoever moved it.
-            if ($listing->festival_id !== null && $listing->isDirty('promoter_id')
-                && (int) Festival::query()->whereKey($listing->festival_id)->value('promoter_id') !== (int) $listing->promoter_id) {
-                $listing->festival_id = null;
             }
         });
 

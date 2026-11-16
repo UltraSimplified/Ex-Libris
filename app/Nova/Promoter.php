@@ -2,7 +2,6 @@
 
 namespace App\Nova;
 
-use App\Nova\Fields\BrandProfileFields;
 use Laravel\Nova\Actions\Action;
 use Laravel\Nova\Card;
 use Laravel\Nova\Fields\BelongsTo;
@@ -10,9 +9,12 @@ use Laravel\Nova\Fields\Field;
 use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\MorphMany;
 use Laravel\Nova\Fields\Text;
+use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Filters\Filter;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Lenses\Lens;
+use Outl1ne\NovaColorField\Color;
+use Ultrasimplified\ImageCropper\ImageCropper;
 
 /**
  * @extends \App\Nova\Resource<\App\Models\Promoter>
@@ -66,8 +68,39 @@ class Promoter extends Resource
                 ->nullable()
                 ->searchable()
                 ->help('The account that can edit this promoter, and its listings, from the front-end dashboard.'),
-            ...(new BrandProfileFields)->fields(),
-            HasMany::make('Festivals', 'festivals', Festival::class),
+            Text::make('website')->nullable()->hideFromIndex(),
+            Text::make('email')->nullable()->hideFromIndex(),
+            Text::make('phone')->hideFromIndex(),
+            ImageCropper::make('Logo')
+                ->croppable(512 / 512)
+                ->resize(512, 512)
+                ->convert('webp')
+                ->disk('do')
+                ->nullable()
+                ->indexWidth(100)
+                ->detailWidth(20)
+                ->maxWidth(100)
+                ->textAlign('center')
+                ->prunable(),
+            ImageCropper::make('Banner')
+                ->croppable()
+                ->resize(1280)
+                ->convert('webp')
+                ->disk('do')
+                ->nullable()
+                ->indexWidth(100)
+                ->detailWidth(20)
+                ->maxWidth(100)
+                ->textAlign('center')
+                ->prunable()->hideFromIndex(),
+            Textarea::make('about')
+                ->nullable()
+                ->rules('nullable', 'string', 'max:2000')
+                ->hideFromIndex(),
+            Color::make('Brand Colour', 'brand_colour'),
+            Color::make('Accent colour', 'accent_colour1'),
+            Color::make('Accent colour #2', 'accent_colour2')->hideFromIndex(),
+            Color::make('Brand Background Colour', 'brand_background_colour')->hideFromIndex(),
             HasMany::make('Events', 'listings', Listing::class),
             MorphMany::make('Gig Widgets', 'widgets', Widget::class),
         ];

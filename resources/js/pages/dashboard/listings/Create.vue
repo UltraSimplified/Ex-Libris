@@ -12,11 +12,9 @@ import AppLayout from '../../../layouts/AppLayout.vue';
 type Option = { id: number; name: string; town?: string | null };
 
 defineProps<{
-    /** Where it starts when added from a festival's own listings. */
-    listing: { promoter_id: number; festival_id: number } | null;
     categories: Option[];
     venues: Option[];
-    promoters: (Option & { festivals?: Option[] })[];
+    promoters: Option[];
     managesVenue: boolean;
     canAddVenue: boolean;
 }>();
@@ -46,7 +44,6 @@ const breadcrumbs: BreadcrumbItem[] = [
                 <FormErrors :errors="errors" />
 
                 <ListingFormFields
-                    :listing="listing"
                     :categories="categories"
                     :venues="venues"
                     :promoters="promoters"

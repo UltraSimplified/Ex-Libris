@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\Dashboard\ArticleController;
-use App\Models\Festival;
 use App\Models\Listing;
 use App\Models\Promoter;
 use App\Models\User;
@@ -71,74 +70,6 @@ test('a venue the account does not run narrows nothing', function () {
             ->where('venue', null)
             ->where('promoter', null)
         );
-});
-
-/**
- * A festival gets a section of its own too, once the office has let the
- * account run festivals: the same page, narrowed to what is in it.
- */
-test('a festival section shows only what is in that festival', function () {
-    $user = User::factory()->runsFestivals()->create();
-    $festival = Festival::factory()
-        ->for(Promoter::factory()->for($user))
-        ->create(['name' => 'Riverside Fest 2027']);
-
-    $inIt = Listing::factory()->for($user)->create([
-        'promoter_id' => $festival->promoter_id,
-        'festival_id' => $festival->id,
-    ]);
-    Listing::factory()->for($user)->create(['promoter_id' => $festival->promoter_id]);
-
-    $this->actingAs($user)
-        ->get(route('dashboard.listings.index', ['festival' => $festival->id]))
-        ->assertOk()
-        ->assertInertia(fn ($page) => $page
-            ->has('listings', 1)
-            ->where('listings.0.id', $inIt->id)
-            ->where('festival', [
-                'id' => $festival->id,
-                'name' => 'Riverside Fest 2027',
-                'promoter_id' => $festival->promoter_id,
-            ])
-        );
-});
-
-test('a festival narrows nothing for an account that does not run it, or runs no festivals', function (bool $runsFestivals, bool $ownPromoter) {
-    $user = User::factory()->create(['runs_festivals' => $runsFestivals]);
-    $festival = $ownPromoter
-        ? Festival::factory()->for(Promoter::factory()->for($user))->create()
-        : Festival::factory()->create();
-    $listing = Listing::factory()->for($user)->create();
-
-    $this->actingAs($user)
-        ->get(route('dashboard.listings.index', ['festival' => $festival->id]))
-        ->assertOk()
-        ->assertInertia(fn ($page) => $page
-            ->has('listings', 1)
-            ->where('listings.0.id', $listing->id)
-            ->where('festival', null)
-        );
-})->with([
-    'somebody else\'s festival' => [true, false],
-    'its own festival, without Runs Festivals' => [false, true],
-]);
-
-test('the sidebar is given the festivals the account may manage, and none without Runs Festivals', function () {
-    $runner = User::factory()->runsFestivals()->create();
-    $festival = Festival::factory()->for(Promoter::factory()->for($runner))->create(['name' => 'Riverside Fest 2027']);
-
-    $this->actingAs($runner)
-        ->get(route('dashboard'))
-        ->assertInertia(fn ($page) => $page->where('auth.festivals', [
-            ['id' => $festival->id, 'name' => 'Riverside Fest 2027'],
-        ]));
-
-    $promoterOnly = User::factory()->create();
-    Festival::factory()->for(Promoter::factory()->for($promoterOnly))->create();
-
-    $this->actingAs($promoterOnly)
-        ->get(route('dashboard'))
-        ->assertInertia(fn ($page) => $page->where('auth.festivals', []));
 });
 
 /**

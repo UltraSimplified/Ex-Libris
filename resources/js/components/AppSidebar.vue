@@ -11,10 +11,8 @@ import {
     Megaphone,
     PanelsTopLeft,
     Receipt,
-    Tent,
 } from '@lucide/vue';
 import { computed, nextTick } from 'vue';
-import FestivalController from '@/actions/App/Http/Controllers/Dashboard/FestivalController';
 import ListingController from '@/actions/App/Http/Controllers/Dashboard/ListingController';
 import OrderController from '@/actions/App/Http/Controllers/Dashboard/OrderController';
 import PromoterController from '@/actions/App/Http/Controllers/Dashboard/PromoterController';
@@ -107,44 +105,18 @@ const onWidgets = computed<boolean>(() =>
     page.url.split('?')[0].startsWith(WidgetController.index.url()),
 );
 
-const onFestivals = computed<boolean>(() =>
-    page.url.split('?')[0].startsWith(FestivalController.index.url()),
-);
-
 /**
- * A promoter's festivals, under the promoter, for an account the office
- * has let run them. Everybody else's promoters go without.
- */
-const festivalsOf = (promoter: Managed): NavItem[] =>
-    page.props.auth.roles.runs_festivals
-        ? [
-              {
-                  title: 'Festivals',
-                  href: FestivalController.index.url({
-                      query: { promoter: promoter.id },
-                  }),
-                  icon: Tent,
-                  isActive:
-                      onFestivals.value &&
-                      scope.value.get('promoter') === String(promoter.id),
-              },
-          ]
-        : [];
-
-/**
- * A venue, promoter or festival, and its own listings underneath it. Most
- * accounts run one of each, so the sidebar names them rather than offering
- * an index to go through - the name is the way in to editing it, and what
+ * A venue or promoter, and its own listings underneath it. Most accounts
+ * run one of each, so the sidebar names them rather than offering an
+ * index to go through - the name is the way in to editing it, and what
  * is on there, and the widgets showing it on their own site, hang off it.
- * A promoter's festivals sit between the two.
  */
 const runs = (
     managed: Managed,
     icon: NavItem['icon'],
     edit: string,
-    key: 'venue' | 'promoter' | 'festival',
+    key: 'venue' | 'promoter',
     heading?: string,
-    between: NavItem[] = [],
 ): NavGroup => ({
     heading,
     items: [
@@ -163,7 +135,6 @@ const runs = (
                         onListings.value &&
                         scope.value.get(key) === String(managed.id),
                 },
-                ...between,
                 {
                     title: 'Gig Widgets',
                     href: WidgetController.index.url({
@@ -186,9 +157,8 @@ const runs = (
  * section, and sits with the rest of them under Profile.
  *
  * Promoters and venues are granted by the office, so most accounts run
- * neither and those bands are simply absent. Festivals follow the
- * promoters, for an account the office has let run them. An empty band is
- * dropped along with its rule rather than leaving a gap.
+ * neither and those bands are simply absent. An empty band is dropped
+ * along with its rule rather than leaving a gap.
  *
  * Listings are only ever reached through the venue or promoter they are
  * for. An account that runs neither is not in the business of listing
@@ -279,16 +249,6 @@ const navGroups = computed<NavGroup[]>(() =>
                 PromoterController.edit(promoter.id).url,
                 'promoter',
                 'Promoters',
-                festivalsOf(promoter),
-            ),
-        ),
-        ...page.props.auth.festivals.map((festival) =>
-            runs(
-                festival,
-                Tent,
-                FestivalController.edit(festival.id).url,
-                'festival',
-                'Festivals',
             ),
         ),
         ...page.props.auth.venues.map((venue) =>

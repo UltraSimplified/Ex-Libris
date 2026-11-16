@@ -107,14 +107,6 @@ interface Promoter {
     email?: string | null;
 }
 
-/**
- * A festival, as its own page is given it: the details a promoter has, all
- * of its own, and the promoter putting it on.
- */
-interface Festival extends Promoter {
-    promoter: { id: number; name: string };
-}
-
 interface Writer {
     id: number;
     writer: string;
@@ -417,16 +409,6 @@ interface Magazine {
     downloadable?: boolean;
 }
 
-/** A listing's festival, as its card draws it. */
-interface ListingFestival {
-    id: number;
-    name: string;
-    /** The square logo, as a path on the CDN, which is the festival's mark. */
-    logo: string | null;
-    /** The colour the mark sits on: the festival's own, or Good on Paper's. */
-    mark_background: string;
-}
-
 interface Listing {
     id: number;
     title: string;
@@ -446,13 +428,6 @@ interface Listing {
      * not the same as having no promoter.
      */
     promoter?: Promoter | null;
-    /**
-     * The festival it is part of, with as much as its mark and its "Part
-     * of" line need. Loaded on the listings pages and the listing's own.
-     */
-    festival?: ListingFestival | null;
-    /** Whether the festival's mark is drawn on its cover. */
-    show_festival_mark?: boolean;
     event_link: string;
     /**
      * The event link, or the venue's website, tagged as Good on Paper's

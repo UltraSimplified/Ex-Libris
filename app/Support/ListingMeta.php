@@ -47,11 +47,6 @@ class ListingMeta
                 'url' => $listing->event_link,
                 'availability' => 'https://schema.org/InStock',
             ] : null,
-            'superEvent' => $listing->festival ? [
-                '@type' => 'Festival',
-                'name' => $listing->festival->name,
-                'url' => route('Festival', ['id' => $listing->festival->id, 'slug' => Str::slug($listing->festival->name)]),
-            ] : null,
         ]);
     }
 }

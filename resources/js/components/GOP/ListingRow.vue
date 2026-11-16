@@ -3,7 +3,6 @@ import { Link } from '@inertiajs/vue3';
 import { Megaphone } from '@lucide/vue';
 import { computed } from 'vue';
 import BookmarkHeart from '@/components/GOP/BookmarkHeart.vue';
-import FestivalMark from '@/components/GOP/FestivalMark.vue';
 import LocationPin from '@/components/GOP/LocationPin.vue';
 import OfficeEditLink from '@/components/GOP/OfficeEditLink.vue';
 import SoldOutFlash from '@/components/GOP/SoldOutFlash.vue';
@@ -55,12 +54,7 @@ const slugify = (str: string) => {
         <!-- Image: full width on mobile, fixed column on desktop -->
 
         <div class="relative md:w-44 md:shrink-0">
-            <img
-                :src="props.listing.image"
-                alt=""
-                class="block w-full rounded"
-            />
-            <FestivalMark :listing="props.listing" />
+            <img :src="props.listing.image" alt="" class="w-full rounded" />
             <SoldOutFlash v-if="props.listing.sold_out" />
         </div>
 

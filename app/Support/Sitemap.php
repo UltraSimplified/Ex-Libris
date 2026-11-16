@@ -4,7 +4,6 @@ namespace App\Support;
 
 use App\Models\Category;
 use App\Models\Feature;
-use App\Models\Festival;
 use App\Models\Listing;
 use App\Models\Page;
 use App\Models\Product;
@@ -107,10 +106,7 @@ class Sitemap
     }
 
     /**
-     * Each venue's and each promoter's own page, under its name, and each
-     * festival's that has anything in it. A festival with nothing listed
-     * yet has a page with nothing on it, which is not worth a search
-     * engine's visit until it has.
+     * Each venue's and each promoter's own page, under its name.
      *
      * @return list<array{loc: string, lastmod: ?string}>
      */
@@ -124,10 +120,6 @@ class Sitemap
             ...Promoter::query()->get(['id', 'name', 'updated_at'])->map(fn (Promoter $promoter): array => self::entry(
                 route('Promoter', ['id' => $promoter->id, 'slug' => Str::slug($promoter->name)]),
                 $promoter->updated_at,
-            )),
-            ...Festival::query()->has('listings')->get(['id', 'name', 'updated_at'])->map(fn (Festival $festival): array => self::entry(
-                route('Festival', ['id' => $festival->id, 'slug' => Str::slug($festival->name)]),
-                $festival->updated_at,
             )),
         ];
     }

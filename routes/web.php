@@ -8,7 +8,6 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\ClaimOrderController;
 use App\Http\Controllers\Dashboard\AdvertController as DashboardAdvertController;
 use App\Http\Controllers\Dashboard\ArticleController as DashboardArticleController;
-use App\Http\Controllers\Dashboard\FestivalController as DashboardFestivalController;
 use App\Http\Controllers\Dashboard\HomeController as DashboardHomeController;
 use App\Http\Controllers\Dashboard\ListingController as DashboardListingController;
 use App\Http\Controllers\Dashboard\OrderController as DashboardOrderController;
@@ -17,7 +16,6 @@ use App\Http\Controllers\Dashboard\VenueController as DashboardVenueController;
 use App\Http\Controllers\Dashboard\WidgetController as DashboardWidgetController;
 use App\Http\Controllers\FeatureController;
 use App\Http\Controllers\FeatureReadController;
-use App\Http\Controllers\FestivalController;
 use App\Http\Controllers\FileController;
 use App\Http\Controllers\GuestOrderController;
 use App\Http\Controllers\IssueController;
@@ -128,8 +126,6 @@ Route::get('listings/{id}/{slug}', [ListingController::class, 'listing'])->name(
 Route::get('listings/venue/{id}/{slug}', [ListingController::class, 'venue'])->name('Venue');
 
 Route::get('listings/promoter/{id}/{slug}', [ListingController::class, 'promoter'])->name('Promoter');
-
-Route::get('listings/festival/{id}/{slug}', [FestivalController::class, 'show'])->name('Festival');
 
 /*
  * Bookmarks, for everybody: an account keeps them in the bookmarks table
@@ -272,13 +268,6 @@ Route::middleware(['auth', 'verified'])
          */
         Route::resource('promoters', DashboardPromoterController::class)
             ->only(['index', 'edit', 'update']);
-
-        /*
-         * Festivals are made here, by an account the office has given Runs
-         * Festivals, for one of its promoters.
-         */
-        Route::resource('festivals', DashboardFestivalController::class)
-            ->except('show');
 
         /*
          * Venues too, except that a promoter writing up an event at a hall

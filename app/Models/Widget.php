@@ -143,7 +143,7 @@ class Widget extends Model
 
         $owner = $this->owner;
 
-        return $owner instanceof Venue || $owner instanceof Promoter || $owner instanceof Festival
+        return $owner instanceof Venue || $owner instanceof Promoter
             ? $owner->brand()
             : Brand::from([]);
     }
@@ -154,14 +154,6 @@ class Widget extends Model
     public function isForPromoter(): bool
     {
         return $this->owner_type === Promoter::class;
-    }
-
-    /**
-     * Whether it shows a festival's events, which may be at any venue.
-     */
-    public function isForFestival(): bool
-    {
-        return $this->owner_type === Festival::class;
     }
 
     /**
@@ -177,13 +169,12 @@ class Widget extends Model
      */
     public function spansVenues(): bool
     {
-        return $this->isForPromoter() || $this->isForFestival() || $this->isForBookmarks();
+        return $this->isForPromoter() || $this->isForBookmarks();
     }
 
     /**
      * Narrow a query of listings to the ones this widget shows: the
-     * venue's, promoter's or festival's own, or those the publisher has
-     * bookmarked.
+     * venue's or promoter's own, or those the publisher has bookmarked.
      *
      * @param  Builder<Listing>  $listings
      * @return Builder<Listing>
@@ -197,20 +188,7 @@ class Widget extends Model
             );
         }
 
-        return $listings->where($this->listingsColumn(), $this->owner_id);
-    }
-
-    /**
-     * The listings column that names this widget's venue, promoter or
-     * festival.
-     */
-    private function listingsColumn(): string
-    {
-        return match (true) {
-            $this->isForPromoter() => 'promoter_id',
-            $this->isForFestival() => 'festival_id',
-            default => 'venue_id',
-        };
+        return $listings->where($this->isForPromoter() ? 'promoter_id' : 'venue_id', $this->owner_id);
     }
 
     /**

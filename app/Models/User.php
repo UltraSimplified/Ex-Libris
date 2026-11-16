@@ -10,7 +10,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -52,17 +51,7 @@ class User extends Authenticatable implements MustVerifyEmail
      *
      * @var list<string>
      */
-    public const ROLES = ['is_venue_mgr', 'is_promoter', 'is_writer', 'is_publisher', 'runs_festivals'];
-
-    /**
-     * The roles staff hold only when they tick them on their own account.
-     * Runs Festivals puts festivals into an account's Backstage, which staff
-     * do not all want; the Office's own festival pages are open to them
-     * either way.
-     *
-     * @var list<string>
-     */
-    public const ROLES_STAFF_TICK = ['runs_festivals'];
+    public const ROLES = ['is_venue_mgr', 'is_promoter', 'is_writer', 'is_publisher'];
 
     /**
      * The office's own accounts, the admins: let into the Office, and
@@ -104,17 +93,6 @@ class User extends Authenticatable implements MustVerifyEmail
     public function promoters(): HasMany
     {
         return $this->hasMany(Promoter::class);
-    }
-
-    /**
-     * The festivals of the promoters this account manages, whether or not
-     * it may manage them from Backstage: managedFestivals() says that.
-     *
-     * @return HasManyThrough<Festival, Promoter, $this>
-     */
-    public function festivals(): HasManyThrough
-    {
-        return $this->hasManyThrough(Festival::class, Promoter::class);
     }
 
     /**
@@ -267,8 +245,7 @@ class User extends Authenticatable implements MustVerifyEmail
      * Staff hold all of them without being marked with any: somebody who
      * can reach the Office can already do everything a role permits, and
      * ticking three boxes on every staff account to say so would only be
-     * something else to keep in step. The exceptions are the roles staff
-     * tick for themselves, which change what their own Backstage shows.
+     * something else to keep in step.
      */
     public function hasRole(string $role): bool
     {
@@ -276,26 +253,7 @@ class User extends Authenticatable implements MustVerifyEmail
             return false;
         }
 
-        if (in_array($role, self::ROLES_STAFF_TICK, true)) {
-            return (bool) $this->{$role};
-        }
-
         return Gate::forUser($this)->allows('viewNova') || (bool) $this->{$role};
-    }
-
-    /**
-     * The festivals this account may manage from Backstage: those of the
-     * promoters it runs, once the office has given it Runs Festivals, and
-     * none before. Everything in Backstage that offers or accepts a
-     * festival asks here, so what is hidden and what is refused agree.
-     *
-     * @return Builder<Festival>
-     */
-    public function managedFestivals(): Builder
-    {
-        $festivals = Festival::query()->whereIn('festivals.promoter_id', $this->promoters()->select('promoters.id'));
-
-        return $this->hasRole('runs_festivals') ? $festivals : $festivals->whereRaw('1 = 0');
     }
 
     /**
@@ -440,7 +398,6 @@ class User extends Authenticatable implements MustVerifyEmail
             'is_promoter' => 'boolean',
             'is_writer' => 'boolean',
             'is_publisher' => 'boolean',
-            'runs_festivals' => 'boolean',
             'is_active_writer' => 'boolean',
         ];
     }

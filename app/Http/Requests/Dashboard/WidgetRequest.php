@@ -6,7 +6,6 @@ use App\Support\Brand;
 use App\Support\Widgets\WidgetDensity;
 use App\Support\Widgets\WidgetFont;
 use App\Support\Widgets\WidgetOptions;
-use App\Support\Widgets\WidgetOwners;
 use App\Support\Widgets\WidgetSizeMode;
 use App\Support\Widgets\WidgetTemplate;
 use Illuminate\Foundation\Http\FormRequest;
@@ -61,7 +60,7 @@ class WidgetRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'owner' => [Rule::requiredIf($this->isMethod('post')), 'string', 'regex:'.WidgetOwners::pattern()],
+            'owner' => [Rule::requiredIf($this->isMethod('post')), 'string', 'regex:/^((venue|promoter):\d+|bookmarks)$/'],
             'name' => ['required', 'string', 'max:100'],
             'template' => ['required', Rule::enum(WidgetTemplate::class)],
             'density' => ['required', Rule::enum(WidgetDensity::class)],
@@ -90,7 +89,7 @@ class WidgetRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'owner' => 'venue, promoter or festival',
+            'owner' => 'venue or promoter',
             'options.count' => 'number of events',
             'options.button_text' => 'button wording',
             'colours.brand_colour' => 'brand colour',

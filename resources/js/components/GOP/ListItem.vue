@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { usePage, Link } from '@inertiajs/vue3';
-import { Megaphone, Tent } from '@lucide/vue';
+import { Megaphone } from '@lucide/vue';
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import BookmarkHeart from '@/components/GOP/BookmarkHeart.vue';
-import FestivalMark from '@/components/GOP/FestivalMark.vue';
 import ListingLineUp from '@/components/GOP/ListingLineUp.vue';
 import ListingShareLinks from '@/components/GOP/ListingShareLinks.vue';
 import LocationPin from '@/components/GOP/LocationPin.vue';
@@ -287,9 +286,8 @@ const resolvedListings = computed(() =>
                 <div class="relative">
                     <img
                         :src="resolvedListings[0].image"
-                        class="block w-full rounded"
+                        class="w-full rounded"
                     />
-                    <FestivalMark :listing="props.listing" />
                     <SoldOutFlash v-if="props.listing.sold_out" corner />
                 </div>
                 <PlaceholderFlash
@@ -380,30 +378,6 @@ const resolvedListings = computed(() =>
                     <span v-else class="dark:text-silver">{{
                         listing.promoter.name
                     }}</span>
-                </h2>
-                <h2
-                    v-if="listing.festival"
-                    data-test="part-of-festival"
-                    class="mt-2 flex items-center gap-2 font-din text-sm text-gray-600 uppercase md:text-xs"
-                >
-                    <Tent
-                        class="size-3 shrink-0 dark:text-tyre"
-                        aria-hidden="true"
-                    />
-                    <span class="dark:text-silver">
-                        Part of
-                        <Link
-                            v-if="!props.preview"
-                            :href="
-                                '/listings/festival/' +
-                                listing.festival.id +
-                                '/' +
-                                slugify(listing.festival.name)
-                            "
-                            >{{ listing.festival.name }}</Link
-                        >
-                        <template v-else>{{ listing.festival.name }}</template>
-                    </span>
                 </h2>
             </div>
 

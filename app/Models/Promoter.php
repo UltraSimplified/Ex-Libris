@@ -3,8 +3,9 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasBrand;
-use App\Models\Concerns\HasReferredWebsite;
 use App\Services\Widgets\WidgetCache;
+use App\Support\AffiliateLink;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -19,7 +20,7 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
  */
 class Promoter extends Model
 {
-    use HasBrand, HasFactory, HasReferredWebsite;
+    use HasBrand, HasFactory;
 
     /**
      * Everything the owner may change from the dashboard by name. The logo
@@ -40,16 +41,29 @@ class Promoter extends Model
     /**
      * Its name and colours are in its gig widgets, which are rendered afresh
      * whenever it is saved.
-     *
-     * Its festivals go before it, one at a time through the model, so each
-     * takes its widgets and pictures with it: the database would remove the
-     * rows on its own, but nothing else.
      */
     protected static function booted(): void
     {
         static::saved(fn (Promoter $promoter) => app(WidgetCache::class)->forgetOwner(Promoter::class, $promoter->id));
+    }
 
-        static::deleting(fn (Promoter $promoter) => $promoter->festivals()->get()->each->delete());
+    /**
+     * The promoter's website, tagged as Good on Paper's referral as a
+     * venue's is. A link that is not a web address is passed on as it was.
+     *
+     * Appended only on the promoter's own page, where the link is drawn.
+     */
+    protected function websiteLink(): Attribute
+    {
+        return Attribute::get(function (): ?string {
+            $website = trim((string) $this->website);
+
+            if ($website === '') {
+                return null;
+            }
+
+            return AffiliateLink::tag($website, 'promoter-'.$this->id) ?? $website;
+        });
     }
 
     /**
@@ -70,16 +84,6 @@ class Promoter extends Model
     public function listings(): HasMany
     {
         return $this->hasMany(Listing::class);
-    }
-
-    /**
-     * The festivals this promoter puts on, each with its own name and look.
-     *
-     * @return HasMany<Festival, $this>
-     */
-    public function festivals(): HasMany
-    {
-        return $this->hasMany(Festival::class);
     }
 
     /**

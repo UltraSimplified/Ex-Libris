@@ -15,16 +15,13 @@ export type User = {
 
 /**
  * What the office has granted an account. Staff hold all of them without
- * being marked with any, except Runs Festivals, which they tick for
- * themselves. These are already resolved when they arrive.
+ * being marked with any, so these are already resolved when they arrive.
  */
 export type Roles = {
     is_venue_mgr: boolean;
     is_promoter: boolean;
     is_writer: boolean;
     is_publisher: boolean;
-    /** Whether Backstage shows festivals: the menu, the form's choice, widgets. */
-    runs_festivals: boolean;
 };
 
 /** Something this account runs, which the sidebar heads a section with. */
@@ -39,8 +36,6 @@ export type Auth = {
     promoters: Managed[];
     /** The venues this account runs, by name. */
     venues: Managed[];
-    /** The festivals this account manages, by name; none without Runs Festivals. */
-    festivals: Managed[];
     /** Whether this account has anything to look at under Orders. */
     hasOrders: boolean;
     roles: Roles;

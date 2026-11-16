@@ -2,7 +2,6 @@
 
 namespace App\Services\Widgets;
 
-use App\Models\Festival;
 use App\Models\Listing;
 use App\Models\Venue;
 use App\Models\Widget;
@@ -29,16 +28,11 @@ class WidgetFeed
      * one ends: a widget is "what's on next". One already under way shows
      * as running until its last day.
      *
-     * A festival that has finished is shown whole, from its first day, as
-     * its page is: its widget stays on the festival's own website after the
-     * last night, and a blank there says nothing.
-     *
      * @return Collection<int, array<string, mixed>>
      */
     public function events(Widget $widget): Collection
     {
         $settings = $widget->settings();
-        $wholeFestival = $widget->owner instanceof Festival && $widget->owner->hasFinished();
 
         return $widget->constrainListings(Listing::query())
             ->select([
@@ -47,7 +41,7 @@ class WidgetFeed
                 'sold_out', 'event_link', 'venue_id', 'category_id',
             ])
             ->with(['venue:id,name,town,url', 'category:id,name,slug'])
-            ->unless($wholeFestival, fn ($query) => $query->current())
+            ->current()
             ->orderBy('start_date')
             ->orderBy('title')
             ->limit($settings->count + 1)
@@ -57,18 +51,16 @@ class WidgetFeed
 
     /**
      * Where the "Listings by Good on Paper" credit and the "more events"
-     * link go: the venue's or the festival's page of listings, or the
-     * listings for a promoter.
+     * link go: the venue's page of listings, or the listings for a promoter,
+     * who has no page of their own yet.
      */
     public function ownerPage(Widget $widget): string
     {
         $owner = $widget->owner;
 
-        $path = match (true) {
-            $owner instanceof Venue => route('Venue', ['id' => $owner->id, 'slug' => Str::slug($owner->name)], false),
-            $owner instanceof Festival => route('Festival', ['id' => $owner->id, 'slug' => Str::slug($owner->name)], false),
-            default => route('Listings', [], false),
-        };
+        $path = $owner instanceof Venue
+            ? route('Venue', ['id' => $owner->id, 'slug' => Str::slug($owner->name)], false)
+            : route('Listings', [], false);
 
         return $this->onSite($path, $widget, 'widget-credit');
     }

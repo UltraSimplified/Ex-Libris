@@ -2,16 +2,13 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\Festival;
-use App\Models\Promoter;
 use App\Models\ShopCategory;
 use App\Models\User;
-use App\Models\Venue;
 use App\Services\Adverts\AdvertPool;
 use App\Services\Adverts\AdvertRotation;
 use App\Services\Bookmarks\Bookmarks;
 use App\Services\Shop\Basket;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -81,8 +78,6 @@ class HandleInertiaRequests extends Middleware
                  */
                 'promoters' => fn (): array => $this->named($request->user()?->promoters()),
                 'venues' => fn (): array => $this->named($request->user()?->venues()),
-                // The festivals it may manage, none without Runs Festivals.
-                'festivals' => fn (): array => $this->named($request->user()?->managedFestivals()),
 
                 /*
                  * Whether there is anything behind Orders: an order this
@@ -165,17 +160,15 @@ class HandleInertiaRequests extends Middleware
     /**
      * The id and name of everything in the given relation, by name.
      *
-     * @template TModel of Promoter|Venue|Festival
-     *
-     * @param  HasMany<TModel, User>|Builder<TModel>|null  $relation
+     * @param  HasMany<Model, User>|null  $relation
      * @return array<int, array{id: int, name: string}>
      */
-    private function named(HasMany|Builder|null $relation): array
+    private function named(?HasMany $relation): array
     {
         return $relation
             ?->orderBy('name')
             ->get(['id', 'name'])
-            ->map(fn (Promoter|Venue|Festival $record): array => [
+            ->map(fn (Model $record): array => [
                 'id' => $record->getKey(),
                 'name' => (string) $record->name,
             ])

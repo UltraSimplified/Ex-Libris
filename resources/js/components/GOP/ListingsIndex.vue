@@ -27,7 +27,6 @@ import { register } from '@/routes';
 import type {
     Advert,
     Category,
-    Festival,
     LineUpArtist,
     Listing,
     Promoter,
@@ -45,11 +44,6 @@ interface Props {
     bookmarked?: boolean;
     venue: Venue;
     promoter?: Promoter | null;
-    /** The promoter's festivals still to come, on its own page. */
-    festivals?: { id: number; name: string }[];
-    festival?: Festival | null;
-    /** Whether everything in the festival has been. */
-    finished?: boolean;
     genres?: Category[];
     /** The server's today, as "2026-11-12". */
     currentDay: string;
@@ -106,11 +100,11 @@ const { signedIn, count: bookmarkCount, isBookmarked } = useBookmarks();
 const props = defineProps<Props>();
 
 /**
- * The venue, promoter or festival whose own page this is, if it is one: it
- * heads the page in place of the sub-nav and search.
+ * The venue or promoter whose own page this is, if it is one: it heads
+ * the page in place of the sub-nav and search.
  */
-const profileOwner = computed<Venue | Promoter | Festival | null>(
-    () => props.venue ?? props.promoter ?? props.festival ?? null,
+const profileOwner = computed<Venue | Promoter | null>(
+    () => props.venue ?? props.promoter ?? null,
 );
 
 /**
@@ -509,26 +503,9 @@ watch([search, chosenSlugs], () => revealAll());
         <PromoterProfile
             v-else-if="props.promoter"
             :promoter="props.promoter"
-            :festivals="props.festivals"
-        />
-        <PromoterProfile
-            v-else-if="props.festival"
-            :promoter="props.festival"
-            :by="props.festival.promoter"
         />
         <div class="border-b border-silver px-5 pt-4 pb-4 md:border-l">
             <h2 class="text-4xl font-semibold">{{ title }}</h2>
-            <!--
-                Once all of it has been, the page is the festival's record
-                rather than a blank, and says so over the programme.
-            -->
-            <p
-                v-if="props.festival && props.finished"
-                data-test="festival-finished"
-                class="mt-2 font-din text-sm uppercase"
-            >
-                {{ props.festival.name }} has finished. This was the programme.
-            </p>
         </div>
     </template>
     <div
@@ -788,9 +765,6 @@ watch([search, chosenSlugs], () => revealAll());
         </h1>
         <h1 v-else-if="props.bookmarked" class="font-bold uppercase">
             No bookmarked events
-        </h1>
-        <h1 v-else-if="props.festival" class="font-bold uppercase">
-            Nothing listed yet
         </h1>
         <h1 v-else class="font-bold uppercase">No events listed</h1>
     </div>

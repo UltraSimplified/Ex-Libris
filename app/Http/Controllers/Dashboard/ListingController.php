@@ -15,7 +15,6 @@ use App\Services\Images\ListingThumbnail;
 use App\Services\Listings\ListingDays;
 use App\Services\Listings\ListingLineUp;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -50,12 +49,10 @@ class ListingController extends Controller
          */
         $venue = $user->venues()->find($request->integer('venue'), ['id', 'name']);
         $promoter = $user->promoters()->find($request->integer('promoter'), ['id', 'name']);
-        $festival = $user->managedFestivals()->find($request->integer('festival'), ['id', 'name', 'promoter_id']);
 
         $editable
             ->when($venue, fn (Builder $query): Builder => $query->where('listings.venue_id', $venue->id))
-            ->when($promoter, fn (Builder $query): Builder => $query->where('listings.promoter_id', $promoter->id))
-            ->when($festival, fn (Builder $query): Builder => $query->where('listings.festival_id', $festival->id));
+            ->when($promoter, fn (Builder $query): Builder => $query->where('listings.promoter_id', $promoter->id));
 
         /*
          * What is still to come, unless somebody asks for the lot. An
@@ -81,7 +78,6 @@ class ListingController extends Controller
             // and keep hold of it across the links that change the scope.
             'venue' => $venue?->only(['id', 'name']),
             'promoter' => $promoter?->only(['id', 'name']),
-            'festival' => $festival?->only(['id', 'name', 'promoter_id']),
             // How many are behind the "show everything" link, so it can say
             // whether there is anything behind it at all.
             'pastCount' => (clone $editable)->count() - (clone $editable)->current()->count(),
@@ -132,7 +128,6 @@ class ListingController extends Controller
         Gate::authorize('create', Listing::class);
 
         return Inertia::render('dashboard/listings/Create', [
-            'listing' => $this->startingFrom($request),
             'categories' => $this->categories(),
             'venues' => $this->venues($request->user()),
             'promoters' => $this->promoters($request->user()),
@@ -340,37 +335,14 @@ class ListingController extends Controller
     }
 
     /**
-     * The promoters this user may put a listing under, each with the
-     * festivals it may put one in: those it runs, which is none without
-     * Runs Festivals, and whichever the listing is in already, which stays
-     * choosable for whoever edits it.
+     * The promoters this user may put a listing under.
      *
      * @return Collection<int, Promoter>
      */
     private function promoters(User $user, ?Listing $listing = null): Collection
     {
         return $user->listablePromoters($listing)
-            ->with(['festivals' => fn (HasMany $festivals): HasMany => $festivals
-                ->where(fn (Builder $query): Builder => $query
-                    ->whereIn('festivals.id', $user->managedFestivals()->select('festivals.id'))
-                    ->when($listing?->festival_id, fn (Builder $query, int $kept): Builder => $query->orWhere('festivals.id', $kept)))
-                ->orderBy('name')
-                ->select(['id', 'name', 'promoter_id'])])
             ->orderBy('name')
             ->get(['id', 'name']);
-    }
-
-    /**
-     * Where a new listing starts when it is added from a festival's own
-     * listings: in that festival, under the promoter putting it on. Only a
-     * festival this account runs is recognised.
-     *
-     * @return array{promoter_id: int, festival_id: int}|null
-     */
-    private function startingFrom(Request $request): ?array
-    {
-        $festival = $request->user()->managedFestivals()->find($request->integer('festival'), ['id', 'promoter_id']);
-
-        return $festival ? ['promoter_id' => $festival->promoter_id, 'festival_id' => $festival->id] : null;
     }
 }

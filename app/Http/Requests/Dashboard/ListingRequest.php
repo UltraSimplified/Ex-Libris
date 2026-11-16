@@ -4,14 +4,11 @@ namespace App\Http\Requests\Dashboard;
 
 use App\Models\Listing;
 use App\Rules\Embed;
-use App\Rules\FestivalOfPromoter;
 use App\Rules\SpecificDaysWithinRun;
 use App\Services\Listings\ListingLineUp;
 use Closure;
-use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\Rules\ExcludeIf;
 
 class ListingRequest extends FormRequest
 {
@@ -36,7 +33,6 @@ class ListingRequest extends FormRequest
         $this->merge([
             'remove_thumbnail' => $this->asBoolean($this->input('remove_thumbnail')),
             'sold_out' => $this->asBoolean($this->input('sold_out')),
-            'show_festival_mark' => $this->asBoolean($this->input('show_festival_mark')),
             'set_specific_days' => $this->asBoolean($this->input('set_specific_days')),
         ]);
 
@@ -65,7 +61,7 @@ class ListingRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, list<string|Closure|ValidationRule|ExcludeIf>>
+     * @return array<string, array<int, string>>
      */
     public function rules(): array
     {
@@ -81,14 +77,6 @@ class ListingRequest extends FormRequest
                 fn (?Listing $listing = null) => $this->user()->listablePromoters($listing),
                 'You can only list events under a promoter you manage.'
             )],
-            // Asked for only of an account that runs festivals. Anybody else
-            // is never offered the choice, so the listing keeps whatever
-            // festival and mark it has, whatever the request says.
-            'festival_id' => [$this->unlessRunningFestivals(), 'nullable', 'integer', new FestivalOfPromoter(
-                $this->user()->managedFestivals(),
-                $this->listingBeingEdited()?->festival_id,
-            )],
-            'show_festival_mark' => [$this->unlessRunningFestivals(), 'boolean'],
             'start_date' => ['required', 'date'],
             'end_date' => ['nullable', 'required_if_accepted:set_specific_days', 'date', 'after_or_equal:start_date'],
             // The days ticked in the calendar, only looked at while "Set
@@ -134,29 +122,12 @@ class ListingRequest extends FormRequest
     private function mustBeSelectable(callable $selectable, string $message): Closure
     {
         return function (string $attribute, mixed $value, Closure $fail) use ($selectable, $message): void {
-            if (! $selectable($this->listingBeingEdited())->whereKey($value)->exists()) {
+            $listing = $this->route('listing');
+
+            if (! $selectable($listing instanceof Listing ? $listing : null)->whereKey($value)->exists()) {
                 $fail($message);
             }
         };
-    }
-
-    /**
-     * The listing this request saves over, or none for a new one.
-     */
-    private function listingBeingEdited(): ?Listing
-    {
-        $listing = $this->route('listing');
-
-        return $listing instanceof Listing ? $listing : null;
-    }
-
-    /**
-     * Leaves a festival field out of what is saved for an account the
-     * office has not let run festivals.
-     */
-    private function unlessRunningFestivals(): ExcludeIf
-    {
-        return Rule::excludeIf(fn (): bool => ! $this->user()->hasRole('runs_festivals'));
     }
 
     /**
@@ -203,7 +174,6 @@ class ListingRequest extends FormRequest
             'category_id' => 'category',
             'venue_id' => 'venue',
             'promoter_id' => 'promoter',
-            'festival_id' => 'festival',
             'body' => 'description',
             'thumbnail' => 'thumbnail image',
             'line_up' => 'additional media',

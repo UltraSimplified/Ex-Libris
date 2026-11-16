@@ -5,7 +5,6 @@ namespace App\Nova;
 use App\Nova\Actions\ExportListings;
 use App\Nova\Concerns\ShowsLayoutImages;
 use App\Nova\Fields\ListingDateFields;
-use App\Nova\Fields\ListingFestivalFields;
 use App\Nova\Filters\ListingPeriod;
 use App\Rules\Embed;
 use App\Services\Listings\ListingLineUp;
@@ -188,8 +187,6 @@ class Listing extends Resource
                 ->showCreateRelationButton()
                 ->sortable()
                 ->help('Who is putting the event on, where that is not the venue itself.'),
-
-            ...(new ListingFestivalFields)->fields(),
 
             Text::make('Event booking link', 'event_link')
                 ->help('only fill this in if the booking address is different to the venue address')

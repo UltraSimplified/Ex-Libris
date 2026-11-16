@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Dashboard\WidgetRequest;
-use App\Models\Festival;
 use App\Models\Promoter;
 use App\Models\User;
 use App\Models\Venue;
@@ -12,11 +11,11 @@ use App\Models\Widget;
 use App\Support\Brand;
 use App\Support\Widgets\WidgetDensity;
 use App\Support\Widgets\WidgetFont;
-use App\Support\Widgets\WidgetOwners;
 use App\Support\Widgets\WidgetSizeMode;
 use App\Support\Widgets\WidgetSnippets;
 use App\Support\Widgets\WidgetTemplate;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -47,8 +46,7 @@ class WidgetController extends Controller
         $user = $request->user();
         $venue = $user->venues()->find($request->integer('venue'), ['id', 'name']);
         $promoter = $user->promoters()->find($request->integer('promoter'), ['id', 'name']);
-        $festival = $user->managedFestivals()->find($request->integer('festival'), ['id', 'name']);
-        $owner = $venue ?? $promoter ?? $festival ?? ($request->boolean('bookmarks') ? $user : null);
+        $owner = $venue ?? $promoter ?? ($request->boolean('bookmarks') ? $user : null);
 
         $widgets = Widget::query()
             ->with('owner:id,name')
@@ -65,9 +63,6 @@ class WidgetController extends Controller
                     ->orWhere(fn (Builder $query) => $query
                         ->where('owner_type', Promoter::class)
                         ->whereIn('owner_id', $user->promoters()->select('id')))
-                    ->orWhere(fn (Builder $query) => $query
-                        ->where('owner_type', Festival::class)
-                        ->whereIn('owner_id', $user->managedFestivals()->select('festivals.id')))
                     ->orWhere(fn (Builder $query) => $query
                         ->where('owner_type', User::class)
                         ->where('owner_id', $user->id));
@@ -87,7 +82,6 @@ class WidgetController extends Controller
             'widgets' => $widgets,
             'venue' => $venue?->only(['id', 'name']),
             'promoter' => $promoter?->only(['id', 'name']),
-            'festival' => $festival?->only(['id', 'name']),
             'forBookmarks' => $owner instanceof User,
             'status' => $request->session()->get('status'),
         ]);
@@ -102,12 +96,11 @@ class WidgetController extends Controller
     {
         Gate::authorize('create', Widget::class);
 
-        $owners = WidgetOwners::choicesFor($request->user());
+        $owners = $this->owners($request->user());
 
         $asked = match (true) {
             $request->filled('venue') => 'venue:'.$request->integer('venue'),
             $request->filled('promoter') => 'promoter:'.$request->integer('promoter'),
-            $request->filled('festival') => 'festival:'.$request->integer('festival'),
             $request->boolean('bookmarks') => 'bookmarks',
             default => null,
         };
@@ -124,7 +117,7 @@ class WidgetController extends Controller
     {
         Gate::authorize('create', Widget::class);
 
-        $owner = WidgetOwners::resolve($request->validated('owner'), $request->user());
+        $owner = $this->resolveOwner($request->validated('owner'), $request->user());
         Gate::authorize('createFor', [Widget::class, $owner]);
 
         $widget = new Widget($request->widgetAttributes());
@@ -147,7 +140,6 @@ class WidgetController extends Controller
                 ...$widget->only(['id', 'key', 'name', 'width', 'height', 'active']),
                 'owner' => $this->ownerLabel($widget),
                 'for_promoter' => $widget->isForPromoter(),
-                'for_festival' => $widget->isForFestival(),
                 'for_bookmarks' => $widget->isForBookmarks(),
                 'spans_venues' => $widget->spansVenues(),
                 'template' => $widget->template->value,
@@ -162,7 +154,6 @@ class WidgetController extends Controller
             'ownerEditUrl' => match (true) {
                 $widget->owner instanceof Venue => route('dashboard.venues.edit', $widget->owner),
                 $widget->owner instanceof Promoter => route('dashboard.promoters.edit', $widget->owner),
-                $widget->owner instanceof Festival => route('dashboard.festivals.edit', $widget->owner),
                 default => null,
             },
             'snippets' => WidgetSnippets::for($widget),
@@ -195,6 +186,34 @@ class WidgetController extends Controller
 
         return to_route('dashboard.widgets.index')
             ->with('status', 'Widget deleted. Anywhere it was pasted now shows nothing.');
+    }
+
+    /**
+     * The venues and promoters this account may make widgets for, and its
+     * bookmarks when it is a publisher.
+     *
+     * @return list<array{value: string, label: string}>
+     */
+    private function owners(User $user): array
+    {
+        return [
+            ...($user->hasRole('is_publisher') ? [['value' => 'bookmarks', 'label' => 'My bookmarks']] : []),
+            ...$user->venues()->orderBy('name')->get(['id', 'name'])
+                ->map(fn (Venue $venue): array => ['value' => 'venue:'.$venue->id, 'label' => $venue->name.' (venue)']),
+            ...$user->promoters()->orderBy('name')->get(['id', 'name'])
+                ->map(fn (Promoter $promoter): array => ['value' => 'promoter:'.$promoter->id, 'label' => $promoter->name.' (promoter)']),
+        ];
+    }
+
+    private function resolveOwner(string $owner, User $user): Model
+    {
+        if ($owner === 'bookmarks') {
+            return $user;
+        }
+
+        [$type, $id] = explode(':', $owner, 2);
+
+        return ($type === 'promoter' ? Promoter::query() : Venue::query())->findOrFail((int) $id);
     }
 
     /**
