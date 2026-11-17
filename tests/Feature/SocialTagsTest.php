@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Issue;
+use App\Models\Listing;
 use App\Models\Promoter;
 use App\Models\Venue;
 use App\Support\SiteMeta;
@@ -49,6 +50,23 @@ test('the home page speaks for the site', function () {
             ->where('meta.image', Storage::disk('do')->url('issues/latest.webp'))
             ->where('meta.jsonLd.@type', 'WebSite')
         );
+});
+
+test('a listing\'s share card opens its description with when it runs', function () {
+    $listing = Listing::factory()->create([
+        'title' => 'Lantern Making Workshops',
+        'body' => '<p>Come and make your own   willow lantern.</p>',
+        'start_date' => '2026-11-24',
+        'end_date' => '2026-12-04',
+        'additional_date_information' => 'Tuesdays and Fridays',
+    ]);
+
+    $html = $this->get(route('Listing', [$listing->id, 'lantern-making-workshops']))->assertOk()->getContent();
+    $described = 'TUES 24 NOV - FRI 4 DEC (Tuesdays and Fridays) · Come and make your own willow lantern.';
+
+    expect(socialTag($html, 'property', 'og:description'))->toBe($described)
+        ->and(socialTag($html, 'name', 'twitter:description'))->toBe($described)
+        ->and($html)->toContain('"description":"Come and make your own willow lantern."');
 });
 
 test('a venue\'s page shares its own picture and description, with its place', function () {

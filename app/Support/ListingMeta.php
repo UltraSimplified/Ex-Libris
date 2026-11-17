@@ -11,8 +11,8 @@ class ListingMeta
 {
     public static function for(Listing $listing): PageMeta
     {
-        $description = $listing->meta_description
-                       ?? Str::of($listing->body)->stripTags()->squish()->limit(160);
+        $description = (string) ($listing->meta_description
+                       ?? Str::of($listing->body)->stripTags()->squish()->limit(160));
 
         $image = $listing->thumbnail
             ? config('services.cdn.url').'/'.$listing->thumbnail
@@ -20,11 +20,22 @@ class ListingMeta
 
         return new PageMeta(
             title: $listing->title.' at '.$listing->venue->name,
-            description: (string) $description,
+            description: self::withDates($listing, $description),
             image: $image,
             type: 'article',
-            jsonLd: self::jsonLd($listing, (string) $description, $image),
+            jsonLd: self::jsonLd($listing, $description, $image),
         );
+    }
+
+    /**
+     * The description led by when the listing runs, as the listings pages
+     * write it. A share card has a title and a description but no place of
+     * its own for the dates, so they open the description, straight under
+     * the title.
+     */
+    private static function withDates(Listing $listing, string $description): string
+    {
+        return implode(' · ', array_filter([ListingDates::for($listing), $description]));
     }
 
     protected static function jsonLd(Listing $listing, string $description, string $image): array
