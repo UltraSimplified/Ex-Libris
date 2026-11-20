@@ -36,10 +36,21 @@ test('a listing can be saved in the Office', function () {
         ->assertSee('Start date')
         ->fill('[dusk="title"]', 'Waterfield, saved from the Office')
         ->click('Update & Continue Editing')
+        ->assertSee(officeSaved())
         ->assertNoJavaScriptErrors();
 
     expect($listing->fresh()->title)->toBe('Waterfield, saved from the Office');
 });
+
+/**
+ * What Nova says once a save has come back. A click only sends the form, so
+ * a test waits for this before it reads the database: without it the read
+ * can land before the save does.
+ */
+function officeSaved(): string
+{
+    return 'The listing was updated!';
+}
 
 /**
  * The days ticked on the Office's calendar, as the page has them.
@@ -64,6 +75,7 @@ test('specific days can be ticked and saved in the Office', function () {
         ->click('[aria-label="Every Sunday"]')
         ->assertSee('5 of 20 days chosen')
         ->click('Update & Continue Editing')
+        ->assertSee(officeSaved())
         ->assertNoJavaScriptErrors();
 
     $festival->refresh();
@@ -138,6 +150,7 @@ test('a listing cut to one day in the Office keeps none of its specific days', f
         ->fill('[dusk="end_date"]', '2026-11-03')
         ->assertDontSee('Specific days')
         ->click('Update & Continue Editing')
+        ->assertSee(officeSaved())
         ->assertNoJavaScriptErrors();
 
     $quiz->refresh();
