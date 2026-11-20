@@ -36,7 +36,8 @@ type Fulfilment = 'post' | 'collection';
 const props = defineProps<{
     title: string;
     lines: Line[];
-    fulfilment: Fulfilment;
+    /** None when nothing in the basket is posted or collected: donations. */
+    fulfilment: Fulfilment | 'none';
     fulfilmentOptions: { value: Fulfilment; label: string }[];
     subtotal: number;
     postage: { amount: number; uncapped: number; capped: boolean };
@@ -193,7 +194,7 @@ function checkout(): void {
                 </ul>
 
                 <aside class="space-y-6">
-                    <fieldset>
+                    <fieldset v-if="fulfilment !== 'none'">
                         <legend class="text-xl font-bold">
                             How would you like it?
                         </legend>
@@ -251,7 +252,10 @@ function checkout(): void {
                             <dt>Subtotal</dt>
                             <dd>{{ formatPence(subtotal) }}</dd>
                         </div>
-                        <div class="flex justify-between">
+                        <div
+                            v-if="fulfilment !== 'none'"
+                            class="flex justify-between"
+                        >
                             <dt>
                                 {{
                                     fulfilment === 'collection'

@@ -5,7 +5,7 @@
 **Oversold:** at least one line took the last of its stock as someone else bought it too. Check the stock before packing, and refund or offer a swap.
 @endif
 
-**{{ $order->name }}** ({{ $order->email }}{{ $order->phone ? ', '.$order->phone : '' }}) paid **£{{ number_format($order->total / 100, 2) }}**, {{ $collecting ? 'to collect' : 'to post' }}.
+**{{ $order->name }}** ({{ $order->email }}{{ $order->phone ? ', '.$order->phone : '' }}) paid **£{{ number_format($order->total / 100, 2) }}**, {{ $order->fulfilment->officeTask() }}.
 
 <x-mail::table>
 | Item | Qty | Packing |
@@ -15,10 +15,10 @@
 @endforeach
 </x-mail::table>
 
-@unless ($collecting)
+@if ($posting)
 **Post to:**<br>
 {!! implode('<br>', array_map('e', \App\Models\Order::addressLines($order->shipping_address))) !!}
-@endunless
+@endif
 
 <x-mail::button :url="$officeUrl">
 Open in the Office

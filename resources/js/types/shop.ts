@@ -3,7 +3,7 @@ export interface ShopOrder {
     reference: string;
     status: string;
     status_label: string;
-    fulfilment: 'post' | 'collection';
+    fulfilment: 'post' | 'collection' | 'none';
     email: string | null;
     items: {
         id: number;

@@ -111,7 +111,13 @@
 
         <div class="reference">{{ $order->reference }}</div>
         <div class="how">
-            {{ $order->fulfilment === $collection ? 'For collection at '.$collectionName : 'To post' }}
+            @if ($order->fulfilment === $collection)
+                For collection at {{ $collectionName }}
+            @elseif ($order->fulfilment === $post)
+                To post
+            @else
+                Nothing to send
+            @endif
             @if ($order->paid_at)
                 &middot; paid {{ $order->paid_at->format('j M Y') }}
             @endif
@@ -122,11 +128,11 @@
         @endif
 
         <div class="address">
-            @if ($order->fulfilment === $collection)
+            @if ($order->fulfilment === $post)
+                {!! implode('<br>', array_map('e', \App\Models\Order::addressLines($order->shipping_address))) !!}
+            @else
                 {{ $order->name }}<br>
                 {{ $order->phone }}
-            @else
-                {!! implode('<br>', array_map('e', \App\Models\Order::addressLines($order->shipping_address))) !!}
             @endif
         </div>
 

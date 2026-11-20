@@ -130,9 +130,9 @@ class ShopController extends Controller
 
     /**
      * What it costs to post the product, and where it can be collected
-     * free instead.
+     * free instead; or that it is never posted or collected at all.
      *
-     * @return array{band: string, amount: int, cap: int, collection: string}
+     * @return array{band: string, needed: bool, amount: int, cap: int, collection: string}
      */
     private function delivery(Product $product): array
     {
@@ -140,6 +140,7 @@ class ShopController extends Controller
 
         return [
             'band' => $product->postageBand->name,
+            'needed' => $product->postageBand->needs_delivery,
             'amount' => $product->postageBand->amount,
             'cap' => $settings->postage_cap,
             'collection' => $settings->collection_name,

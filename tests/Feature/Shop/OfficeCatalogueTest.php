@@ -8,6 +8,7 @@ use App\Models\ShopSettings;
 use App\Models\User;
 use App\Nova\Product as ProductResource;
 use App\Services\Shop\VariantGrid;
+use App\Support\Shop\ShopPicture;
 
 /*
  * The sortable trait keeps its answer for the rest of the process, which in
@@ -207,6 +208,18 @@ test('a product moved to another category goes to the end of it', function () {
 
     expect($product->fresh()->position)->toBe(3);
 });
+
+test('category images, product covers and product pictures are all cropped to the shop\'s one shape', function (string $uriKey, string $attribute) {
+    $field = collect($this->actingAs(shopOffice())->getJson("/nova-api/{$uriKey}/creation-fields")->assertOk()->json('fields'))
+        ->firstWhere('attribute', $attribute);
+
+    expect($field['croppable'])->toBeTrue()
+        ->and($field['aspectRatio'])->toBe(ShopPicture::WIDTH / ShopPicture::HEIGHT);
+})->with([
+    'category image' => ['shop-categories', 'image'],
+    'product cover' => ['products', 'image'],
+    'product picture' => ['product-images', 'path'],
+]);
 
 test('postage bands and shop settings can be edited but never made or removed', function (string $uriKey, Closure $model) {
     $office = shopOffice();

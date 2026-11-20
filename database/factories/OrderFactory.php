@@ -49,6 +49,18 @@ class OrderFactory extends Factory
     }
 
     /**
+     * With nothing to post or collect, as an order of donations.
+     */
+    public function nothingToSend(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'fulfilment' => Fulfilment::None,
+            'shipping' => 0,
+            'total' => $attributes['subtotal'],
+        ]);
+    }
+
+    /**
      * To be collected rather than posted.
      */
     public function collection(): static

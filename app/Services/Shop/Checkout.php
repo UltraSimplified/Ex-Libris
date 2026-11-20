@@ -46,7 +46,7 @@ class Checkout
             ]);
         }
 
-        $fulfilment = $basket->fulfilment();
+        $fulfilment = $basket->fulfilment($lines);
         $order = $this->makeOrder($lines, $fulfilment, $user);
 
         try {
@@ -110,14 +110,14 @@ class Checkout
      *
      * A posted order asks for a UK delivery address and pays its postage as
      * Stripe's shipping line; a collected one is asked for no delivery
-     * address at all, and its shipping line says where to collect it.
+     * address at all, and its shipping line says where to collect it. One
+     * with nothing to send has neither an address nor a shipping line.
      *
      * @param  Collection<int, BasketLine>  $lines
      * @return array<string, mixed>
      */
     public function parameters(Order $order, Collection $lines, ?string $customerId): array
     {
-        $collect = $order->fulfilment === Fulfilment::Collection;
         $metadata = ['order_id' => (string) $order->id, 'reference' => (string) $order->reference];
 
         return array_filter([
@@ -140,16 +140,8 @@ class Checkout
                     ], fn ($value): bool => $value !== null),
                 ],
             ])->values()->all(),
-            'shipping_address_collection' => $collect ? null : ['allowed_countries' => ['GB']],
-            'shipping_options' => [[
-                'shipping_rate_data' => [
-                    'type' => 'fixed_amount',
-                    'display_name' => $collect
-                        ? 'Collect from Good on Paper, Lansdown, Stroud'
-                        : 'UK postage',
-                    'fixed_amount' => ['amount' => $order->shipping, 'currency' => 'gbp'],
-                ],
-            ]],
+            'shipping_address_collection' => $order->fulfilment === Fulfilment::Post ? ['allowed_countries' => ['GB']] : null,
+            'shipping_options' => $this->shippingOptions($order),
             'billing_address_collection' => 'required',
             'phone_number_collection' => ['enabled' => true],
             'customer' => $customerId,
@@ -162,5 +154,28 @@ class Checkout
             'cancel_url' => route('checkout.cancelled'),
             'expires_at' => now()->addMinutes(max(30, (int) config('shop.checkout_expires_after')))->getTimestamp(),
         ], fn ($value): bool => $value !== null);
+    }
+
+    /**
+     * The order's shipping line for Stripe: its postage, or where to
+     * collect it. Null when there is nothing to send.
+     *
+     * @return list<array<string, mixed>>|null
+     */
+    private function shippingOptions(Order $order): ?array
+    {
+        $name = match ($order->fulfilment) {
+            Fulfilment::Post => 'UK postage',
+            Fulfilment::Collection => 'Collect from Good on Paper, Lansdown, Stroud',
+            Fulfilment::None => null,
+        };
+
+        return $name === null ? null : [[
+            'shipping_rate_data' => [
+                'type' => 'fixed_amount',
+                'display_name' => $name,
+                'fixed_amount' => ['amount' => $order->shipping, 'currency' => 'gbp'],
+            ],
+        ]];
     }
 }

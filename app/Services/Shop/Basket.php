@@ -91,10 +91,17 @@ class Basket
 
     /**
      * How the order will reach the customer. Posted, until they choose
-     * otherwise.
+     * otherwise; and neither posted nor collected when nothing in the
+     * basket needs to be, as when it holds only donations.
+     *
+     * @param  Collection<int, BasketLine>  $lines  the basket's lines(), passed in as every caller already has them
      */
-    public function fulfilment(): Fulfilment
+    public function fulfilment(Collection $lines): Fulfilment
     {
+        if ($lines->isNotEmpty() && ! $lines->contains(fn (BasketLine $line): bool => $line->needsDelivery())) {
+            return Fulfilment::None;
+        }
+
         return Fulfilment::tryFrom((string) $this->session->get(self::FULFILMENT)) ?? Fulfilment::Post;
     }
 

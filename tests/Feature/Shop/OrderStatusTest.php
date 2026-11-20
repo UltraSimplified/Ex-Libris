@@ -19,9 +19,19 @@ test('an order moves only as its fulfilment allows', function (Fulfilment $fulfi
     'collection: ready to collected' => [Fulfilment::Collection, OrderStatus::Ready, OrderStatus::Collected, true],
     'collection: ready to cancelled' => [Fulfilment::Collection, OrderStatus::Ready, OrderStatus::Cancelled, true],
     'collection: paid to posted' => [Fulfilment::Collection, OrderStatus::Paid, OrderStatus::Posted, false],
+    'nothing to send: pending to paid' => [Fulfilment::None, OrderStatus::Pending, OrderStatus::Paid, true],
+    'nothing to send: paid to cancelled' => [Fulfilment::None, OrderStatus::Paid, OrderStatus::Cancelled, true],
+    'nothing to send: paid to posted' => [Fulfilment::None, OrderStatus::Paid, OrderStatus::Posted, false],
+    'nothing to send: paid to ready' => [Fulfilment::None, OrderStatus::Paid, OrderStatus::Ready, false],
     'pending to posted' => [Fulfilment::Post, OrderStatus::Pending, OrderStatus::Posted, false],
     'cancelled to paid' => [Fulfilment::Post, OrderStatus::Cancelled, OrderStatus::Paid, false],
 ]);
+
+test('a paid order with nothing to send is not left waiting on the office', function () {
+    Order::factory()->paid()->nothingToSend()->create();
+
+    expect(Order::query()->awaitingOffice()->exists())->toBeFalse();
+});
 
 test('moving an order stamps when it got there', function () {
     $order = Order::factory()->paid()->create();

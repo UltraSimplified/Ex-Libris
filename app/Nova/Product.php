@@ -5,6 +5,7 @@ namespace App\Nova;
 use App\Models\Product as ProductModel;
 use App\Models\ProductVariant as ProductVariantModel;
 use App\Nova\Actions\GenerateVariants;
+use App\Support\Shop\ShopPicture;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Jacobfitzp\NovaCanvas\Canvas;
 use Laravel\Nova\Actions\Action;
@@ -18,7 +19,6 @@ use Laravel\Nova\Fields\Slug;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Outl1ne\NovaSortable\Traits\HasSortableRows;
-use Ultrasimplified\ImageCropper\ImageCropper;
 
 /**
  * Something the shop sells.
@@ -96,9 +96,9 @@ class Product extends Resource
                 ->nullable()
                 ->hideFromIndex()
                 ->rules('nullable', 'required_if_accepted:is_published')
-                ->help('What it costs to post one. Needed before it can be published.'),
-            ImageCropper::make('Image')->resize(1600)->convert('webp')->disk('do')->indexWidth(120)->prunable()->nullable()
-                ->help('The main picture. More, including a picture per colour, go under Pictures below.'),
+                ->help('What it costs to post one. Donations go in No postage. Needed before it can be published.'),
+            ShopPicture::field('Image')->disk('do')->indexWidth(120)->prunable()->nullable()
+                ->help('The main picture, cropped to A-paper portrait like every picture in the shop. More, including a picture per colour, go under Pictures below.'),
             Text::make('Summary')->nullable()->hideFromIndex()->rules('nullable', 'max:255')
                 ->help('One line for the product\'s card in the shop.'),
             Canvas::make('Description')->nullable()->hideFromIndex(),

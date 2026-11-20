@@ -49,7 +49,10 @@ const page = usePage();
                 <dt>Subtotal</dt>
                 <dd>{{ formatPence(order.subtotal) }}</dd>
             </div>
-            <div class="flex justify-between">
+            <div
+                v-if="order.fulfilment !== 'none'"
+                class="flex justify-between"
+            >
                 <dt>
                     {{
                         order.fulfilment === 'collection'

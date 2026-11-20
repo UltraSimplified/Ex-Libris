@@ -20,8 +20,22 @@ class PostageBandFactory extends Factory
         return [
             'name' => fake()->randomElement(['Letter', 'Large letter', 'Parcel', 'Tube']),
             'amount' => fake()->randomElement([200, 300, 400, 600]),
+            'needs_delivery' => true,
             'description' => null,
             'position' => 0,
         ];
+    }
+
+    /**
+     * Like the migrations' No postage band: free, and never posted or
+     * collected, as a donation.
+     */
+    public function noPostage(): static
+    {
+        return $this->state([
+            'name' => 'No postage',
+            'amount' => 0,
+            'needs_delivery' => false,
+        ]);
     }
 }

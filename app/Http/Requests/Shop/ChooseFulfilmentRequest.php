@@ -23,7 +23,7 @@ class ChooseFulfilmentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'fulfilment' => ['required', Rule::enum(Fulfilment::class)],
+            'fulfilment' => ['required', Rule::enum(Fulfilment::class)->only(Fulfilment::choices())],
         ];
     }
 }

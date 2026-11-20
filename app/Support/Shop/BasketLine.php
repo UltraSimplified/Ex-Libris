@@ -32,6 +32,14 @@ final readonly class BasketLine
     }
 
     /**
+     * Whether it has to be posted or collected at all: not a donation.
+     */
+    public function needsDelivery(): bool
+    {
+        return $this->variant->product->postageBand->needs_delivery;
+    }
+
+    /**
      * Its postage band's amount and the quantity, for Postage::quote().
      *
      * @return array{amount: int, quantity: int}

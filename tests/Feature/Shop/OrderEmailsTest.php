@@ -53,6 +53,21 @@ test('a collection order\'s confirmation says where to collect it', function () 
         ->assertDontSeeInHtml('post it to');
 });
 
+test('an order with nothing to send is confirmed with no postage and nowhere to send it', function () {
+    $order = Order::factory()->paid()->nothingToSend()->create();
+    OrderItem::factory()->for($order)->create(['product_name' => 'Donation']);
+
+    (new OrderConfirmed($order))
+        ->assertSeeInHtml('Donation')
+        ->assertDontSeeInHtml('UK postage')
+        ->assertDontSeeInHtml('post it to')
+        ->assertDontSeeInHtml('ready to collect');
+
+    (new NewOrderForOffice($order))
+        ->assertHasSubject("New order {$order->reference} with nothing to send")
+        ->assertDontSeeInHtml('Post to:');
+});
+
 test('the office\'s email says what to pack and links to the order', function () {
     $order = paidOrderToPost();
 

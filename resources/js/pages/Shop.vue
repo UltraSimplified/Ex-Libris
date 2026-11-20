@@ -46,10 +46,14 @@ const page = usePage();
                             v-if="category.image"
                             :src="`${page.props.cdnUrl}/${category.image}`"
                             :alt="category.name"
-                            class="block h-auto w-full transition-opacity duration-300 group-hover:opacity-90"
+                            class="block aspect-[1131/1600] w-full object-cover transition-opacity duration-300 group-hover:opacity-90"
                         />
                     </div>
-                    <!-- The cover is the card's width, its height whatever its shape gives. -->
+                    <!--
+                        Every card the same shape, A-paper portrait, which
+                        the Office crops uploads to. A picture from before
+                        that is cut to it here, from the middle.
+                    -->
                     <div>
                         <h2 class="mt-4 text-2xl font-bold tracking-tight">
                             {{ category.name }}

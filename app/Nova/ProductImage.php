@@ -3,12 +3,12 @@
 namespace App\Nova;
 
 use App\Models\ProductImage as ProductImageModel;
+use App\Support\Shop\ShopPicture;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\Field;
 use Laravel\Nova\Fields\Number;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
-use Ultrasimplified\ImageCropper\ImageCropper;
 
 /**
  * One of a product's pictures after the main one. Reached from its
@@ -62,7 +62,8 @@ class ProductImage extends Resource
     {
         return [
             BelongsTo::make('Product', 'product', Product::class)->hideFromIndex(),
-            ImageCropper::make('Image', 'path')->resize(1600)->convert('webp')->disk('do')->indexWidth(120)->prunable()->rules('required'),
+            ShopPicture::field('Image', 'path')->disk('do')->indexWidth(120)->prunable()->rules('required')
+                ->help('Cropped to A-paper portrait, like every picture in the shop.'),
             Text::make('Colour')->nullable()->rules('nullable', 'max:60')
                 ->help('Spelt as on the colour and size it shows, to show only when that colour is chosen. Leave empty to show for every colour.'),
             Text::make('Alt text', 'alt_text')->nullable()->hideFromIndex()->rules('nullable', 'max:255')

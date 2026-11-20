@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\PostageBand;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\ShopSettings;
@@ -21,6 +22,19 @@ function basketProduct(int $price = 2500, int $band = 300, ?int $stock = null): 
 {
     $product = Product::factory()->onSale(price: $price, stock: $stock)->create();
     $product->postageBand->update(['amount' => $band]);
+
+    return $product->variants()->sole();
+}
+
+/**
+ * A donation on sale at the given price, in the No postage band.
+ */
+function donationProduct(int $price = 500): ProductVariant
+{
+    $product = Product::factory()
+        ->onSale(price: $price)
+        ->for(PostageBand::factory()->noPostage())
+        ->create();
 
     return $product->variants()->sole();
 }
@@ -128,9 +142,34 @@ test('choosing collection takes the postage off', function () {
             ->where('total', 2000));
 });
 
-test('only post and collection can be chosen', function () {
-    $this->put(route('basket.fulfilment'), ['fulfilment' => 'courier'])
+test('only post and collection can be chosen', function (string $fulfilment) {
+    $this->put(route('basket.fulfilment'), ['fulfilment' => $fulfilment])
         ->assertSessionHasErrors('fulfilment');
+})->with(['courier', 'none']);
+
+test('a basket of donations alone is neither posted nor collected, whatever was chosen before', function () {
+    $donation = donationProduct(price: 500);
+    $this->post(route('basket.items.store'), ['variant_id' => $donation->id, 'quantity' => 2]);
+    $this->put(route('basket.fulfilment'), ['fulfilment' => 'collection']);
+
+    $this->get(route('basket.show'))
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('fulfilment', 'none')
+            ->where('postage.amount', 0)
+            ->where('total', 1000));
+});
+
+test('a donation alongside something to post leaves the choice to the customer and adds no postage', function () {
+    $shirt = basketProduct(price: 2000, band: 300);
+    $donation = donationProduct(price: 500);
+    $this->post(route('basket.items.store'), ['variant_id' => $shirt->id, 'quantity' => 1]);
+    $this->post(route('basket.items.store'), ['variant_id' => $donation->id, 'quantity' => 1]);
+
+    $this->get(route('basket.show'))
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('fulfilment', 'post')
+            ->where('postage.amount', 300)
+            ->where('total', 2800));
 });
 
 test('the postage cap is the one set in shop settings', function () {

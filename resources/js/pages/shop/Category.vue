@@ -61,7 +61,7 @@ const productUrl = (product: ProductCard): string =>
                             v-if="product.image"
                             :src="`${page.props.cdnUrl}/${product.image}`"
                             :alt="product.name"
-                            class="block h-auto w-full transition-opacity duration-300 group-hover:opacity-90"
+                            class="block aspect-[1131/1600] w-full object-cover transition-opacity duration-300 group-hover:opacity-90"
                             :class="{ 'opacity-50': product.sold_out }"
                         />
                         <span
@@ -70,7 +70,11 @@ const productUrl = (product: ProductCard): string =>
                             >Sold out</span
                         >
                     </div>
-                    <!-- The cover is the card's width, its height whatever its shape gives. -->
+                    <!--
+                        Every card the same shape, A-paper portrait, which
+                        the Office crops uploads to. A picture from before
+                        that is cut to it here, from the middle.
+                    -->
                     <div>
                         <h2 class="mt-4 text-2xl font-bold tracking-tight">
                             {{ product.name }}

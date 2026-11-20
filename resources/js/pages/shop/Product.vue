@@ -41,8 +41,17 @@ interface Props {
         images: ProductImage[];
         variants: Variant[];
     };
-    /** Postage per item in pence, the most an order pays, and where to collect free. */
-    delivery: { band: string; amount: number; cap: number; collection: string };
+    /**
+     * Postage per item in pence, the most an order pays, and where to
+     * collect free; or, when not needed, that it is never sent at all.
+     */
+    delivery: {
+        band: string;
+        needed: boolean;
+        amount: number;
+        cap: number;
+        collection: string;
+    };
 }
 
 const props = defineProps<Props>();
@@ -235,7 +244,7 @@ watch(selectedColour, (colour) => {
                             v-if="gallery[shownPicture]"
                             :src="imageUrl(gallery[shownPicture].path)"
                             :alt="gallery[shownPicture].alt"
-                            class="block h-auto max-w-full"
+                            class="block aspect-[1131/1600] w-[750px] max-w-full object-cover"
                         />
                     </div>
                     <div
@@ -246,7 +255,7 @@ watch(selectedColour, (colour) => {
                             v-for="(picture, index) in gallery"
                             :key="picture.key"
                             type="button"
-                            class="aspect-square overflow-hidden rounded border-2"
+                            class="aspect-[1131/1600] overflow-hidden rounded border-2"
                             :class="
                                 index === shownPicture
                                     ? 'border-tarmac'
@@ -258,7 +267,7 @@ watch(selectedColour, (colour) => {
                             <img
                                 :src="imageUrl(picture.path)"
                                 :alt="picture.alt"
-                                class="h-full w-full object-contain"
+                                class="h-full w-full object-cover"
                             />
                         </button>
                     </div>
@@ -387,7 +396,10 @@ watch(selectedColour, (colour) => {
                         On sale soon.
                     </p>
 
-                    <p class="mt-4 text-sm">
+                    <p v-if="!delivery.needed" class="mt-4 text-sm">
+                        No postage to pay.
+                    </p>
+                    <p v-else class="mt-4 text-sm">
                         UK postage {{ formatPence(delivery.amount) }} each, and
                         never more than {{ formatPence(delivery.cap) }} an
                         order. Or collect it free from

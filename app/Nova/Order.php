@@ -107,7 +107,11 @@ class Order extends Resource
                     OrderStatus::Cancelled->label() => 'danger',
                     OrderStatus::Refunded->label() => 'danger',
                 ]),
-            Text::make('Delivery', fn (): string => $this->resource->fulfilment === Fulfilment::Collection ? 'Collect' : 'Post')
+            Text::make('Delivery', fn (): string => match ($this->resource->fulfilment) {
+                Fulfilment::Post => 'Post',
+                Fulfilment::Collection => 'Collect',
+                Fulfilment::None => 'None',
+            })
                 ->exceptOnForms(),
             Text::make('Customer', 'name')->exceptOnForms()->sortable(),
             Text::make('Email')->exceptOnForms()->hideFromIndex(),

@@ -1,11 +1,13 @@
 <?php
 
 use App\Models\Order;
+use App\Models\PostageBand;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\User;
 use App\Services\Shop\Basket;
 use App\Services\Shop\Payments\PaymentGateway;
+use App\Support\Shop\Fulfilment;
 use App\Support\Shop\OrderStatus;
 use Inertia\Testing\AssertableInertia;
 use Tests\Fakes\FakePaymentGateway;
@@ -117,6 +119,20 @@ test('a collection order asks Stripe for no delivery address and charges no post
         ->and($session['shipping_options'][0]['shipping_rate_data']['fixed_amount']['amount'])->toBe(0)
         ->and($session['shipping_options'][0]['shipping_rate_data']['display_name'])->toContain('Collect')
         ->and(Order::query()->sole()->total)->toBe(2000);
+});
+
+test('an order of donations alone asks Stripe for no delivery address and has no shipping line', function () {
+    $product = Product::factory()->onSale(price: 500)->for(PostageBand::factory()->noPostage())->create();
+    $this->post(route('basket.items.store'), ['variant_id' => $product->variants()->sole()->id, 'quantity' => 2]);
+
+    $this->post(route('checkout.store'));
+
+    $order = Order::query()->sole();
+
+    expect($this->gateway->lastSession())->not->toHaveKeys(['shipping_address_collection', 'shipping_options'])
+        ->and($order->fulfilment)->toBe(Fulfilment::None)
+        ->and($order->shipping)->toBe(0)
+        ->and($order->total)->toBe(1000);
 });
 
 test('a signed-in customer is checked out as their Stripe customer', function () {

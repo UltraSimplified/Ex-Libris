@@ -11,13 +11,14 @@ use Illuminate\Database\QueryException;
  * The shop's catalogue: what the migrations put in place, and what decides
  * whether the public can see and buy a product.
  */
-test('the migrations seed the four postage bands at their placeholder amounts', function () {
+test('the migrations seed the five postage bands at their placeholder amounts, no postage first', function () {
     expect(PostageBand::query()->ordered()->pluck('amount', 'name')->all())->toBe([
+        'No postage' => 0,
         'Letter' => 200,
         'Large letter' => 300,
         'Parcel' => 400,
         'Tube' => 600,
-    ]);
+    ])->and(PostageBand::query()->where('needs_delivery', false)->pluck('name')->all())->toBe(['No postage']);
 });
 
 test('the migrations seed the shop settings with a ten pound postage cap and the collection address', function () {

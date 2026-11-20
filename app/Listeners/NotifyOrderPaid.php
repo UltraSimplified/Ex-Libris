@@ -6,7 +6,6 @@ use App\Events\Shop\OrderPaid;
 use App\Mail\Shop\NewOrderForOffice;
 use App\Mail\Shop\OrderConfirmed;
 use App\Models\User;
-use App\Support\Shop\Fulfilment;
 use Illuminate\Support\Facades\Mail;
 use Laravel\Nova\Notifications\NovaNotification;
 use Laravel\Nova\URL;
@@ -30,14 +29,13 @@ class NotifyOrderPaid
             ->queue(new NewOrderForOffice($order));
 
         $total = '£'.number_format($order->total / 100, 2);
-        $how = $order->fulfilment === Fulfilment::Collection ? 'to collect' : 'to post';
 
         User::query()
             ->whereIn('email', User::OFFICE_EMAILS)
             ->get()
             ->each(fn (User $staff) => $staff->notify(
                 NovaNotification::make()
-                    ->message("New order {$order->reference}: {$total}, {$how}.")
+                    ->message("New order {$order->reference}: {$total}, {$order->fulfilment->officeTask()}.")
                     ->action('View order', URL::make('/resources/orders/'.$order->id))
                     ->icon('shopping-bag')
                     ->type('success'),

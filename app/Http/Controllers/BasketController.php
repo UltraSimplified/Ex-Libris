@@ -29,7 +29,7 @@ class BasketController extends Controller
     public function show(): Response
     {
         $lines = $this->basket->lines();
-        $fulfilment = $this->basket->fulfilment();
+        $fulfilment = $this->basket->fulfilment($lines);
         $postage = Basket::postage($lines, $fulfilment);
         $subtotal = Basket::subtotal($lines);
         $settings = ShopSettings::current();
@@ -51,7 +51,7 @@ class BasketController extends Controller
                 'max_quantity' => min(Basket::MAX_PER_LINE, $line->variant->stock ?? Basket::MAX_PER_LINE),
             ]),
             'fulfilment' => $fulfilment->value,
-            'fulfilmentOptions' => collect(Fulfilment::cases())->map(fn (Fulfilment $option): array => [
+            'fulfilmentOptions' => collect(Fulfilment::choices())->map(fn (Fulfilment $option): array => [
                 'value' => $option->value,
                 'label' => $option->label(),
             ]),

@@ -2,6 +2,7 @@
 
 namespace App\Nova;
 
+use App\Support\Shop\ShopPicture;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Laravel\Nova\Fields\Boolean;
 use Laravel\Nova\Fields\Field;
@@ -11,7 +12,6 @@ use Laravel\Nova\Fields\Slug;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Http\Requests\NovaRequest;
-use Ultrasimplified\ImageCropper\ImageCropper;
 
 /**
  * A shelf in the shop. Hidden from the public until published.
@@ -86,7 +86,8 @@ class ShopCategory extends Resource
                 ->updateRules('unique:shop_categories,slug,{{resourceId}}')
                 ->hideFromIndex()
                 ->help('The category\'s address: /shop/this-slug.'),
-            ImageCropper::make('Image')->resize(1600)->convert('webp')->disk('do')->indexWidth(150)->prunable()->nullable(),
+            ShopPicture::field('Image')->disk('do')->indexWidth(150)->prunable()->nullable()
+                ->help('Cropped to A-paper portrait, like every picture in the shop.'),
             Textarea::make('Description')->nullable()->rows(3),
             Number::make('Products', 'products_count')->onlyOnIndex()->sortable(),
             Number::make('Position')->min(0)->step(1)->default(0)->rules('required', 'integer', 'min:0')->sortable(),

@@ -14,7 +14,7 @@ use Laravel\Nova\Nova;
 
 /**
  * Tells the orders inbox that an order has been paid for and needs posting
- * or packing for collection.
+ * or packing for collection, or, for a donation, nothing at all.
  */
 class NewOrderForOffice extends Mailable implements ShouldQueue
 {
@@ -24,10 +24,8 @@ class NewOrderForOffice extends Mailable implements ShouldQueue
 
     public function envelope(): Envelope
     {
-        $how = $this->order->fulfilment === Fulfilment::Collection ? 'to collect' : 'to post';
-
         return new Envelope(
-            subject: "New order {$this->order->reference} {$how}".($this->order->oversold ? ' - OVERSOLD' : ''),
+            subject: "New order {$this->order->reference} {$this->order->fulfilment->officeTask()}".($this->order->oversold ? ' - OVERSOLD' : ''),
         );
     }
 
@@ -37,7 +35,7 @@ class NewOrderForOffice extends Mailable implements ShouldQueue
             markdown: 'mail.shop.new-order-for-office',
             with: [
                 'order' => $this->order->loadMissing('items'),
-                'collecting' => $this->order->fulfilment === Fulfilment::Collection,
+                'posting' => $this->order->fulfilment === Fulfilment::Post,
                 'officeUrl' => url(Nova::url('/resources/orders/'.$this->order->id)),
             ],
         );

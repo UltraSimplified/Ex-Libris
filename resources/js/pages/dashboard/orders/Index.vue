@@ -14,7 +14,7 @@ interface OrderRow {
     paid_at: string | null;
     status: string;
     status_label: string;
-    fulfilment: 'post' | 'collection';
+    fulfilment: 'post' | 'collection' | 'none';
     item_count: number;
     total: number;
 }
@@ -86,12 +86,14 @@ const paidOn = (order: OrderRow): string =>
                                             ? 'item'
                                             : 'items'
                                     }}
-                                    ·
-                                    {{
-                                        order.fulfilment === 'collection'
-                                            ? 'Collection'
-                                            : 'Posted'
-                                    }}
+                                    <template v-if="order.fulfilment !== 'none'"
+                                        >·
+                                        {{
+                                            order.fulfilment === 'collection'
+                                                ? 'Collection'
+                                                : 'Posted'
+                                        }}</template
+                                    >
                                 </span>
                                 <span class="text-sm">{{
                                     order.status_label

@@ -4,8 +4,8 @@ namespace App\Support\Shop;
 
 /**
  * Where an order has got to. Which moves are allowed depends on whether it
- * is posted or collected, and lives here alone, so the webhook and the
- * Office cannot disagree about it.
+ * is posted, collected or has nothing to send, and lives here alone, so the
+ * webhook and the Office cannot disagree about it.
  */
 enum OrderStatus: string
 {
@@ -69,12 +69,22 @@ enum OrderStatus: string
                 self::Collected => [self::Refunded],
                 default => [],
             },
+            /*
+             * Done once paid, as there is nothing to send. Giving the money
+             * back cancels it, since nothing has left.
+             */
+            Fulfilment::None => match ($this) {
+                self::Pending => [self::Paid, self::Cancelled],
+                self::Paid => [self::Cancelled],
+                default => [],
+            },
         };
     }
 
     /**
      * The statuses in which an order is still the office's to deal with:
-     * paid and waiting to go in the post, or not yet handed over.
+     * paid and waiting to go in the post, or not yet handed over. One with
+     * nothing to send never is.
      *
      * One definition, because the badge on the Orders link, the dashboard
      * metrics and the lenses must agree about what is outstanding.
@@ -86,6 +96,7 @@ enum OrderStatus: string
         return match ($fulfilment) {
             Fulfilment::Post => [self::Paid],
             Fulfilment::Collection => [self::Paid, self::Ready],
+            Fulfilment::None => [],
         };
     }
 

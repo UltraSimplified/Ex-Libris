@@ -36,10 +36,12 @@ Your order **{{ $order->reference }}** is paid for.
 <td colspan="3" valign="top">Subtotal</td>
 <td align="right" valign="top">&pound;{{ number_format($order->subtotal / 100, 2) }}</td>
 </tr>
+@if ($collecting || $posting)
 <tr>
 <td colspan="3" valign="top">{{ $collecting ? 'Collection' : 'UK postage' }}</td>
 <td align="right" valign="top">{{ $order->shipping === 0 ? 'Free' : '£'.number_format($order->shipping / 100, 2) }}</td>
 </tr>
+@endif
 <tr>
 <td colspan="3" valign="top"><strong>Total</strong></td>
 <td align="right" valign="top"><strong>&pound;{{ number_format($order->total / 100, 2) }}</strong></td>
@@ -50,7 +52,7 @@ Your order **{{ $order->reference }}** is paid for.
 
 @if ($collecting)
 We'll email you again when it is ready to collect from {{ $collection['name'] }}, {{ implode(', ', $collection['address']) }}.
-@else
+@elseif ($posting)
 We'll post it to:
 
 {!! implode('<br>', array_map('e', \App\Models\Order::addressLines($order->shipping_address))) !!}

@@ -110,7 +110,7 @@ const history = [
                         </figcaption>
                     </figure>
                 </div>
-                <div v-else>
+                <div v-else-if="order.fulfilment === 'collection'">
                     <Heading variant="small" title="Collecting" />
                     <p class="text-sm">
                         From Good on Paper. We'll email you when it's ready.

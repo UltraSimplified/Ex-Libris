@@ -10,9 +10,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * What it costs to post one of a kind of thing. There are four, made by a
- * migration and only ever edited in the Office: Letter, Large letter,
+ * What it costs to post one of a kind of thing. There are five, made by
+ * migrations and only ever edited in the Office: No postage, for donations
+ * and anything else never posted or collected, then Letter, Large letter,
  * Parcel and Tube. Amounts are in pence, per item.
+ *
+ * No postage alone has needs_delivery off: a basket holding only things in
+ * it is neither posted nor collected.
  */
 class PostageBand extends Model
 {
@@ -25,6 +29,7 @@ class PostageBand extends Model
     protected $fillable = [
         'name',
         'amount',
+        'needs_delivery',
         'description',
         'position',
     ];
@@ -36,6 +41,7 @@ class PostageBand extends Model
     {
         return [
             'amount' => 'integer',
+            'needs_delivery' => 'boolean',
             'position' => 'integer',
         ];
     }

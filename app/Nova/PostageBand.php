@@ -3,6 +3,7 @@
 namespace App\Nova;
 
 use Illuminate\Http\Request;
+use Laravel\Nova\Fields\Boolean;
 use Laravel\Nova\Fields\Currency;
 use Laravel\Nova\Fields\Field;
 use Laravel\Nova\Fields\HasMany;
@@ -11,9 +12,9 @@ use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
 /**
- * The four postage bands. A migration makes them and the Office only sets
- * their names and prices: a fifth band, or one fewer, would leave products
- * with nowhere to post from.
+ * The five postage bands. Migrations make them and the Office only sets
+ * their names and prices: a band added here, or taken away, would leave
+ * products with nowhere to post from.
  *
  * @extends \App\Nova\Resource<\App\Models\PostageBand>
  */
@@ -75,6 +76,7 @@ class PostageBand extends Resource
                 ->asMinorUnits()
                 ->rules('required', 'integer', 'min:0')
                 ->help('Charged for each item in this band, until an order reaches the postage cap in Shop settings.'),
+            Boolean::make('Posted or collected', 'needs_delivery')->exceptOnForms(),
             Text::make('Description')
                 ->nullable()
                 ->hideFromIndex()

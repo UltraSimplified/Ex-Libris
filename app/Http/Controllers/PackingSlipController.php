@@ -34,6 +34,7 @@ class PackingSlipController extends Controller
         return Pdf::loadView('reports.packing-slips', [
             'orders' => $orders,
             'collection' => Fulfilment::Collection,
+            'post' => Fulfilment::Post,
             'collectionName' => $settings->collection_name,
         ])
             ->setPaper('a4')

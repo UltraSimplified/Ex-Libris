@@ -52,6 +52,7 @@ class OrderConfirmed extends Mailable implements ShouldQueue
             with: [
                 'order' => $this->order,
                 'collecting' => $collecting,
+                'posting' => $this->order->fulfilment === Fulfilment::Post,
                 'collection' => [
                     'name' => $settings->collection_name,
                     'address' => $settings->collectionAddressLines(),

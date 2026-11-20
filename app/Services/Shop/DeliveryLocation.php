@@ -24,14 +24,14 @@ final class DeliveryLocation
     public function __construct(private PostcodeGeocoder $geocoder) {}
 
     /**
-     * Where the order is going, or null if it is being collected, has no
+     * Where the order is going, or null if it is not being posted, has no
      * delivery postcode, or postcodes.io does not know it.
      *
      * @return array{latitude: float, longitude: float}|null
      */
     public function for(Order $order): ?array
     {
-        if ($order->fulfilment === Fulfilment::Collection) {
+        if ($order->fulfilment !== Fulfilment::Post) {
             return null;
         }
 

@@ -9,8 +9,9 @@ use App\Support\Shop\PostageQuote;
  * The one place postage is worked out, so the basket, the checkout and the
  * order cannot disagree.
  *
- * Collected orders pay nothing. Posted orders pay each item's band, once
- * per item, and never more than the cap however many items there are.
+ * Only posted orders pay: each item's band, once per item, and never more
+ * than the cap however many items there are. Collected orders, and those
+ * with nothing to send, pay nothing.
  */
 class Postage
 {
@@ -19,7 +20,7 @@ class Postage
      */
     public static function quote(iterable $items, Fulfilment $fulfilment, int $cap): PostageQuote
     {
-        if ($fulfilment === Fulfilment::Collection) {
+        if ($fulfilment !== Fulfilment::Post) {
             return new PostageQuote(0, 0);
         }
 
