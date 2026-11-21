@@ -158,8 +158,13 @@ useFeatureReading(
                         class="pl-2 font-din text-[10px] tracking-[.25em] uppercase"
                         >{{ props.feature.tag.tag }}</span
                     >
+                    <!--
+                        At 60px a word of 14 letters or so is wider than a
+                        phone, so a word that long is hyphenated, or broken
+                        if it has to be, rather than widening the page.
+                    -->
                     <h1
-                        class="pt-5 pb-5 text-[60px] leading-[60px] font-normal"
+                        class="pt-5 pb-5 text-[60px] leading-[60px] font-normal hyphens-auto wrap-break-word"
                     >
                         {{ props.feature.title }}
                     </h1>

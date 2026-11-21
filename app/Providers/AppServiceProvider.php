@@ -5,10 +5,14 @@ namespace App\Providers;
 use App\Mail\UntrackedLettrTransport;
 use App\Services\Shop\Payments\PaymentGateway;
 use App\Services\Shop\Payments\StripePaymentGateway;
+use App\Support\SharedBucketDisk;
 use Carbon\CarbonImmutable;
+use Illuminate\Filesystem\AwsS3V3Adapter;
+use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
@@ -32,6 +36,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureDefaults();
         $this->configureLettrTransport();
+        $this->configureSharedBucket();
     }
 
     /**
@@ -72,5 +77,24 @@ class AppServiceProvider extends ServiceProvider
             $this->app->make(IdempotencyKeyGenerator::class),
             (bool) config('lettr.idempotency.enabled', true),
         ));
+    }
+
+    /**
+     * Every S3 disk in config/filesystems.php is the live site's Spaces
+     * bucket. Away from the live site, each is built as usual and handed
+     * out as one that never deletes from it (SharedBucketDisk explains why).
+     */
+    protected function configureSharedBucket(): void
+    {
+        Storage::extend('s3', function (Application $app, array $config): AwsS3V3Adapter {
+            /** @var AwsS3V3Adapter $disk */
+            $disk = $app->make('filesystem')->createS3Driver($config);
+
+            if ($app->isProduction()) {
+                return $disk;
+            }
+
+            return new SharedBucketDisk($disk->getDriver(), $disk->getAdapter(), $disk->getConfig(), $disk->getClient());
+        });
     }
 }

@@ -125,19 +125,23 @@ test('once a photo has slid or faded in, it is the only one left in the frame', 
 /*
  * A phone, and the tablet widths between the md breakpoint and about 920px,
  * where the column's 192px gutter leaves less than its 726px measure. The
- * writer's bio ends in a long link, which once widened the page on a phone.
+ * title's long word and the link ending the writer's bio each once widened
+ * the page on a phone.
  */
 test('a feature with a photojournal fits the screen without scrolling sideways', function (int $width) {
     $writer = User::factory()->writer()->create([
         'bio' => '<p>Writes about sound. www.averyveryverylongwebsiteaddressforawriter.example.co.uk</p>',
     ]);
-    $feature = Feature::factory()->for($writer)->create(['body' => featureBodyAroundPhotojournal([
-        photojournalPhoto('cOne00000000001'),
-        photojournalPhoto('cTwo00000000001'),
-        photojournalPhoto('cThree000000001'),
-        photojournalPhoto('cFour0000000001'),
-        photojournalPhoto('cFive0000000001'),
-    ])]);
+    $feature = Feature::factory()->for($writer)->create([
+        'title' => 'An Afternoon of Photojournalism',
+        'body' => featureBodyAroundPhotojournal([
+            photojournalPhoto('cOne00000000001'),
+            photojournalPhoto('cTwo00000000001'),
+            photojournalPhoto('cThree000000001'),
+            photojournalPhoto('cFour0000000001'),
+            photojournalPhoto('cFive0000000001'),
+        ]),
+    ]);
 
     $page = visit(route('feature', [$feature->id, $feature->slug], absolute: false))
         ->resize($width, 900)
