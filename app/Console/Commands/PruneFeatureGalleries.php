@@ -18,7 +18,10 @@ use League\Flysystem\FileAttributes;
  * from under somebody still editing.
  *
  * Runs as a dry run unless --commit is passed, because the configured disk
- * is the live one; the scheduler passes it.
+ * is the live one; the scheduler passes it. Only the live site may commit:
+ * staging and local checkouts share its disk but not its database, so to
+ * them every photo of a feature added on live since their copy was taken
+ * looks like a stray.
  */
 class PruneFeatureGalleries extends Command
 {
@@ -29,6 +32,12 @@ class PruneFeatureGalleries extends Command
 
     public function handle(FeatureGallery $gallery): int
     {
+        if ($this->option('commit') && ! app()->isProduction()) {
+            $this->error('Only the live site can clear down photos: this site shares its disk, but not its database, so it would delete photos live still shows.');
+
+            return self::FAILURE;
+        }
+
         $used = [];
 
         Feature::query()

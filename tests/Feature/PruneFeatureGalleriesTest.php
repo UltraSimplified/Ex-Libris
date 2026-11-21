@@ -2,9 +2,15 @@
 
 use App\Models\Feature;
 use App\Services\Images\FeatureGallery;
+use Illuminate\Console\Scheduling\Event;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\Storage;
 
+/**
+ * As the live site, the only one allowed to clear photos down.
+ */
 beforeEach(function () {
+    app()['env'] = 'production';
     Storage::fake(FeatureGallery::DISK);
 });
 
@@ -70,6 +76,34 @@ test('without --commit it only says what it would clear down', function () {
         ->assertSuccessful();
 
     Storage::disk(FeatureGallery::DISK)->assertExists($orphan);
+});
+
+/*
+ * Staging and a local checkout share live's disk but hold an older copy of
+ * its database, so a photo only live's newer features show looks unused.
+ */
+test('away from the live site, --commit is refused and nothing is deleted', function (string $environment) {
+    app()['env'] = $environment;
+    $photo = galleryFileAged('cLiveOnly000001.webp', 30);
+
+    $this->artisan('galleries:prune', ['--commit' => true])
+        ->expectsOutputToContain('Only the live site can clear down photos')
+        ->assertFailed();
+
+    Storage::disk(FeatureGallery::DISK)->assertExists($photo);
+})->with([
+    'staging' => 'development',
+    'a local checkout' => 'local',
+]);
+
+test('the nightly clear-down is scheduled on the live site only', function () {
+    $prune = collect(app(Schedule::class)->events())
+        ->first(fn (Event $event): bool => str_contains((string) $event->command, 'galleries:prune --commit'));
+
+    expect($prune)->not->toBeNull()
+        ->and($prune->runsInEnvironment('production'))->toBeTrue()
+        ->and($prune->runsInEnvironment('development'))->toBeFalse()
+        ->and($prune->runsInEnvironment('local'))->toBeFalse();
 });
 
 test('files outside the gallery directory are left alone', function () {

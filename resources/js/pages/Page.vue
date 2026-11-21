@@ -52,9 +52,10 @@ const html = typeof props.page.body === 'string' ? props.page.body : '';
             <div class="page-body border-silver px-5 py-5 md:border-l">
                 <!--
                     The same measure a feature's body keeps, so a long page
-                    reads at the width an article does.
+                    reads at the width an article does, and no wider than a
+                    tablet leaves room for.
                 -->
-                <div class="w-full md:w-[726px]">
+                <div class="w-full md:max-w-[726px]">
                     <template v-for="layout in layouts" :key="layout.key">
                         <Copy
                             v-if="layout.layout === 'copy'"

@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Feature;
+use App\Models\User;
 use App\Services\Images\FeatureGallery;
 
 /**
@@ -120,6 +121,37 @@ test('once a photo has slid or faded in, it is the only one left in the frame', 
         ->assertAttributeContains('.gallery-frame img', 'src', 'cThree000000001.webp')
         ->assertNoJavaScriptErrors();
 });
+
+/*
+ * A phone, and the tablet widths between the md breakpoint and about 920px,
+ * where the column's 192px gutter leaves less than its 726px measure. The
+ * writer's bio ends in a long link, which once widened the page on a phone.
+ */
+test('a feature with a photojournal fits the screen without scrolling sideways', function (int $width) {
+    $writer = User::factory()->writer()->create([
+        'bio' => '<p>Writes about sound. www.averyveryverylongwebsiteaddressforawriter.example.co.uk</p>',
+    ]);
+    $feature = Feature::factory()->for($writer)->create(['body' => featureBodyAroundPhotojournal([
+        photojournalPhoto('cOne00000000001'),
+        photojournalPhoto('cTwo00000000001'),
+        photojournalPhoto('cThree000000001'),
+        photojournalPhoto('cFour0000000001'),
+        photojournalPhoto('cFive0000000001'),
+    ])]);
+
+    $page = visit(route('feature', [$feature->id, $feature->slug], absolute: false))
+        ->resize($width, 900)
+        ->assertSee('1 / 5')
+        ->assertSee('Writes about sound.');
+
+    expect($page->script('document.documentElement.scrollWidth <= document.documentElement.clientWidth'))->toBeTrue();
+
+    $page->assertNoJavaScriptErrors();
+})->with([
+    'a phone' => [375],
+    'a tablet at the md breakpoint' => [768],
+    'an iPad Air' => [820],
+]);
 
 test('a photojournal of one photo has no arrows, counter or thumbnails', function () {
     $feature = Feature::factory()->create(['body' => featureBodyAroundPhotojournal([

@@ -144,8 +144,13 @@ useFeatureReading(
             <div
                 class="-ml-10 pt-40 pl-5 md:border-l md:border-silver md:pt-30 lg:pt-50"
             >
+                <!--
+                    At most 726px, rather than exactly: between the md
+                    breakpoint and about 920px the 192px gutter leaves less
+                    than that, and a fixed width ran off the right edge.
+                -->
                 <div
-                    class="w-full md:w-[726px]"
+                    class="w-full md:max-w-[726px]"
                     :class="{ 'is-draft': props.feature.status === 'draft' }"
                 >
                     <span
@@ -315,7 +320,12 @@ useFeatureReading(
                                         class="h-20 w-20 rounded-full border-[3px] border-white"
                                     />
                                 </div>
-                                <div>
+                                <!--
+                                    Free to shrink beside the badge, and a
+                                    long link in the bio breaks rather than
+                                    widening the page on a phone.
+                                -->
+                                <div class="min-w-0 wrap-break-word">
                                     <h2 class="text-lg font-bold">
                                         <BylineName
                                             :writer="props.feature.user"

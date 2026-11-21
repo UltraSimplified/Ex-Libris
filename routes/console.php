@@ -17,10 +17,14 @@ Schedule::command('bookmarks:prune --commit')
     ->withoutOverlapping();
 
 /*
- * Photojournal photos chosen for a feature that was never saved.
+ * Photojournal photos chosen for a feature that was never saved. On the
+ * live site only: staging shares its Spaces bucket, and staging's copy of
+ * the database lacks every feature added since, so there it took their
+ * photos for strays and deleted them.
  */
 Schedule::command('galleries:prune --commit')
     ->dailyAt('03:40')
+    ->environments('production')
     ->withoutOverlapping();
 
 /*
