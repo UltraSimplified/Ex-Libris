@@ -9,8 +9,9 @@ import type { Advert } from '@/types/global';
  * own: the 728×300 desktop creative from 768px up, the 400×300 mobile one
  * below that, as the advert panel shows them, and neither ever drawn
  * larger than it was uploaded. Its impression is counted, like the
- * panel's, once it has been half in view for a second. An advert saved
- * without one of its creatives leaves the row out at that size.
+ * panel's, once it has been half in view for a second. An advert with no
+ * mobile creative shows phones its desktop one, letterboxed to their width;
+ * one with no desktop creative leaves the row out on desktops.
  *
  * It sits on the sponsorship panel's grey, so that on a phone it is not
  * taken for one of the listings around it.
@@ -35,6 +36,15 @@ const clickUrl = (variant: 'mobile' | 'desktop'): string =>
         from: page.url.split('?')[0],
     })}`;
 
+/**
+ * The creative phones are shown: the mobile one, or the desktop one when the
+ * advert has no mobile one. Either way it is the phones' copy, so its views
+ * and clicks are counted as mobile.
+ */
+const phoneImage = computed(
+    () => props.advert.mobile_image || props.advert.desktop_image || null,
+);
+
 const mobileImg = ref<HTMLElement | null>(null);
 const desktopImg = ref<HTMLElement | null>(null);
 
@@ -47,12 +57,9 @@ useAdImpression(
 
 <template>
     <div
-        v-if="props.advert.mobile_image || props.advert.desktop_image"
+        v-if="phoneImage"
         class="listing-advert bg-gray-200 bg-[url('@/../img/rectangle.png')] bg-cover bg-center px-5 py-5"
-        :class="{
-            'max-md:hidden': !props.advert.mobile_image,
-            'md:hidden': !props.advert.desktop_image,
-        }"
+        :class="{ 'md:hidden': !props.advert.desktop_image }"
     >
         <!--
             Shown and hidden on the images, as the advert panel does: a
@@ -62,16 +69,18 @@ useAdImpression(
             Paid advertisement
         </p>
         <a
-            v-if="props.advert.mobile_image"
             :href="clickUrl('mobile')"
             target="_blank"
             rel="sponsored nofollow noopener"
         >
             <img
                 ref="mobileImg"
-                :src="cdn(props.advert.mobile_image)"
+                :src="cdn(phoneImage)"
                 :alt="props.advert.alt_text ?? props.advert.title"
-                class="w-full max-w-[400px] rounded md:hidden"
+                class="w-full rounded md:hidden"
+                :class="
+                    props.advert.mobile_image ? 'max-w-[400px]' : 'max-w-[728px]'
+                "
             />
         </a>
         <a

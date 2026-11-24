@@ -7,39 +7,55 @@ beforeEach(function () {
     $this->actingAs(User::factory()->create(['email' => 'robin@ultrasimplified.com']));
 });
 
-test('the adverts card turns through every live advert', function () {
-    Advert::factory()->create(['title' => 'Stroud Arts Festival', 'sponsorship' => true, 'run_from' => today()->subMonth()]);
-    Advert::factory()->create(['title' => 'Los Fastidios', 'sponsorship' => true, 'run_from' => today()->subWeek()]);
+test('the in-list section turns through every live in-list advert while the sponsorship stays put', function () {
+    Advert::factory()->create(['title' => 'Stroud Arts Festival', 'run_from' => today()->subMonth()]);
+    Advert::factory()->create(['title' => 'Los Fastidios', 'run_from' => today()->subWeek()]);
+    Advert::factory()->create(['title' => 'Good on Paper', 'sponsorship' => true]);
 
     visit('/office')
-        ->assertSee('Los Fastidios · Sponsorship panel')
-        ->assertSee('1 of 2 live')
+        ->assertSeeIn('[aria-label="In-list"]', 'Los Fastidios')
+        ->assertSeeIn('[aria-label="In-list"]', '1 of 2 live')
         ->click('[aria-label="Next advert"]')
-        ->assertSee('Stroud Arts Festival · Sponsorship panel')
-        ->assertSee('2 of 2 live')
+        ->assertSeeIn('[aria-label="In-list"]', 'Stroud Arts Festival')
+        ->assertSeeIn('[aria-label="In-list"]', '2 of 2 live')
         ->click('[aria-label="Next advert"]')
-        ->assertSee('Los Fastidios · Sponsorship panel')
+        ->assertSeeIn('[aria-label="In-list"]', 'Los Fastidios')
         ->click('[aria-label="Show Stroud Arts Festival"]')
-        ->assertSee('Stroud Arts Festival · Sponsorship panel')
+        ->assertSeeIn('[aria-label="In-list"]', 'Stroud Arts Festival')
+        ->assertSeeIn('[aria-label="Sponsorship panel"]', 'Good on Paper')
+        ->assertNoJavaScriptErrors();
+});
+
+test('the sponsorship panel section shows one sponsorship, with its report and nothing to turn', function () {
+    Advert::factory()->create(['title' => 'Good on Paper', 'sponsorship' => true, 'run_from' => today()->subMonth()]);
+    $newer = Advert::factory()->create(['title' => 'Stroud Arts Festival', 'sponsorship' => true, 'run_from' => today()->subWeek()]);
+
+    visit('/office')
+        ->assertSeeIn('[aria-label="Sponsorship panel"]', 'Stroud Arts Festival')
+        ->assertSeeIn('[aria-label="Sponsorship panel"]', '2 sponsorships are live and taking turns in the panel.')
+        ->assertMissing('[aria-label="Next advert"]')
+        ->assertAttributeContains('[aria-label="Sponsorship panel"] .gop-report-button', 'href', "/exports/adverts/{$newer->id}/report")
         ->assertNoJavaScriptErrors();
 });
 
 test('one live advert sits on its own, with nothing to turn', function () {
-    Advert::factory()->create(['title' => 'Stroud Arts Festival', 'sponsorship' => true]);
+    Advert::factory()->create(['title' => 'Stroud Arts Festival']);
 
     visit('/office')
-        ->assertSee('Stroud Arts Festival · Sponsorship panel')
+        ->assertSeeIn('[aria-label="In-list"]', 'Stroud Arts Festival')
         ->assertMissing('[aria-label="Next advert"]')
         ->assertNoJavaScriptErrors();
 });
 
-test('with nothing live, the card says so over the figures for every advert', function () {
+test('with nothing live, each section says so over the figures for its slot', function () {
     Advert::factory()->create(['active' => false]);
 
     visit('/office')
-        ->assertSee('Nothing is running at the moment.')
-        ->assertSee('0 impressions')
-        ->assertMissing('[aria-label="Next advert"]')
+        ->assertSeeIn('[aria-label="In-list"]', 'No in-list advert is running at the moment.')
+        ->assertSeeIn('[aria-label="In-list"]', '0 impressions')
+        ->assertSeeIn('[aria-label="Sponsorship panel"]', 'No sponsorship is running, so the panel shows Good on Paper’s own advert.')
+        ->assertSeeIn('[aria-label="Sponsorship panel"]', '0 impressions')
+        ->assertMissing('.gop-report-button')
         ->assertNoJavaScriptErrors();
 });
 

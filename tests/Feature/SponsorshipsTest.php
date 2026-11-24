@@ -19,7 +19,7 @@ beforeEach(function () {
 
 /**
  * The errors the Office gives an advert form, past the field rules: the
- * check that a sponsorship has both creatives.
+ * check that a sponsorship has a desktop creative.
  *
  * @param  array<string, mixed>  $input
  * @param  array<string, UploadedFile>  $files
@@ -172,19 +172,16 @@ test('an archived advert\'s report can still be downloaded', function () {
     $this->get($link)->assertOk()->assertHeader('content-type', 'application/pdf');
 });
 
-test('a sponsorship cannot be saved without both creatives', function () {
-    expect(sponsorshipFormErrors(['sponsorship' => '1']))->toHaveKeys(['desktop_image', 'mobile_image'])
-        ->and(sponsorshipFormErrors(['sponsorship' => '1'], ['desktop_image' => UploadedFile::fake()->image('d.png', 728, 300)]))
-        ->toHaveKey('mobile_image')
-        ->not->toHaveKey('desktop_image');
+test('a sponsorship cannot be saved without a desktop creative, even with a mobile one', function () {
+    $mobileOnly = ['mobile_image' => UploadedFile::fake()->image('m.png', 400, 300)];
+
+    expect(sponsorshipFormErrors(['sponsorship' => '1'], $mobileOnly))
+        ->toBe(['desktop_image' => ['A sponsorship needs a desktop creative.']]);
 });
 
-test('a sponsorship with both creatives, uploaded now or already saved, passes', function () {
-    $files = [
-        'desktop_image' => UploadedFile::fake()->image('d.png', 728, 300),
-        'mobile_image' => UploadedFile::fake()->image('m.png', 400, 300),
-    ];
-    $saved = Advert::factory()->create(['desktop_image' => 'sponsors/d.png', 'mobile_image' => 'sponsors/m.png']);
+test('a sponsorship with a desktop creative and no mobile one, uploaded now or already saved, passes', function () {
+    $files = ['desktop_image' => UploadedFile::fake()->image('d.png', 728, 300)];
+    $saved = Advert::factory()->create(['desktop_image' => 'sponsors/d.png', 'mobile_image' => null]);
 
     expect(sponsorshipFormErrors(['sponsorship' => '1'], $files))->toBe([])
         ->and(sponsorshipFormErrors(['sponsorship' => '1'], [], $saved))->toBe([]);

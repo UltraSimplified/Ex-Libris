@@ -164,16 +164,36 @@ test('an advert with no creative is left out of the listings', function () {
     visit('/listings')->assertCount('.listing-advert', 0)->assertSee('Listing 5');
 });
 
-test('an advert with only one of its two creatives takes its slots, left out at the other size', function (array $creatives, string $hiddenAt) {
+test('an advert with no desktop creative takes its slots, left out on desktops', function () {
     config(['adverts.listings_every' => 2]);
-    Advert::factory()->create($creatives);
+    Advert::factory()->create(['desktop_image' => null, 'mobile_image' => 'sponsors/mobile.gif']);
     listingsOnToday(5);
 
     visit('/listings')
         ->assertCount('.listing-advert', 2)
-        ->assertAttributeContains('.listing-advert >> nth=0', 'class', $hiddenAt)
+        ->assertAttributeContains('.listing-advert >> nth=0', 'class', 'md:hidden')
         ->assertSee('Listing 5');
-})->with([
-    'no desktop creative' => [['desktop_image' => null, 'mobile_image' => 'sponsors/mobile.gif'], 'md:hidden'],
-    'no mobile creative' => [['desktop_image' => 'sponsors/desktop.gif', 'mobile_image' => null], 'max-md:hidden'],
-]);
+});
+
+test('an advert with no mobile creative shows its desktop one on phones, counted as mobile', function () {
+    config(['adverts.listings_every' => 2]);
+    Advert::factory()->create(['desktop_image' => 'sponsors/desktop.gif', 'mobile_image' => null]);
+    listingsOnToday(5);
+
+    visit('/listings')
+        ->resize(400, 900)
+        ->assertCount('.listing-advert', 2)
+        ->assertScript(<<<'JS'
+            (() => {
+                const advert = document.querySelector('.listing-advert');
+                const shown = [...advert.querySelectorAll('img')]
+                    .filter((image) => getComputedStyle(image).display !== 'none');
+
+                return getComputedStyle(advert).display !== 'none'
+                    && shown.length === 1
+                    && shown[0].src.endsWith('/sponsors/desktop.gif')
+                    && shown[0].closest('a').href.includes('v=mobile');
+            })()
+            JS)
+        ->assertNoJavaScriptErrors();
+});

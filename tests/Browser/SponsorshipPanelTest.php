@@ -30,6 +30,35 @@ test('the panel carries a live sponsorship, named for its sponsor, on phones and
         ->assertNoJavaScriptErrors();
 });
 
+test('a sponsorship with no mobile creative shows its desktop one on phones, counted as mobile', function () {
+    Advert::factory()->sponsorship()->create(['owner' => 'Good on Paper', 'mobile_image' => null]);
+
+    visit('/listings')
+        ->resize(400, 900)
+        ->assertScript(PANEL_SHOWN, 'advert')
+        ->assertScript(<<<'JS'
+            (() => {
+                const shown = [...document.querySelectorAll('.sponsorship-panel img')]
+                    .filter((image) => getComputedStyle(image).display !== 'none');
+
+                return shown.length === 1
+                    && shown[0].src.endsWith('/sponsors/desktop.webp')
+                    && shown[0].closest('a').href.includes('v=mobile');
+            })()
+            JS)
+        ->assertNoJavaScriptErrors();
+});
+
+test('a sponsorship whose sponsor is Good on Paper reads just "Sponsorship"', function () {
+    Advert::factory()->sponsorship()->create(['owner' => 'GOOD ON PAPER', 'title' => 'Advertise with us']);
+
+    visit('/listings')
+        ->assertSeeIn('.sponsorship-panel', 'Sponsorship')
+        ->assertDontSee('Sponsored by')
+        ->assertScript(PANEL_SHOWN, 'advert')
+        ->assertNoJavaScriptErrors();
+});
+
 test('a sponsorship with no owner is named by its title', function () {
     Advert::factory()->sponsorship()->create(['owner' => null, 'title' => 'Borderless Books']);
 

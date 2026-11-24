@@ -114,7 +114,7 @@ class Advert extends Resource
                 Boolean::make('Active')
                     ->help('Kill-switch — advert only serves when active AND within the run dates. Live adverts take page views in turn, and nobody sees the same one twice running.'),
                 Boolean::make('Sponsorship')
-                    ->help('Shown only in the panel at the foot of every page, in turn with the other live sponsorships, and never among the listings. Needs both creatives.'),
+                    ->help('Shown only in the panel at the foot of every page, in turn with the other live sponsorships, and never among the listings. Needs a desktop creative; the mobile one is optional, and without it phones are shown the desktop one.'),
             ]),
             HasMany::make('Events', 'events', AdvertEvent::class),
         ];
@@ -167,11 +167,12 @@ class Advert extends Resource
 
     /**
      * A sponsorship fills the panel on phones and desktops alike, so it must
-     * have both creatives: uploaded now, or already on the advert.
+     * have a desktop creative, uploaded now or already on the advert. Phones
+     * are shown that too when there is no mobile creative.
      */
     protected static function afterValidation(NovaRequest $request, $validator)
     {
-        if (! $request->boolean('sponsorship')) {
+        if (! $request->boolean('sponsorship') || $request->hasFile('desktop_image')) {
             return;
         }
 
@@ -179,10 +180,8 @@ class Advert extends Resource
             ? \App\Models\Advert::withTrashed()->find($request->resourceId)
             : null;
 
-        foreach (['desktop_image' => 'desktop', 'mobile_image' => 'mobile'] as $attribute => $variant) {
-            if (! $request->hasFile($attribute) && blank($existing?->{$attribute})) {
-                $validator->errors()->add($attribute, "A sponsorship needs a {$variant} creative.");
-            }
+        if (blank($existing?->desktop_image)) {
+            $validator->errors()->add('desktop_image', 'A sponsorship needs a desktop creative.');
         }
     }
 

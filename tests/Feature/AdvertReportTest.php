@@ -172,7 +172,7 @@ test('the report quotes the campaign', function () {
 test('each advert on the dashboard card carries a signed link to its report', function () {
     $advert = Advert::factory()->create(['title' => 'Los Fastidios']);
 
-    $slide = (new AdvertReach)->jsonSerialize()['adverts'][0];
+    $slide = (new AdvertReach)->jsonSerialize()['sections'][0]['adverts'][0];
 
     expect($slide['report'])->toContain('/exports/adverts/'.$advert->id.'/report')
         ->and($slide['report'])->toContain('signature=')

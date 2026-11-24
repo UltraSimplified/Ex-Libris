@@ -372,13 +372,16 @@ Nova.booting((app) => {
         }, symbol)
 
     /*
-     * Every live advert, one at a time: its creative, its own figures for
-     * the last thirty days, and arrows and a dot apiece to turn through them
-     * when more than one is running. With nothing live, the figures for
-     * every advert together stand in.
+     * One slot's live adverts, one at a time: its creative with its own
+     * figures for the last thirty days beside it, and under them arrows and a
+     * dot apiece to turn through them when more than one is running, with
+     * the report of the one on show to their right. The sponsorship panel's
+     * section is sent only its one sponsorship, so it never turns. With
+     * nothing live in the slot, the figures for every advert in it together
+     * stand in.
      */
-    app.component('gop-advert-reach', {
-        props: ['card'],
+    const advertSlot = {
+        props: ['section'],
 
         data() {
             return { index: 0 }
@@ -386,7 +389,7 @@ Nova.booting((app) => {
 
         computed: {
             adverts() {
-                return this.card.adverts || []
+                return this.section.adverts || []
             },
 
             shown() {
@@ -403,39 +406,34 @@ Nova.booting((app) => {
         },
 
         render() {
+            const section = this.section
             const advert = this.shown
             const count = this.adverts.length
 
-            const creative = advert === null
-                ? [h('p', { class: 'gop-muted text-sm' }, 'Nothing is running at the moment.')]
-                : [
-                    advert.image
-                        ? h('a', {
-                              href: Nova.url(advert.link),
-                              style: { display: 'block', flex: '1', minHeight: '0' },
-                              onClick: (event) => {
-                                  event.preventDefault()
-                                  Nova.visit(advert.link)
-                              },
-                          }, [
-                              h('img', {
-                                  src: advert.image,
-                                  alt: advert.title,
-                                  class: 'rounded',
-                                  // Scaled to fit rather than cropped: these are
-                                  // whole creatives, and a cropped one misleads.
-                                  style: { display: 'block', width: 'auto', height: '100%', maxWidth: '100%', objectFit: 'contain', objectPosition: 'left' },
-                              }),
-                          ])
-                        : null,
-                    h('p', { class: 'text-xs gop-muted', style: { marginTop: '0.4rem' } },
-                        advert.title + ' · ' + advert.slot
-                    ),
-                ]
+            const creative = advert && advert.image
+                ? h('a', {
+                      href: Nova.url(advert.link),
+                      class: 'gop-advert-creative',
+                      onClick: (event) => {
+                          event.preventDefault()
+                          Nova.visit(advert.link)
+                      },
+                  }, [h('img', { src: advert.image, alt: advert.title, class: 'rounded' })])
+                : null
 
-            const figures = advert === null
-                ? { impressions: this.card.impressions, summary: this.card.summary }
-                : advert
+            const figures = advert || section
+
+            const slide = h('div', { key: advert ? advert.link : 'none', class: 'gop-advert-slide' }, [
+                creative,
+                h('div', { class: 'gop-advert-figures' }, [
+                    h('p', { class: 'text-xs gop-muted' }, advert ? advert.title : section.emptyText),
+                    h('p', { class: 'text-xl font-bold gop-strong' },
+                        Number(figures.impressions).toLocaleString() + ' impressions'
+                    ),
+                    h('p', { class: 'text-xs gop-muted' }, figures.summary),
+                    section.notice ? h('p', { class: 'text-xs gop-strong', style: { marginTop: '0.25rem' } }, section.notice) : null,
+                ]),
+            ])
 
             const turning = count > 1
                 ? [
@@ -456,8 +454,6 @@ Nova.booting((app) => {
                   ]
                 : []
 
-            // The PDF of the advert on show, across its whole run, kept to
-            // the right of the carousel's own controls.
             const report = advert
                 ? h('a', {
                       href: advert.report,
@@ -475,32 +471,22 @@ Nova.booting((app) => {
                   }, [...turning, report])
                 : null
 
-            return panel(this.card.heading, [
-                h(Transition, { name: 'gop-fade', mode: 'out-in' }, {
-                    default: () => h('div', {
-                        key: advert ? advert.link : 'none',
-                        style: {
-                            // Two parts creative to one part figures, so the
-                            // advert is two thirds of what is left under the
-                            // heading however tall the row happens to be.
-                            display: 'flex',
-                            flexDirection: 'column',
-                            flex: '3',
-                            minHeight: '0',
-                        },
-                    }, [
-                        h('div', {
-                            style: { display: 'flex', flexDirection: 'column', flex: '2', minHeight: '0', marginBottom: '0.9rem' },
-                        }, creative),
-                        h('div', { style: { flex: '1', minHeight: '0' } }, [
-                            h('p', { class: 'text-2xl font-bold gop-strong' },
-                                Number(figures.impressions).toLocaleString() + ' impressions'
-                            ),
-                            h('p', { class: 'text-xs gop-muted' }, figures.summary),
-                        ]),
-                    ]),
-                }),
+            return h('section', { class: 'gop-advert-slot', 'aria-label': section.heading }, [
+                h('h4', { class: 'text-xs uppercase tracking-wide font-bold gop-muted' }, section.heading),
+                h(Transition, { name: 'gop-fade', mode: 'out-in' }, { default: () => slide }),
                 controls,
+            ])
+        },
+    }
+
+    /* The adverts card: the in-list slots, then the sponsorship panel. */
+    app.component('gop-advert-reach', {
+        props: ['card'],
+
+        render() {
+            return panel(this.card.heading, [
+                ...(this.card.sections || []).map((section) => h(advertSlot, { key: section.heading, section })),
+                h('div', { style: { flex: '1' } }),
                 h('div', { style: { marginTop: '0.75rem' } }, [novaLink(app, this.card.linkText, this.card.link)]),
             ])
         },

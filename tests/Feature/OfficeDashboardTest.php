@@ -361,40 +361,74 @@ test('each leaderboard says what it is counting', function () {
         ->and((new WriterLeaders)->jsonSerialize()['unit'])->toBe('article');
 });
 
-test('the adverts card reports impressions, clicks and the rate', function () {
-    AdvertEvent::factory()->count(8)->create(['type' => 'impression']);
-    AdvertEvent::factory()->count(2)->create(['type' => 'click']);
+/**
+ * One section of the adverts card, found by the slot it names.
+ *
+ * @return array<string, mixed>
+ */
+function advertSection(string $heading): array
+{
+    return collect((new AdvertReach)->jsonSerialize()['sections'])->firstWhere('heading', $heading);
+}
 
+test('the adverts card has the in-list slots, then the sponsorship panel', function () {
     $card = (new AdvertReach)->jsonSerialize();
 
-    expect($card['impressions'])->toBe(8)
-        ->and($card['summary'])->toContain('2 clicks')
-        ->and($card['summary'])->toContain('25%')
+    expect(array_column($card['sections'], 'heading'))->toBe(['In-list', 'Sponsorship panel'])
         ->and($card['linkText'])->toBe('View all adverts');
 });
 
-test('the adverts card survives a period with no impressions', function () {
-    $card = (new AdvertReach)->jsonSerialize();
+test('each adverts section totals the last thirty days of its own slot, archived adverts included', function () {
+    $live = Advert::factory()->create();
+    $archived = Advert::factory()->create();
+    $sponsorship = Advert::factory()->sponsorship()->create();
+    AdvertEvent::factory()->count(6)->for($live)->create(['type' => 'impression']);
+    AdvertEvent::factory()->count(2)->for($live)->create(['type' => 'click']);
+    AdvertEvent::factory()->count(2)->for($archived)->create(['type' => 'impression']);
+    AdvertEvent::factory()->count(3)->for($sponsorship)->create(['type' => 'impression']);
+    AdvertEvent::factory()->for($sponsorship)->create(['type' => 'impression', 'created_at' => now()->subDays(45)]);
+    $archived->delete();
 
-    expect($card['impressions'])->toBe(0)
-        ->and($card['summary'])->toContain('0% click-through');
+    $inList = advertSection('In-list');
+    $panel = advertSection('Sponsorship panel');
+
+    expect($inList['impressions'])->toBe(8)
+        ->and($inList['summary'])->toBe('Last 30 days · 2 clicks · 25% click-through');
+    expect($panel['impressions'])->toBe(3)
+        ->and($panel['summary'])->toBe('Last 30 days · 0 clicks · 0% click-through');
 });
 
-test('the adverts card shows the creative that is running', function () {
-    Advert::factory()->create([
-        'title' => 'Stroud Arts Festival',
-        'sponsorship' => true,
-        'desktop_image' => 'adverts/poster.png',
-        'active' => true,
-        'run_from' => today()->subWeek(),
-        'run_to' => today()->addWeek(),
-    ]);
+test('the adverts sections survive a period with no impressions', function () {
+    $sections = (new AdvertReach)->jsonSerialize()['sections'];
 
-    $advert = (new AdvertReach)->jsonSerialize()['adverts'][0];
+    expect(array_column($sections, 'impressions'))->toBe([0, 0])
+        ->and(array_column($sections, 'summary'))->each->toContain('0% click-through');
+});
+
+test('a running sponsorship is shown in the sponsorship panel section and not among the in-list adverts', function () {
+    Advert::factory()->sponsorship()->create(['title' => 'Stroud Arts Festival']);
+
+    $advert = advertSection('Sponsorship panel')['adverts'][0];
 
     expect($advert['title'])->toBe('Stroud Arts Festival')
-        ->and($advert['slot'])->toBe('Sponsorship panel')
-        ->and($advert['image'])->toBe(config('filesystems.disks.do.url').'/adverts/poster.png');
+        ->and($advert['image'])->toBe(config('filesystems.disks.do.url').'/sponsors/desktop.webp');
+    expect(advertSection('In-list')['adverts'])->toBe([]);
+});
+
+test('the sponsorship panel section shows only the newest sponsorship and says when another is taking turns with it', function () {
+    Advert::factory()->sponsorship()->create(['title' => 'Good on Paper', 'run_from' => today()->subMonth()]);
+    Advert::factory()->sponsorship()->create(['title' => 'Stroud Arts Festival', 'run_from' => today()->subWeek()]);
+
+    $panel = advertSection('Sponsorship panel');
+
+    expect(array_column($panel['adverts'], 'title'))->toBe(['Stroud Arts Festival'])
+        ->and($panel['notice'])->toBe('2 sponsorships are live and taking turns in the panel.');
+});
+
+test('a sponsorship on its own in the panel raises no notice', function () {
+    Advert::factory()->sponsorship()->create();
+
+    expect(advertSection('Sponsorship panel')['notice'])->toBeNull();
 });
 
 test('an advert whose run has ended is not shown as current', function () {
@@ -404,13 +438,14 @@ test('an advert whose run has ended is not shown as current', function () {
         'run_to' => today()->subMonth(),
     ]);
 
-    expect((new AdvertReach)->jsonSerialize()['adverts'])->toBe([]);
+    expect(array_column((new AdvertReach)->jsonSerialize()['sections'], 'adverts'))->toBe([[], []]);
 });
 
-test('the adverts card has a slide for every live advert, newest first, each with its own figures', function () {
+test('the in-list section has a slide for every live in-list advert, newest first, each with its own figures', function () {
     $older = Advert::factory()->create(['title' => 'Stroud Arts Festival', 'run_from' => today()->subMonth()]);
     $newer = Advert::factory()->create(['title' => 'Los Fastidios', 'run_from' => today()->subWeek()]);
     Advert::factory()->create(['title' => 'Switched off', 'active' => false]);
+    Advert::factory()->sponsorship()->create(['title' => 'Prince Albert']);
 
     AdvertEvent::factory()->count(6)->create(['advert_id' => $older->id, 'type' => 'impression']);
     AdvertEvent::factory()->count(3)->create(['advert_id' => $older->id, 'type' => 'click']);
@@ -418,7 +453,7 @@ test('the adverts card has a slide for every live advert, newest first, each wit
     AdvertEvent::factory()->create(['advert_id' => $newer->id, 'type' => 'click']);
     AdvertEvent::factory()->create(['advert_id' => $newer->id, 'type' => 'impression', 'created_at' => now()->subDays(45)]);
 
-    $slides = (new AdvertReach)->jsonSerialize()['adverts'];
+    $slides = advertSection('In-list')['adverts'];
 
     expect(array_column($slides, 'title'))->toBe(['Los Fastidios', 'Stroud Arts Festival'])
         ->and($slides[0]['impressions'])->toBe(4)

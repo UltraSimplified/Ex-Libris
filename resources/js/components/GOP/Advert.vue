@@ -43,6 +43,26 @@ const sponsor = computed(
     () => advert.value?.owner?.trim() || advert.value?.title || '',
 );
 
+/**
+ * The line over the creative: "Sponsored by" its sponsor, or just
+ * "Sponsorship" when Good on Paper is its own sponsor, as the house advert
+ * reads, however the name is capitalised.
+ */
+const label = computed(() =>
+    sponsor.value.toLowerCase() === 'good on paper'
+        ? 'Sponsorship'
+        : `Sponsored by ${sponsor.value}`,
+);
+
+/**
+ * The creative phones are shown: the mobile one, or the desktop one when the
+ * sponsorship has no mobile one. Either way it is the phones' copy, so its
+ * views and clicks are counted as mobile.
+ */
+const phoneImage = computed(
+    () => advert.value?.mobile_image || advert.value?.desktop_image || null,
+);
+
 const mobileImg = ref<HTMLElement | null>(null);
 const desktopImg = ref<HTMLElement | null>(null);
 
@@ -60,30 +80,29 @@ useAdImpression(
 
     Neither creative is ever drawn larger than it was uploaded, and both sit
     against the band's 20px left gutter, under the label: the 728×300
-    desktop one and the 400×300 mobile one alike. The Office requires both of
-    a sponsorship; one saved before that, missing either, leaves the band out
-    at that size rather than showing an empty one.
+    desktop one and the 400×300 mobile one alike. The Office requires the
+    desktop one of a sponsorship and leaves the mobile one optional: without
+    it, phones are shown the desktop one, letterboxed to their width. One
+    saved before the desktop one was required, missing it, leaves the band
+    out on desktops rather than showing an empty one.
 -->
 <template>
     <div
-        v-if="advert && (advert.mobile_image || advert.desktop_image)"
+        v-if="advert && phoneImage"
         class="sponsorship-panel h-full border-silver bg-gray-200 bg-[url('@/../img/rectangle.png')] bg-cover bg-center pb-10 md:border-l"
-        :class="{
-            'max-md:hidden': !advert.mobile_image,
-            'md:hidden': !advert.desktop_image,
-        }"
+        :class="{ 'md:hidden': !advert.desktop_image }"
     >
-        <p class="px-5 py-5 text-xs text-tarmac">Sponsored by {{ sponsor }}</p>
+        <p class="px-5 py-5 text-xs text-tarmac">{{ label }}</p>
         <a
-            v-if="advert.mobile_image"
             :href="clickUrl('mobile')"
             target="_blank"
             rel="sponsored nofollow noopener"
             ><img
                 ref="mobileImg"
-                :src="cdn(advert.mobile_image)"
+                :src="cdn(phoneImage)"
                 :alt="advert.alt_text ?? advert.title"
-                class="mx-5 mb-8 w-[calc(100%-2.5rem)] max-w-[400px] md:hidden"
+                class="mx-5 w-[calc(100%-2.5rem)] md:hidden"
+                :class="advert.mobile_image ? 'max-w-[400px]' : 'max-w-[728px]'"
             />
         </a>
         <a
