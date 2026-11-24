@@ -349,7 +349,6 @@ type Layout =
 
 interface Article {
     id: number;
-    issue_number: number;
     title: string;
     subject: string | null;
     published: string | null;

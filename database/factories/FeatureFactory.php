@@ -35,7 +35,6 @@ class FeatureFactory extends Factory
     public function definition(): array
     {
         return [
-            'issue_number' => fake()->numberBetween(1, 60),
             'status' => FeatureStatus::Published,
             'title' => rtrim(fake()->sentence(4), '.'),
             'subject' => fake()->words(3, true),

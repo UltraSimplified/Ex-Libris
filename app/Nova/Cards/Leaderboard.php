@@ -8,10 +8,11 @@ use Illuminate\Database\Eloquent\Model;
 use Laravel\Nova\Card;
 
 /**
- * A pair of headline counts over a list of whoever has the most on.
+ * A list of whoever has the most on, over a resource's own index.
  *
- * Shared by the promoters and venues tiles, which differ only in what they
- * are counting.
+ * Shared by the promoters, venues and writers lists, which differ only in
+ * what they are ranking. Their headline counts are on the Office dashboard,
+ * in the headline counts card, so the list here stands on its own.
  */
 abstract class Leaderboard extends Card
 {
@@ -28,22 +29,6 @@ abstract class Leaderboard extends Card
     abstract protected function heading(): string;
 
     abstract protected function emptyText(): string;
-
-    /**
-     * An optional heading for the list itself, sat between the counts and
-     * the rows. Null leaves the rows running straight on from the counts.
-     */
-    protected function listHeading(): ?string
-    {
-        return null;
-    }
-
-    /**
-     * The two headline counts, as label => value.
-     *
-     * @return array<string, int>
-     */
-    abstract protected function counts(): array;
 
     /**
      * A fresh query for the thing being ranked.
@@ -80,11 +65,9 @@ abstract class Leaderboard extends Card
     }
 
     /**
-     * Where "view all" goes, and what that link says.
+     * The resource pages each row links into.
      */
     abstract protected function link(): string;
-
-    abstract protected function linkText(): string;
 
     public function component(): string
     {
@@ -98,25 +81,10 @@ abstract class Leaderboard extends Card
     {
         return array_merge(parent::jsonSerialize(), [
             'heading' => $this->heading(),
-            'counts' => collect($this->counts())
-                ->map(fn (int $value, string $label): array => ['label' => $label, 'value' => $value])
-                ->values()
-                ->all(),
-            'listHeading' => $this->listHeading(),
             'unit' => $this->unit(),
             'rows' => $this->leaders(),
             'emptyText' => $this->emptyText(),
-            'link' => $this->link(),
-            'linkText' => $this->linkText(),
         ]);
-    }
-
-    /**
-     * Every event still to come, or running today.
-     */
-    protected function upcomingEvents(): int
-    {
-        return Listing::query()->current()->count();
     }
 
     /**

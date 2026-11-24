@@ -40,3 +40,20 @@ test('the Features card shows the reading time by category and the most read', f
         ->assertSee('2h 5m in all · 4m 10s each · 40% reached the end')
         ->assertNoJavaScriptErrors();
 });
+
+test('the Features page shows the reading time by category and the most read in a card each', function () {
+    $this->actingAs(User::factory()->create(['email' => 'robin@ultrasimplified.com']));
+
+    $archive = Feature::factory()->create([
+        'title' => 'From the archive',
+        'tag_id' => Tag::factory()->create(['tag' => 'Archives'])->id,
+    ]);
+    FeatureRead::factory()->create(['feature_id' => $archive->id, 'read_count' => 30, 'seconds_read' => 7500, 'reached_end_count' => 12]);
+
+    visit('/office/resources/features')
+        ->assertSee('Reading by category')
+        ->assertSee('Archives · 2h 5m (100%)')
+        ->assertSee('Read in the last 30 days')
+        ->assertSee('2h 5m in all · 4m 10s each · 40% reached the end')
+        ->assertNoJavaScriptErrors();
+});

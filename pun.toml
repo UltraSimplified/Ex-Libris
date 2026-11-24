@@ -1,0 +1,72 @@
+# Written by `pun migrate` from pint.json.
+[files]
+exclude = ["tmp"]
+
+[extensions]
+laravel = "on"
+pest = "on"
+phpunit = "on"
+
+[format]
+preset = "laravel"
+
+[lint]
+sets = ["rector/dead-code", "rector/code-quality", "rector/type-declaration", "rector/php-polyfills", "rector/php-sets"]
+exclude = ["bootstrap", "nova-components", "public", "rector.php"]
+
+[lint.rules]
+"refactor/rename-phpdoc-tag" = "error"
+"functions/no-unused-closure-use" = "error"
+"style/no-alias-function" = "error"
+"statements/no-empty" = "error"
+"phpdoc/no-superfluous-tags" = { allow-mixed = true, allow-unused-params = true }
+"functions/no-unreachable-default-argument-value" = "error"
+"imports/no-unused" = "error"
+"control-flow/no-useless-return" = "error"
+"style/require-ordered-traits" = "error"
+"phpunit/require-method-casing" = { case = "snake-case" }
+"phpunit/require-protected-setup" = "error"
+"phpdoc/no-access" = "error"
+"phpdoc/no-package" = "error"
+"phpdoc/no-useless-inheritdoc" = "error"
+"classes/prefer-self-in-final" = "error"
+"style/prefer-class-constant" = { namespaced-only = true, checks = ["string-class-name"] }
+"php-8.5/prefer-array-first-last" = "error"
+"php-8.5/no-finfo-buffer-context" = "error"
+"php-8.5/no-null-debug-info" = "error"
+"php-8.5/no-null-array-key" = "error"
+"php-8.5/no-out-of-range-chr" = "error"
+"style/no-sleep-wakeup" = "error"
+"php-8.5/prefer-ord-first-byte" = "error"
+"refactor/add-override-attribute" = "error"
+"php-8.6/prefer-clamp" = "error"
+"php-8.6/prefer-readonly-property-default" = "error"
+"refactor/remove-function-argument" = { items = [{ function = "ldap_first_attribute", argument-position = 2 }] }
+"refactor/rename-function" = { mysqli_param_count = "mysqli_stmt_param_count", mcrypt_generic_end = "mcrypt_generic_deinit", set_socket_blocking = "stream_set_blocking", ocibindbyname = "oci_bind_by_name", ocicancel = "oci_cancel", ocicolumnisnull = "oci_field_is_null", ocicolumnname = "oci_field_name", ocicolumnprecision = "oci_field_precision", ocicolumnscale = "oci_field_scale", ocicolumnsize = "oci_field_size", ocicolumntype = "oci_field_type", ocicolumntyperaw = "oci_field_type_raw", ocicommit = "oci_commit", ocidefinebyname = "oci_define_by_name", ocierror = "oci_error", ociexecute = "oci_execute", ocifetch = "oci_fetch", ocifetchstatement = "oci_fetch_all", ocifreecursor = "oci_free_statement", ocifreestatement = "oci_free_statement", ociinternaldebug = "oci_internal_debug", ocilogoff = "oci_close", ocilogon = "oci_connect", ocinewcollection = "oci_new_collection", ocinewcursor = "oci_new_cursor", ocinewdescriptor = "oci_new_descriptor", ocinlogon = "oci_new_connect", ocinumcols = "oci_num_fields", ociparse = "oci_parse", ociplogon = "oci_pconnect", ociresult = "oci_result", ocirollback = "oci_rollback", ocirowcount = "oci_num_rows", ociserverversion = "oci_server_version", ocisetprefetch = "oci_set_prefetch", ocistatementtype = "oci_statement_type", jpeg2wbmp = "imagecreatefromjpeg", png2wbmp = "imagecreatefrompng", gmp_random = "gmp_random_bits", read_exif_data = "exif_read_data", image2wbmp = "imagewbmp", mbregex_encoding = "mb_regex_encoding", mbereg = "mb_ereg", mberegi = "mb_eregi", mbereg_replace = "mb_ereg_replace", mberegi_replace = "mb_eregi_replace", mbsplit = "mb_split", mbereg_match = "mb_ereg_match", mbereg_search = "mb_ereg_search", mbereg_search_pos = "mb_ereg_search_pos", mbereg_search_regs = "mb_ereg_search_regs", mbereg_search_init = "mb_ereg_search_init", mbereg_search_getregs = "mb_ereg_search_getregs", mbereg_search_getpos = "mb_ereg_search_getpos", is_real = "is_float", pg_clientencoding = "pg_client_encoding", pg_cmdtuples = "pg_affected_rows", pg_errormessage = "pg_last_error", pg_fieldisnull = "pg_field_is_null", pg_fieldname = "pg_field_name", pg_fieldnum = "pg_field_num", pg_fieldprtlen = "pg_field_prtlen", pg_fieldsize = "pg_field_size", pg_fieldtype = "pg_field_type", pg_freeresult = "pg_free_result", pg_getlastoid = "pg_last_oid", pg_loclose = "pg_lo_close", pg_locreate = "pg_lo_create", pg_loexport = "pg_lo_export", pg_loimport = "pg_lo_import", pg_loopen = "pg_lo_open", pg_loread = "pg_lo_read", pg_loreadall = "pg_lo_read_all", pg_lounlink = "pg_lo_unlink", pg_lowrite = "pg_lo_write", pg_numfields = "pg_num_fields", pg_numrows = "pg_num_rows", pg_result = "pg_fetch_result", pg_setclientencoding = "pg_set_client_encoding", split = "explode", join = "implode", sizeof = "count", chop = "rtrim", doubleval = "floatval", gzputs = "gzwrite", fputs = "fwrite", ini_alter = "ini_set", is_double = "is_float", is_integer = "is_int", is_long = "is_int", is_writeable = "is_writable", key_exists = "array_key_exists", pos = "current", strchr = "strstr", mbstrcut = "mb_strcut", mbstrlen = "mb_strlen", mbstrpos = "mb_strpos", mbstrrpos = "mb_strrpos", mbsubstr = "mb_substr" }
+"refactor/rename-cast" = { items = [{ from-cast-expr-class = 'PhpParser\Node\Expr\Cast\Double', from-cast-kind = 3, to-cast-kind = 2 }] }
+"refactor/replace-static-with-function" = { items = [{ class = 'Nette\Utils\Strings', method = "startsWith", function = "str_starts_with" }, { class = 'Nette\Utils\Strings', method = "endsWith", function = "str_ends_with" }, { class = 'Nette\Utils\Strings', method = "contains", function = "str_contains" }] }
+"control-flow/no-return-assignment" = { skip-commented = true }
+"style/prefer-empty-string-compare" = { identical-or-greater-only = true }
+"complexity/no-redundant-nullsafe" = "off"
+"laravel/no-useless-value-call" = "off"
+"laravel/no-useless-with-call" = "off"
+
+[[lint.overrides]]
+files = ["app", "bootstrap/app.php", "config", "database", "routes"]
+rules = { "complexity/no-redundant-nullsafe" = "error", "laravel/no-useless-value-call" = "error", "laravel/no-useless-with-call" = "error" }
+
+[analyse]
+preset = "phpstan/level_5"
+paths = ["app", "bootstrap/app.php", "config", "database", "routes"]
+
+[analyse.rules]
+"laravel/redundant-collection-call" = { parse-model-casts-method = true }
+"laravel/undefined-model-append" = { parse-model-casts-method = true }
+
+[[analyse.ignore]]
+message = '#Call to an undefined method Illuminate\\Database\\Schema\\ColumnDefinition::(sortable|hideOnIndex)\(\)#'
+paths = ["database/migrations/*"]
+
+[[analyse.ignore]]
+message = '#Call to an undefined method Intervention\\Image\\Interfaces\\ColorInterface::(red|green|blue)\(\)#'
+paths = ["app/Services/Images/ListingThumbnail.php"]

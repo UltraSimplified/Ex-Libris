@@ -2,43 +2,31 @@
 
 namespace App\Nova\Cards;
 
-use App\Models\Feature;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
- * Who is writing, and who has written the most.
+ * Who has written the most, over the features index beside what was read.
  *
  * Replaces a chart of writers plotted against articles written, which
- * answered a question nobody was asking: the useful thing is the roster,
- * the body of work, and who is carrying it.
+ * answered a question nobody was asking: the useful thing is who is
+ * carrying the body of work.
  */
 class WriterLeaders extends Leaderboard
 {
+    /**
+     * A third, to sit in a row with the two reading cards.
+     */
+    public $width = '1/3';
+
     protected function heading(): string
     {
-        return 'Writers';
+        return 'Top '.static::LEADERS.' Contributors';
     }
 
     protected function emptyText(): string
     {
         return 'No writer has a published article yet.';
-    }
-
-    protected function listHeading(): string
-    {
-        return 'Top '.static::LEADERS.' Contributors';
-    }
-
-    /**
-     * @return array<string, int>
-     */
-    protected function counts(): array
-    {
-        return [
-            'Writers' => User::writers()->count(),
-            'Articles' => Feature::count(),
-        ];
     }
 
     /**
@@ -71,18 +59,8 @@ class WriterLeaders extends Leaderboard
         return 'article';
     }
 
-    protected function nameColumn(): string
-    {
-        return 'name';
-    }
-
     protected function link(): string
     {
         return '/resources/users';
-    }
-
-    protected function linkText(): string
-    {
-        return 'View all accounts';
     }
 }

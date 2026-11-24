@@ -108,16 +108,16 @@ test('the row eye is hidden everywhere but on a listing', function () {
 });
 
 test('the office serves the script that puts the preview behind the eye', function () {
-    $names = collect(Nova::allScripts())->map(fn ($script): string => $script->name());
+    $paths = collect(Nova::allScripts())->map(fn ($script): ?string => $script->path());
 
-    expect($names)->toContain('office-preview');
+    expect($paths)->toContain(public_path('js/office-preview.js'));
     expect(public_path('js/office-preview.js'))->toBeFile();
 });
 
 test('the office serves the stylesheet the row rules live in', function () {
-    $names = collect(Nova::allStyles())->map(fn ($style): string => $style->name());
+    $paths = collect(Nova::allStyles())->map(fn ($style): ?string => $style->path());
 
-    expect($names)->toContain('admin-overrides');
+    expect($paths)->toContain(public_path('css/nova-overrides.css'));
 });
 
 /**

@@ -9,12 +9,16 @@
 Nova.booting((app) => {
     const { h, Transition } = Vue
 
-    /** A Nova card shell: white panel, rounded, with a heading. */
-    const panel = (heading, children) =>
-        h('div', { class: 'bg-white dark:bg-gray-800 rounded-lg shadow h-full flex flex-col p-4' }, [
-            h('h3', { class: 'text-sm font-bold gop-heading', style: { marginBottom: '1rem' } }, heading),
-            ...children,
-        ])
+    /** A Nova card shell: white panel, rounded. */
+    const shell = (children) =>
+        h('div', { class: 'bg-white dark:bg-gray-800 rounded-lg shadow h-full flex flex-col p-4' }, children)
+
+    /** A card's heading, or the heading of one section of it. */
+    const cardHeading = (heading) =>
+        h('h3', { class: 'text-sm font-bold gop-heading', style: { marginBottom: '1rem' } }, heading)
+
+    /** A Nova card shell with a heading. */
+    const panel = (heading, children) => shell([cardHeading(heading), ...children])
 
     /** Heroicons' arrow-down-tray, at the size Nova sets its own button icons. */
     const downloadIcon = () =>
@@ -58,7 +62,7 @@ Nova.booting((app) => {
             Number(value).toLocaleString()
         )
 
-        return h('div', { style: { textAlign: 'center' } }, [
+        return h('div', { style: { textAlign: 'left' } }, [
             number,
             h('span', { class: 'text-xs uppercase tracking-wide gop-muted' }, label),
         ])
@@ -292,72 +296,111 @@ Nova.booting((app) => {
             ].filter(Boolean).join('')),
         ])
 
+    /** The line a reading card shows when nothing was read in its period. */
+    const nothingRead = (card) => h('p', { class: 'gop-muted text-sm', style: { flex: '1' } }, card.emptyText)
+
+    /**
+     * A legend beside a donut, one arc per slice. `describe` words a slice
+     * for the legend, given its share of the whole as a percentage.
+     */
+    const donut = (slices, describe) => {
+        const total = slices.reduce((sum, slice) => sum + slice.value, 0)
+
+        // Each circle carries a dash the length of its share, rotated past
+        // everything before it.
+        const R = 42
+        const CIRCUMFERENCE = 2 * Math.PI * R
+        let travelled = 0
+
+        const arcs = slices.map((slice) => {
+            const share = slice.value / total
+            const arc = h('circle', {
+                cx: 60,
+                cy: 60,
+                r: R,
+                fill: 'none',
+                stroke: slice.colour,
+                'stroke-width': 18,
+                'stroke-dasharray': `${share * CIRCUMFERENCE} ${CIRCUMFERENCE}`,
+                transform: `rotate(${travelled * 360 - 90} 60 60)`,
+            })
+            travelled += share
+
+            return arc
+        })
+
+        const legend = slices.map((slice) =>
+            h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.15rem 0' } }, [
+                h('span', { style: { width: '8px', height: '8px', borderRadius: '50%', background: slice.colour, flexShrink: '0' } }),
+                h('span', { class: 'text-xs gop-muted' }, describe(slice, Math.round((slice.value / total) * 100))),
+            ])
+        )
+
+        return h('div', { style: { display: 'flex', alignItems: 'center', gap: '1rem' } }, [
+            h('div', { style: { flex: '1', minWidth: '0' } }, legend),
+            h('svg', { width: 120, height: 120, viewBox: '0 0 120 120', style: { flexShrink: '0' } }, arcs),
+        ])
+    }
+
+    /**
+     * Reading time over the last month: the total, then a legend of the
+     * categories beside a donut of the time each took.
+     */
+    const categoryDonut = (card) => [
+        h('div', { style: { marginBottom: '1rem' } }, [
+            h('span', { class: 'text-2xl font-bold gop-strong' }, duration(card.total || 0)),
+            h('span', { class: 'text-sm gop-muted' }, ` ${card.period}`),
+        ]),
+        donut(card.slices || [], (slice, percent) => `${slice.label} · ${duration(slice.value)} (${percent}%)`),
+    ]
+
     /*
-     * Reading time over the last month: a donut of the time each category
-     * took, and the features the most people read beneath it.
+     * The dashboard's reading card: the donut, and the features the most
+     * people read beneath it.
      */
     app.component('gop-features-by-category', {
         props: ['card'],
 
         render() {
-            const slices = this.card.slices || []
-            const total = this.card.total || 0
             const footer = h('div', { style: { marginTop: '0.75rem' } }, [novaLink(app, this.card.linkText, this.card.link)])
 
-            if (total === 0) {
-                return panel(this.card.heading, [
-                    h('p', { class: 'gop-muted text-sm', style: { flex: '1' } }, this.card.emptyText),
-                    footer,
-                ])
+            if (!this.card.total) {
+                return panel(this.card.heading, [nothingRead(this.card), footer])
             }
 
-            // A donut drawn as one arc per slice: each circle carries a dash
-            // the length of its share, rotated past everything before it.
-            const R = 42
-            const CIRCUMFERENCE = 2 * Math.PI * R
-            let travelled = 0
-
-            const arcs = slices.map((slice) => {
-                const share = slice.value / total
-                const arc = h('circle', {
-                    cx: 60,
-                    cy: 60,
-                    r: R,
-                    fill: 'none',
-                    stroke: slice.colour,
-                    'stroke-width': 18,
-                    'stroke-dasharray': `${share * CIRCUMFERENCE} ${CIRCUMFERENCE}`,
-                    transform: `rotate(${travelled * 360 - 90} 60 60)`,
-                })
-                travelled += share
-
-                return arc
-            })
-
-            const legend = slices.map((slice) =>
-                h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.15rem 0' } }, [
-                    h('span', { style: { width: '8px', height: '8px', borderRadius: '50%', background: slice.colour, flexShrink: '0' } }),
-                    h('span', { class: 'text-xs gop-muted' },
-                        `${slice.label} · ${duration(slice.value)} (${Math.round((slice.value / total) * 100)}%)`
-                    ),
-                ])
-            )
-
             return panel(this.card.heading, [
-                h('div', { style: { marginBottom: '1rem' } }, [
-                    h('span', { class: 'text-2xl font-bold gop-strong' }, duration(total)),
-                    h('span', { class: 'text-sm gop-muted' }, ` ${this.card.period}`),
-                ]),
-                h('div', { style: { display: 'flex', alignItems: 'center', gap: '1rem' } }, [
-                    h('div', { style: { flex: '1', minWidth: '0' } }, legend),
-                    h('svg', { width: 120, height: 120, viewBox: '0 0 120 120', style: { flexShrink: '0' } }, arcs),
-                ]),
+                ...categoryDonut(this.card),
                 h('h4', {
                     class: 'text-xs uppercase tracking-wide font-bold gop-muted',
                     style: { margin: '1.25rem 0 0.25rem' },
                 }, this.card.listHeading),
                 h('div', { class: 'gop-reading-list', style: { flex: '1' } }, (this.card.leaders || []).map(readingRow)),
                 footer,
+            ])
+        },
+    })
+
+    /* The donut on its own, over the features index. */
+    app.component('gop-reading-by-category', {
+        props: ['card'],
+
+        render() {
+            return panel(this.card.heading, this.card.total ? categoryDonut(this.card) : [nothingRead(this.card)])
+        },
+    })
+
+    /* The features the most people read over the last month. */
+    app.component('gop-most-read', {
+        props: ['card'],
+
+        render() {
+            const leaders = this.card.leaders || []
+
+            return panel(this.card.heading, [
+                h('p', { class: 'text-xs gop-muted', style: { marginBottom: '0.5rem' } }, this.card.period),
+                leaders.length === 0
+                    ? nothingRead(this.card)
+                    : h('div', { class: 'gop-reading-list', style: { flex: '1' } }, leaders.map(readingRow)),
             ])
         },
     })
@@ -492,6 +535,7 @@ Nova.booting((app) => {
         },
     })
 
+    /* A top-five list over a resource's own index: who has the most on. */
     app.component('gop-leaderboard', {
         props: ['card'],
 
@@ -499,7 +543,7 @@ Nova.booting((app) => {
             const rows = this.card.rows || []
 
             const list = rows.length === 0
-                ? [h('p', { class: 'gop-muted text-sm', style: { textAlign: 'center' } }, this.card.emptyText)]
+                ? [h('p', { class: 'gop-muted text-sm' }, this.card.emptyText)]
                 : rows.map((row) =>
                     h('div', { style: { display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '1rem', padding: '0.3rem 0' } }, [
                         h(
@@ -520,40 +564,76 @@ Nova.booting((app) => {
                     ])
                 )
 
-            return panel(this.card.heading, [
-                h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-around', gap: '1rem', marginBottom: '1.25rem' } },
-                    (this.card.counts || []).map((count) => bigNumber(count.value, count.label))
-                ),
-                this.card.listHeading
-                    ? h('h4', {
-                          class: 'text-xs uppercase tracking-wide font-bold gop-muted',
-                          style: { marginBottom: '0.5rem' },
-                      }, this.card.listHeading)
-                    : null,
-                h('div', { style: { flex: '1' } }, list),
-                h('div', { style: { marginTop: '0.75rem' } }, [novaLink(app, this.card.linkText, this.card.link)]),
-            ])
+            return panel(this.card.heading, [h('div', { style: { flex: '1' } }, list)])
         },
     })
 
+    /*
+     * The headline counts: venues, events and writers, ruled apart, their
+     * figures set in the same columns all the way down.
+     */
+    app.component('gop-headline-counts', {
+        props: ['card'],
+
+        render() {
+            const sections = this.card.sections || []
+            const columns = Math.max(1, ...sections.map((section) => section.counts.length))
+
+            return panel(this.card.heading, sections.map((section) =>
+                h('section', { key: section.heading, class: 'gop-count-section' }, [
+                    h('h4', { class: 'text-xs uppercase tracking-wide font-bold gop-muted', style: { marginBottom: '0.5rem' } }, section.heading),
+                    h('div', { class: 'gop-count-row', style: { gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` } },
+                        section.counts.map((count) => bigNumber(count.value, count.label))
+                    ),
+                ])
+            ))
+        },
+    })
+
+    /*
+     * The listings card: what is coming up, by category and by month, over
+     * the download of next month's listings for the issue being laid out,
+     * their number reversed out of a disk.
+     */
     app.component('gop-listings-export', {
         props: ['card'],
 
         render() {
+            const charts = this.card.charts || []
+            const subheading = (text) =>
+                h('h4', { class: 'text-xs uppercase tracking-wide font-bold gop-muted', style: { marginBottom: '0.5rem' } }, text)
+
+            const upcoming = charts.some((chart) => chart.slices.length > 0)
+                ? charts.map((chart) =>
+                    h('section', { key: chart.heading, class: 'gop-listings-section' }, [
+                        subheading(chart.heading),
+                        donut(chart.slices, (slice, percent) => `${slice.label} · ${Number(slice.value).toLocaleString()} (${percent}%)`),
+                    ])
+                )
+                : [h('section', { class: 'gop-listings-section' }, [h('p', { class: 'gop-muted text-sm' }, this.card.emptyText)])]
+
             return panel(this.card.heading, [
-                h('div', { style: { flex: '1', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '1rem', minHeight: '110px' } }, [
-                    bigNumber(this.card.count, this.card.countLabel),
-                    h(
-                        'a',
-                        {
-                            href: this.card.url,
-                            download: this.card.filename,
-                            class: 'inline-flex items-center justify-center h-9 px-3 rounded text-sm font-bold text-white bg-primary-500 hover:bg-primary-400 no-underline cursor-pointer',
-                            style: { gap: '0.45rem' },
-                        },
-                        [downloadIcon(), h('span', {}, this.card.buttonText)]
-                    ),
+                ...upcoming,
+                h('section', { class: 'gop-listings-section' }, [
+                    cardHeading(this.card.exportHeading),
+                    h('div', { style: { display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: '1rem 1.5rem' } }, [
+                        h('div', { class: 'gop-disk' }, [
+                            h('span', { class: 'text-3xl font-bold' }, Number(this.card.count).toLocaleString()),
+                            h('span', { class: 'text-xs uppercase tracking-wide' }, this.card.countLabel),
+                        ]),
+                        h(
+                            'a',
+                            {
+                                href: this.card.url,
+                                download: this.card.filename,
+                                class: 'inline-flex items-center justify-center h-9 px-3 rounded text-sm font-bold text-white bg-primary-500 hover:bg-primary-400 no-underline cursor-pointer',
+                                style: { gap: '0.45rem' },
+                            },
+                            [downloadIcon(), h('span', {}, this.card.buttonText)]
+                        ),
+                    ]),
                 ]),
+                h('div', { style: { flex: '1' } }),
                 h('div', { style: { marginTop: '0.75rem' } }, [novaLink(app, this.card.linkText, this.card.link)]),
             ])
         },

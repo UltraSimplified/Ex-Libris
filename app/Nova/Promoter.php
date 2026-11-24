@@ -2,6 +2,7 @@
 
 namespace App\Nova;
 
+use App\Nova\Cards\PromoterLeaders;
 use Laravel\Nova\Actions\Action;
 use Laravel\Nova\Card;
 use Laravel\Nova\Fields\BelongsTo;
@@ -113,7 +114,9 @@ class Promoter extends Resource
      */
     public function cards(NovaRequest $request): array
     {
-        return [];
+        return [
+            PromoterLeaders::make(),
+        ];
     }
 
     /**

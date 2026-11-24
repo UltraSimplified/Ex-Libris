@@ -261,6 +261,37 @@ html.goblin [data-goblin-trigger]::before {
     border-top-color: rgb(var(--colors-gray-700));
 }
 
+/* The headline counts card, venues, events and writers, and the listings
+   card's charts and download, each ruled apart the way the adverts card's
+   slots are. */
+.gop-count-section + .gop-count-section,
+.gop-listings-section + .gop-listings-section {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgb(var(--colors-gray-200));
+}
+
+.dark .gop-count-section + .gop-count-section,
+.dark .gop-listings-section + .gop-listings-section {
+    border-top-color: rgb(var(--colors-gray-700));
+}
+
+/* The figures sit in the same columns from section to section. The script
+   sets how many columns there are; on a phone the numbers come down a size
+   so three of them still fit across. */
+.gop-count-row {
+    display: grid;
+    gap: 0.5rem;
+    align-items: start;
+}
+
+@media (max-width: 479px) {
+    .gop-count-row .text-4xl {
+        font-size: 1.875rem;
+        line-height: 2.25rem;
+    }
+}
+
 .gop-advert-slot > h4 {
     margin-bottom: 0.5rem;
 }
@@ -640,4 +671,30 @@ html.goblin [data-goblin-trigger]::before {
     .gop-visitors-chart {
         flex: 1;
     }
+}
+
+/* The listings card's count for the next issue, reversed out of a disk: the
+   card's own colour on a disk of its strongest text colour, so white on a
+   dark panel and dark on a light one. */
+.gop-disk {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 6rem;
+    height: 6rem;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: rgb(30, 41, 59);
+    color: #fff;
+    line-height: 1.1;
+}
+
+.dark .gop-disk {
+    background: rgb(226, 232, 240);
+    color: rgb(var(--colors-gray-800));
+}
+
+html.goblin .gop-disk {
+    background: rgb(var(--colors-gray-100));
 }

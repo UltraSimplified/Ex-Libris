@@ -2,6 +2,9 @@
 
 namespace App\Nova;
 
+use App\Nova\Cards\MostReadFeatures;
+use App\Nova\Cards\ReadingByCategory;
+use App\Nova\Cards\WriterLeaders;
 use App\Nova\Concerns\ShowsLayoutImages;
 use App\Rules\Embed;
 use App\Services\Images\FeatureGallery;
@@ -19,7 +22,6 @@ use Laravel\Nova\Fields\Boolean;
 use Laravel\Nova\Fields\Date;
 use Laravel\Nova\Fields\Field;
 use Laravel\Nova\Fields\Image;
-use Laravel\Nova\Fields\Number;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Textarea;
@@ -114,7 +116,6 @@ class Feature extends Resource
             Boolean::make('Featured')
                 ->sortable()
                 ->help('Show at the top of the home page. Feature more than one and they scroll as a carousel, in the order they are dragged into on the Features list; feature none and the newest feature goes there.'),
-            Number::make('Issue number')->sortable()->nullable()->hideFromIndex(),
             BelongsTo::make('Tag')->nullable(),
             Select::make('Colourway')
                 ->options(self::COLOURWAYS)
@@ -277,7 +278,11 @@ class Feature extends Resource
      */
     public function cards(NovaRequest $request): array
     {
-        return [];
+        return [
+            ReadingByCategory::make(),
+            MostReadFeatures::make(),
+            WriterLeaders::make(),
+        ];
     }
 
     /**

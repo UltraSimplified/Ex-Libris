@@ -42,18 +42,30 @@ use Laravel\Nova\Tool;
 class NovaServiceProvider extends NovaApplicationServiceProvider
 {
     /**
+     * The Office's own scripts, each by its name and its file under public.
+     *
+     * @var array<string, string>
+     */
+    private const SCRIPTS = [
+        'office-cards' => 'js/office-cards.js',
+        'office-active-writer' => 'js/office-active-writer.js',
+        'office-preview' => 'js/office-preview.js',
+        'goblin-mode' => 'js/goblin-mode.js',
+        'office-logo' => 'js/office-logo.js',
+    ];
+
+    /**
      * Bootstrap any application services.
      */
     public function boot()
     {
         parent::boot();
 
-        Nova::style('admin-overrides', public_path('css/nova-overrides.css'));
-        Nova::script('office-cards', public_path('js/office-cards.js'));
-        Nova::script('office-active-writer', public_path('js/office-active-writer.js'));
-        Nova::script('office-preview', public_path('js/office-preview.js'));
-        Nova::script('goblin-mode', public_path('js/goblin-mode.js'));
-        Nova::script('office-logo', public_path('js/office-logo.js'));
+        Nova::style(self::versioned('admin-overrides', 'css/nova-overrides.css'), public_path('css/nova-overrides.css'));
+
+        foreach (self::SCRIPTS as $name => $file) {
+            Nova::script(self::versioned($name, $file), public_path($file));
+        }
 
         Nova::mainMenu(function (Request $request) {
             return [
@@ -111,6 +123,19 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
      * False rather than nought, which leaves the badge off the Orders link
      * entirely, so a badge there always means there is work to do.
      */
+    /**
+     * The name Nova serves one of the Office's own files under: its name and
+     * the time the file last changed. Nova serves each at an address made
+     * from the name, with a Last-Modified date and no lifetime, so a browser
+     * could go on running its copy from before a deploy for hours, as the
+     * Adverts card did on 2026-11-24. A changed file is a new address, which
+     * a browser has to fetch afresh.
+     */
+    private static function versioned(string $name, string $file): string
+    {
+        return $name.'-'.filemtime(public_path($file));
+    }
+
     protected function ordersOutstanding(): string|false
     {
         $outstanding = OrderModel::query()->awaitingOffice()->count();

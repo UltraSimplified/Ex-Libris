@@ -4,11 +4,9 @@ namespace App\Nova\Dashboards;
 
 use App\Nova\Cards\AdvertReach;
 use App\Nova\Cards\FeaturesByCategory;
+use App\Nova\Cards\HeadlineCounts;
 use App\Nova\Cards\ListingsExport;
-use App\Nova\Cards\PromoterLeaders;
 use App\Nova\Cards\SiteVisits;
-use App\Nova\Cards\VenueLeaders;
-use App\Nova\Cards\WriterLeaders;
 use App\Nova\Metrics\OrdersAwaiting;
 use App\Nova\Metrics\StalePendingOrders;
 use App\Support\Shop\Fulfilment;
@@ -59,9 +57,7 @@ class Main extends Dashboard
             FeaturesByCategory::make(),
             AdvertReach::make(),
             ListingsExport::make(),
-            WriterLeaders::make(),
-            PromoterLeaders::make(),
-            VenueLeaders::make(),
+            HeadlineCounts::make(),
         ];
     }
 }

@@ -2,6 +2,7 @@
 
 use App\Models\Advert;
 use App\Models\AdvertEvent;
+use App\Models\Category;
 use App\Models\Feature;
 use App\Models\FeatureRead;
 use App\Models\Listing;
@@ -11,12 +12,18 @@ use App\Models\User;
 use App\Models\Venue;
 use App\Nova\Cards\AdvertReach;
 use App\Nova\Cards\FeaturesByCategory;
+use App\Nova\Cards\HeadlineCounts;
 use App\Nova\Cards\ListingsExport;
+use App\Nova\Cards\MostReadFeatures;
 use App\Nova\Cards\PromoterLeaders;
+use App\Nova\Cards\ReadingByCategory;
 use App\Nova\Cards\SiteVisits;
 use App\Nova\Cards\VenueLeaders;
 use App\Nova\Cards\WriterLeaders;
 use App\Nova\Dashboards\Main;
+use App\Nova\Feature as FeatureResource;
+use App\Nova\Promoter as PromoterResource;
+use App\Nova\Venue as VenueResource;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
 function novaRequest(): NovaRequest
@@ -31,19 +38,53 @@ test('the dashboard is named for the office rather than Nova', function () {
 
 /*
  * The shop's three orders cards are switched off while the shop is quiet,
- * so the dashboard is the seven office cards alone until they come back.
+ * so the dashboard is the five office cards alone until they come back.
  */
-test('the dashboard shows the seven office cards, the shop\'s orders cards switched off', function () {
+test('the dashboard shows the five office cards, the shop\'s orders cards switched off', function () {
     expect(collect((new Main)->cards())->map(fn ($card) => $card::class)->all())
         ->toBe([
             SiteVisits::class,
             FeaturesByCategory::class,
             AdvertReach::class,
             ListingsExport::class,
-            WriterLeaders::class,
-            PromoterLeaders::class,
-            VenueLeaders::class,
+            HeadlineCounts::class,
         ]);
+});
+
+test('each list sits over its own resource\'s index', function (string $resource, string $model, array $cards) {
+    $resourceCards = (new $resource(new $model))->cards(novaRequest());
+
+    expect(collect($resourceCards)->map(fn ($card) => $card::class)->all())->toBe($cards);
+})->with([
+    'features' => [FeatureResource::class, Feature::class, [ReadingByCategory::class, MostReadFeatures::class, WriterLeaders::class]],
+    'promoters' => [PromoterResource::class, Promoter::class, [PromoterLeaders::class]],
+    'venues' => [VenueResource::class, Venue::class, [VenueLeaders::class]],
+]);
+
+/**
+ * One section of the headline counts card, found by its heading, as
+ * label => value.
+ *
+ * @return array<string, int>
+ */
+function headlineCounts(string $heading): array
+{
+    $section = collect((new HeadlineCounts)->jsonSerialize()['sections'])->firstWhere('heading', $heading);
+
+    return array_column($section['counts'], 'value', 'label');
+}
+
+test('the statistics card has venues, then events, then writers', function () {
+    $card = (new HeadlineCounts)->jsonSerialize();
+
+    expect($card['heading'])->toBe('Statistics');
+    expect(collect($card['sections'])->mapWithKeys(fn (array $section): array => [
+        $section['heading'] => array_column($section['counts'], 'label'),
+    ])->all())->toBe([
+        'Venues' => ['Venues', 'Upcoming events'],
+        'Events' => ['Promoters', 'Events listed', 'Bookmarks'],
+        'Writers' => ['Writers', 'Articles'],
+    ]);
 });
 
 test('reading time is grouped by category name, longest first', function () {
@@ -71,6 +112,17 @@ test('reading before the last 30 days is left out', function () {
     FeatureRead::factory()->create(['read_on' => today()->subDays(FeaturesByCategory::DAYS - 1), 'seconds_read' => 60]);
 
     expect((new FeaturesByCategory)->jsonSerialize()['total'])->toBe(60);
+});
+
+test('a feature read only before the last 30 days is not among the most read', function () {
+    $lastMonth = Feature::factory()->create(['title' => 'Read last month']);
+    FeatureRead::factory()->create(['feature_id' => $lastMonth->id, 'read_on' => today()->subDays(MostReadFeatures::DAYS)]);
+    $thisMonth = Feature::factory()->create(['title' => 'Read this month']);
+    FeatureRead::factory()->create(['feature_id' => $thisMonth->id, 'read_on' => today()->subDays(MostReadFeatures::DAYS - 1)]);
+
+    $leaders = (new MostReadFeatures)->jsonSerialize()['leaders'];
+
+    expect(array_column($leaders, 'name'))->toBe(['Read this month']);
 });
 
 test('reading in features with no category is labelled rather than dropped', function () {
@@ -135,23 +187,51 @@ test('with nothing read, the card says so', function () {
         ->and($card['emptyText'])->toBe('No feature has been read in the last 30 days.');
 });
 
-test('the writers card counts the roster and the body of work', function () {
+test('the features index has the reading card split in two, the time by category in one and the most read in the other', function () {
+    $feature = Feature::factory()->create([
+        'title' => 'From the archive',
+        'tag_id' => Tag::factory()->create(['tag' => 'Archives'])->id,
+    ]);
+    FeatureRead::factory()->create(['feature_id' => $feature->id, 'seconds_read' => 600]);
+
+    $byCategory = (new ReadingByCategory)->jsonSerialize();
+    $mostRead = (new MostReadFeatures)->jsonSerialize();
+
+    expect($byCategory['total'])->toBe(600)
+        ->and(array_column($byCategory['slices'], 'value', 'label'))->toBe(['Archives' => 600])
+        ->and($byCategory)->not->toHaveKey('leaders');
+    expect(array_column($mostRead['leaders'], 'name'))->toBe(['From the archive'])
+        ->and($mostRead)->not->toHaveKey('slices');
+});
+
+test('with nothing read, both halves on the features index say so', function () {
+    Feature::factory()->create();
+
+    expect((new ReadingByCategory)->jsonSerialize())->toMatchArray([
+        'total' => 0,
+        'emptyText' => 'No feature has been read in the last 30 days.',
+    ]);
+    expect((new MostReadFeatures)->jsonSerialize())->toMatchArray([
+        'leaders' => [],
+        'emptyText' => 'No feature has been read in the last 30 days.',
+    ]);
+});
+
+/**
+ * Staff hold every role without being marked as writing, so an account
+ * that is not marked is left out however much it could write.
+ */
+test('the writers counts are everyone marked as writing, published or not, and every article', function () {
     $prolific = User::factory()->writer()->create(['name' => 'Ada Prolific']);
     $pair = collect(['Bo Occasional', 'Cy Occasional'])
         ->map(fn (string $name) => User::factory()->writer()->create(['name' => $name]));
     User::factory()->writer()->create(['name' => 'Di Unpublished']);
+    User::factory()->create(['name' => 'Ed Office']);
 
     Feature::factory()->count(3)->create(['user_id' => $prolific->id]);
     $pair->each(fn (User $writer) => Feature::factory()->create(['user_id' => $writer->id]));
 
-    $card = (new WriterLeaders)->jsonSerialize();
-    $counts = collect($card['counts'])->keyBy('label');
-
-    expect($card['heading'])->toBe('Writers')
-        ->and($card['listHeading'])->toBe('Top 5 Contributors')
-        ->and($counts['Writers']['value'])->toBe(4)
-        ->and($counts['Articles']['value'])->toBe(5)
-        ->and($card['linkText'])->toBe('View all accounts');
+    expect(headlineCounts('Writers'))->toBe(['Writers' => 4, 'Articles' => 5]);
 });
 
 test('the writers card ranks contributors by what they have published', function () {
@@ -173,16 +253,13 @@ test('the writers card ranks contributors by what they have published', function
  * An article does not stop counting once its date has passed, the way an
  * event does - so a writer's standing is everything they have written.
  */
-test('writers with nothing published are left out of the list but still counted', function () {
+test('writers with nothing published are left out of the list', function () {
     User::factory()->writer()->count(4)->create();
 
-    $card = (new WriterLeaders)->jsonSerialize();
-
-    expect($card['rows'])->toBe([])
-        ->and(collect($card['counts'])->keyBy('label')['Writers']['value'])->toBe(4);
+    expect((new WriterLeaders)->jsonSerialize()['rows'])->toBe([]);
 });
 
-test('the venues card counts venues and upcoming events', function () {
+test('the venues counts are every venue and every event still to come', function () {
     // The listing factory makes a venue of its own, so the events are hung
     // off one of the three rather than quietly adding five more.
     $venues = Venue::factory()->count(3)->create();
@@ -196,14 +273,7 @@ test('the venues card counts venues and upcoming events', function () {
         'end_date' => today()->subWeek(),
     ]);
 
-    $card = (new VenueLeaders)->jsonSerialize();
-    $counts = collect($card['counts'])->keyBy('label');
-
-    expect($card['heading'])->toBe('Venues')
-        ->and($card['listHeading'])->toBe('Top 5 Venues')
-        ->and($counts['Venues']['value'])->toBe(3)
-        ->and($counts['Upcoming events']['value'])->toBe(5)
-        ->and($card['linkText'])->toBe('View all venues');
+    expect(headlineCounts('Venues'))->toBe(['Venues' => 3, 'Upcoming events' => 5]);
 });
 
 test('the venues card lists the five with the most coming up', function () {
@@ -226,8 +296,9 @@ test('the export card offers next month as a signed download', function () {
 
     $card = (new ListingsExport)->jsonSerialize();
 
-    expect($card['heading'])->toBe("October's Listings")
-        ->and($card['buttonText'])->toBe('Download October Listings')
+    expect($card['heading'])->toBe('Listings')
+        ->and($card['exportHeading'])->toBe('Download listings for the October issue')
+        ->and($card['buttonText'])->toBe('Download October listings')
         ->and($card['filename'])->toBe('OCT26_Listings.csv')
         ->and($card['linkText'])->toBe('View all current listings')
         ->and($card['url'])->toContain('signature=');
@@ -247,6 +318,66 @@ test('the export card counts what the download will contain', function () {
     expect((new ListingsExport)->jsonSerialize()['count'])->toBe(3);
 });
 
+/**
+ * One of the listings card's charts, found by its heading, as
+ * label => listings.
+ *
+ * @return array<string, int>
+ */
+function listingsChart(string $heading): array
+{
+    $chart = collect((new ListingsExport)->jsonSerialize()['charts'])->firstWhere('heading', $heading);
+
+    return array_column($chart['slices'], 'value', 'label');
+}
+
+test('the listings card counts what is coming up by category, the most first', function () {
+    $music = Category::factory()->create(['name' => 'Music']);
+    $film = Category::factory()->create(['name' => 'Film']);
+    Listing::factory()->count(3)->create(['category_id' => $music->id, 'start_date' => today()->addWeek()]);
+    Listing::factory()->count(2)->create(['category_id' => $film->id, 'start_date' => today()->addWeek()]);
+    Listing::factory()->create(['category_id' => $film->id, 'start_date' => today()->subMonth(), 'end_date' => today()->subWeek()]);
+    Listing::factory()->create(['category_id' => null, 'start_date' => today()->addWeek()]);
+
+    expect(listingsChart('Upcoming by category'))->toBe(['Music' => 3, 'Film' => 2, 'Uncategorised' => 1]);
+});
+
+/**
+ * September to January are named, in order, and February on is later.
+ * November and December have nothing on, so they have no slice to draw.
+ */
+test('the listings card counts what is coming up by month, a listing already running in this one', function () {
+    $this->travelTo('2026-09-13');
+
+    Listing::factory()->create(['start_date' => '2026-08-01', 'end_date' => '2026-09-30']);
+    Listing::factory()->create(['start_date' => '2026-09-20']);
+    Listing::factory()->count(2)->create(['start_date' => '2026-10-04']);
+    Listing::factory()->create(['start_date' => '2027-01-10']);
+    Listing::factory()->count(2)->create(['start_date' => '2027-02-01']);
+    Listing::factory()->create(['start_date' => '2027-06-15']);
+    Listing::factory()->create(['start_date' => '2026-09-02', 'end_date' => '2026-09-10']);
+
+    expect(listingsChart('Upcoming by month'))->toBe(['September' => 2, 'October' => 2, 'January' => 1, 'Later' => 3]);
+});
+
+test('each chart on the listings card colours its slices from the start of the dashboard palette', function () {
+    Listing::factory()->create(['start_date' => today()->addWeek()]);
+
+    $charts = (new ListingsExport)->jsonSerialize()['charts'];
+
+    expect(array_map(fn (array $chart): array => array_column($chart['slices'], 'colour'), $charts))
+        ->toBe([['#F5573B'], ['#F5573B']]);
+});
+
+test('with nothing coming up, the listings card has nothing to chart and says so', function () {
+    Listing::factory()->create(['start_date' => today()->subMonth(), 'end_date' => today()->subWeek()]);
+
+    $card = (new ListingsExport)->jsonSerialize();
+
+    expect(array_column($card['charts'], 'slices'))->toBe([[], []])
+        ->and($card['emptyText'])->toBe('No listings are coming up.');
+});
+
 test('the promoters card ranks the busiest five by upcoming events', function () {
     $promoters = collect(['Busiest', 'Second', 'Third', 'Fourth', 'Fifth', 'Sixth'])
         ->mapWithKeys(fn (string $name): array => [$name => Promoter::factory()->create(['name' => $name])]);
@@ -260,16 +391,17 @@ test('the promoters card ranks the busiest five by upcoming events', function ()
 
     $card = (new PromoterLeaders)->jsonSerialize();
 
-    $counts = collect($card['counts'])->keyBy('label');
-
-    expect($card['heading'])->toBe('Promoters')
-        ->and($card['listHeading'])->toBe('Top 5 Promoters')
-        ->and($counts['Promoters']['value'])->toBe(6)
-        ->and($counts['Events listed']['value'])->toBe(21)
+    expect($card['heading'])->toBe('Top 5 Promoters')
         ->and(collect($card['rows'])->pluck('name')->all())
         ->toBe(['Busiest', 'Second', 'Third', 'Fourth', 'Fifth'])
         ->and($card['rows'][0]['count'])->toBe(6)
-        ->and($card['linkText'])->toBe('View all promoters');
+        ->and($card)->not->toHaveKey('listHeading')
+        ->and($card)->not->toHaveKey('linkText');
+
+    $counts = headlineCounts('Events');
+
+    expect($counts['Promoters'])->toBe(6)
+        ->and($counts['Events listed'])->toBe(21);
 });
 
 test('finished events do not count towards a promoter\'s standing', function () {
@@ -304,13 +436,10 @@ test('an event running today still counts', function () {
     expect((new PromoterLeaders)->jsonSerialize()['rows'][0]['count'])->toBe(1);
 });
 
-test('promoters with nothing on are left out of the list but still counted', function () {
+test('promoters with nothing on are left out of the list', function () {
     Promoter::factory()->count(3)->create();
 
-    $card = (new PromoterLeaders)->jsonSerialize();
-
-    expect($card['rows'])->toBe([])
-        ->and(collect($card['counts'])->keyBy('label')['Promoters']['value'])->toBe(3);
+    expect((new PromoterLeaders)->jsonSerialize()['rows'])->toBe([]);
 });
 
 test('the promoter count is everyone on the books, busy or not', function () {
@@ -327,12 +456,12 @@ test('the promoter count is everyone on the books, busy or not', function () {
         'end_date' => today()->subWeek(),
     ]);
 
-    $counts = collect((new PromoterLeaders)->jsonSerialize()['counts'])->keyBy('label');
+    $counts = headlineCounts('Events');
 
     // Six promoters exist; only one has anything coming up, and both the
     // finished event and the upcoming one are events that were promoted.
-    expect($counts['Promoters']['value'])->toBe(6)
-        ->and($counts['Events listed']['value'])->toBe(2);
+    expect($counts['Promoters'])->toBe(6)
+        ->and($counts['Events listed'])->toBe(2);
 });
 
 test('the all-time count is everything listed, promoted or not', function () {
@@ -350,9 +479,7 @@ test('the all-time count is everything listed, promoted or not', function () {
         'end_date' => today()->subMonth(),
     ]);
 
-    $counts = collect((new PromoterLeaders)->jsonSerialize()['counts'])->keyBy('label');
-
-    expect($counts['Events listed']['value'])->toBe(5);
+    expect(headlineCounts('Events')['Events listed'])->toBe(5);
 });
 
 test('each leaderboard says what it is counting', function () {
@@ -469,23 +596,21 @@ test('the in-list section has a slide for every live in-list advert, newest firs
  * kept is three readings of it, and this figure is here to show how much
  * of that is going on.
  */
-test('the promoters card counts every bookmark anybody has made', function () {
+test('the events counts take in every bookmark anybody has made', function () {
     $readers = User::factory()->count(3)->create();
     $saved = Listing::factory()->count(2)->create();
     Listing::factory()->create();
 
     $saved->each(fn (Listing $listing) => $listing->bookmarkedBy()->attach($readers));
 
-    $counts = collect((new PromoterLeaders)->jsonSerialize()['counts'])->keyBy('label');
+    $counts = headlineCounts('Events');
 
-    expect($counts['Bookmarks']['value'])->toBe(6)
-        ->and($counts['Events listed']['value'])->toBe(3);
+    expect($counts['Bookmarks'])->toBe(6)
+        ->and($counts['Events listed'])->toBe(3);
 });
 
-test('the promoters card shows no bookmarks when nobody has saved one', function () {
+test('the events counts show no bookmarks when nobody has saved one', function () {
     Listing::factory()->count(4)->create();
 
-    $counts = collect((new PromoterLeaders)->jsonSerialize()['counts'])->keyBy('label');
-
-    expect($counts['Bookmarks']['value'])->toBe(0);
+    expect(headlineCounts('Events')['Bookmarks'])->toBe(0);
 });

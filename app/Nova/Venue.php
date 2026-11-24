@@ -3,6 +3,7 @@
 namespace App\Nova;
 
 use App\Nova\Actions\DeleteVenue;
+use App\Nova\Cards\VenueLeaders;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -140,7 +141,9 @@ class Venue extends Resource
      */
     public function cards(NovaRequest $request): array
     {
-        return [];
+        return [
+            VenueLeaders::make(),
+        ];
     }
 
     /**
