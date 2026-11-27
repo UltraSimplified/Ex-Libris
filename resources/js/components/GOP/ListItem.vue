@@ -322,7 +322,10 @@ const resolvedListings = computed(() =>
                 </Link>
 
                 <BookmarkHeart :listing-id="props.listing.id" />
-                <OfficeEditLink :listing-id="props.listing.id" />
+                <OfficeEditLink
+                    resource="listings"
+                    :resource-id="props.listing.id"
+                />
             </div>
 
             <!-- Date -->

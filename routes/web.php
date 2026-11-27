@@ -26,6 +26,7 @@ use App\Http\Controllers\ListingExportController;
 use App\Http\Controllers\PackingSlipController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ShopController;
+use App\Http\Controllers\SignedInAccountController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\SwitchBackController;
 use App\Http\Controllers\WriterController;
@@ -251,6 +252,14 @@ Route::post('register', [RegisteredUserController::class, 'store'])
 Route::post('switch-back', SwitchBackController::class)
     ->middleware('auth')
     ->name('switch-back');
+
+/*
+ * Who the browser is signed in as now, for an Office tab whose form was
+ * opened by somebody the browser may no longer be.
+ */
+Route::get('account/signed-in', SignedInAccountController::class)
+    ->middleware('throttle:60,1')
+    ->name('account.signed-in');
 
 Route::middleware(['auth', 'verified'])
     ->prefix('dashboard')

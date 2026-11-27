@@ -77,7 +77,8 @@ const slugify = (str: string) => {
                     class="relative z-10"
                 />
                 <OfficeEditLink
-                    :listing-id="props.listing.id"
+                    resource="listings"
+                    :resource-id="props.listing.id"
                     class="relative z-10"
                 />
             </div>

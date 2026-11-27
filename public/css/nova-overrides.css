@@ -122,6 +122,97 @@ td p.text-center img {
     border: 0;
 }
 
+/* The notice over an Office tab held while its browser is in somebody
+   else's account, and the Unsaved changes line at the head of a form: see
+   public/js/office-unsaved-work.js. Coloured from Nova's own variables, so
+   dark mode and goblin mode recolour them with everything else. */
+.gop-notice-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    background: rgba(0, 0, 0, 0.55);
+}
+
+.gop-notice-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    width: min(32rem, 100%);
+    padding: 1.5rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+.gop-notice-heading {
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.gop-notice-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.gop-notice-problem:empty {
+    display: none;
+}
+
+.gop-notice-problem {
+    color: rgb(var(--colors-red-500));
+    font-weight: 700;
+}
+
+.gop-button,
+.gop-button-quiet {
+    padding: 0.5rem 0.875rem;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.gop-button {
+    background: rgb(var(--colors-primary-500));
+    color: #fff;
+}
+
+.gop-button:hover {
+    background: rgb(var(--colors-primary-400));
+}
+
+.gop-button-quiet {
+    color: rgb(var(--colors-gray-500));
+}
+
+.gop-button-quiet:hover {
+    color: rgb(var(--colors-primary-500));
+}
+
+.gop-button:disabled,
+.gop-button-quiet:disabled {
+    opacity: 0.5;
+    cursor: wait;
+}
+
+.gop-unsaved {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-bottom: 1px solid rgb(var(--colors-gray-100));
+    font-size: 0.875rem;
+}
+
+.dark .gop-unsaved {
+    border-bottom-color: rgb(var(--colors-gray-700));
+}
+
 /* Row controls: the pencil and the eye.
    A row click opens the form now, so the pencil repeated it, and the eye
    went to a read-only detail page that showed the same fields the form

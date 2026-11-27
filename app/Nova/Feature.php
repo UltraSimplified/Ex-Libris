@@ -5,7 +5,9 @@ namespace App\Nova;
 use App\Nova\Cards\MostReadFeatures;
 use App\Nova\Cards\ReadingByCategory;
 use App\Nova\Cards\WriterLeaders;
+use App\Nova\Concerns\RestoresUnsavedDrafts;
 use App\Nova\Concerns\ShowsLayoutImages;
+use App\Nova\Fields\UnsavedChanges;
 use App\Rules\Embed;
 use App\Services\Images\FeatureGallery;
 use App\Services\Images\FeatureImages;
@@ -44,6 +46,7 @@ use Whitecube\NovaFlexibleContent\Flexible;
 class Feature extends Resource
 {
     use HasSortableRows;
+    use RestoresUnsavedDrafts;
     use ShowsLayoutImages;
 
     /**
@@ -85,6 +88,13 @@ class Feature extends Resource
     public function fields(NovaRequest $request): array
     {
         return [
+            /*
+             * Keeps what is typed into the form in the browser until it is
+             * saved, and offers it back when it never was, so a feature is
+             * not lost to a closed tab or a sign-out halfway through.
+             */
+            UnsavedChanges::make('Unsaved changes'),
+
             /*
              * A new feature starts as a draft, and a draft saves however
              * far it has got: only the title is needed to file it. A

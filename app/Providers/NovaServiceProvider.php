@@ -52,6 +52,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
         'office-preview' => 'js/office-preview.js',
         'goblin-mode' => 'js/goblin-mode.js',
         'office-logo' => 'js/office-logo.js',
+        'office-unsaved-work' => 'js/office-unsaved-work.js',
     ];
 
     /**

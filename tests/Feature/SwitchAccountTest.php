@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Feature;
 use App\Models\User;
 use Illuminate\Testing\TestResponse;
 use Inertia\Testing\AssertableInertia;
@@ -93,7 +94,62 @@ test('a switched-to account cannot open the office', function () {
     $this->actingAs($this->staff);
     switchTo(User::factory()->writer()->create());
 
+    $this->get('/office/resources/users')->assertForbidden();
+});
+
+/*
+ * Nova leaves the page for its 403 screen on a refusal from any of its
+ * calls, taking a half-written form with it, so a tab left open while the
+ * browser is switched is told Locked instead, which Nova stays put for.
+ */
+test('an office tab left open while switched is held rather than let in', function () {
+    $writer = User::factory()->writer()->create();
+    $this->actingAs($this->staff);
+    switchTo($writer);
+
+    $response = $this->getJson('/nova-api/users');
+
+    $response->assertStatus(423)
+        ->assertJsonPath('switchedTo', $writer->name)
+        ->assertJsonPath('switchBackUrl', '/switch-back')
+        ->assertJsonMissingPath('resources');
+});
+
+test('a save from an office tab held while switched writes nothing', function () {
+    $feature = Feature::factory()->create(['title' => 'Bdy_Prts at the Hug and Pint']);
+    $this->actingAs($this->staff);
+    switchTo(User::factory()->writer()->create());
+
+    $response = $this->putJson("/nova-api/features/{$feature->id}", ['status' => 'draft', 'title' => 'Written while switched']);
+
+    $response->assertStatus(423);
+    expect($feature->fresh()->title)->toBe('Bdy_Prts at the Hug and Pint');
+});
+
+test('an account signed in as itself is still refused the office outright', function () {
+    $this->actingAs(User::factory()->writer()->create());
+
     $this->getJson('/nova-api/users')->assertForbidden();
+});
+
+test('an office tab switches back without leaving its page', function () {
+    $this->actingAs($this->staff);
+    switchTo(User::factory()->writer()->create());
+
+    $response = $this->postJson(route('switch-back'));
+
+    $response->assertOk()->assertJson(['name' => $this->staff->name, 'office' => true, 'switched' => false]);
+    $this->assertAuthenticatedAs($this->staff);
+    expect(session()->has('nova_impersonated_by'))->toBeFalse();
+});
+
+test('an office tab asking to switch back from an account of its own is told it cannot use the office', function () {
+    $writer = User::factory()->writer()->create();
+
+    $response = $this->actingAs($writer)->postJson(route('switch-back'));
+
+    $response->assertOk()->assertJson(['name' => $writer->name, 'office' => false, 'switched' => false]);
+    $this->assertAuthenticatedAs($writer);
 });
 
 test('every page says who switched to the account', function () {
@@ -167,4 +223,72 @@ test('the owner-only settings stay open to the owner', function () {
     $this->actingAs(User::factory()->writer()->create())
         ->get('/settings/password')
         ->assertOk();
+});
+
+/*
+ * An Office tab asks who the browser is signed in as whenever the Office
+ * refuses it, and holds its form until the answer is the Office's again.
+ */
+test('an office tab is told the browser is in the account switched to', function () {
+    $writer = User::factory()->writer()->create();
+    $this->actingAs($this->staff);
+    switchTo($writer);
+
+    $response = $this->getJson(route('account.signed-in'));
+
+    $response->assertOk()
+        ->assertJson(['name' => $writer->name, 'office' => false, 'switched' => true, 'switchBackUrl' => '/switch-back'])
+        ->assertJsonPath('csrfToken', session()->token())
+        ->assertHeader('Cache-Control', 'no-store, private');
+});
+
+test('an office tab is told when the browser is signed in as somebody else', function () {
+    $writer = User::factory()->writer()->create();
+
+    $this->actingAs($writer)
+        ->getJson(route('account.signed-in'))
+        ->assertOk()
+        ->assertJson(['name' => $writer->name, 'office' => false, 'switched' => false]);
+});
+
+test('an office tab is told when the browser has been signed out', function () {
+    $this->getJson(route('account.signed-in'))
+        ->assertOk()
+        ->assertJson(['name' => null, 'office' => false, 'switched' => false]);
+});
+
+test('an office tab is told when the browser is the office\'s', function () {
+    $this->actingAs($this->staff)
+        ->getJson(route('account.signed-in'))
+        ->assertOk()
+        ->assertJson(['name' => $this->staff->name, 'office' => true, 'switched' => false]);
+});
+
+/*
+ * office-unsaved-work.js asks at this address without being handed it, so
+ * the route's shape is what keeps the two in step.
+ */
+test('the office script asks who is signed in where the site answers', function () {
+    $script = file_get_contents(public_path('js/office-unsaved-work.js'));
+
+    expect(route('account.signed-in', absolute: false))->toBe('/account/signed-in')
+        ->and($script)->toContain("const SIGNED_IN_URL = '/account/signed-in'");
+});
+
+/*
+ * A notice put aside for one switch comes back for the next, the same
+ * account again included, by the mark each sign-in is given.
+ */
+test('each switch is told apart, even back into the same account', function () {
+    $writer = User::factory()->writer()->create();
+    $this->actingAs($this->staff);
+
+    switchTo($writer);
+    $first = $this->getJson(route('account.signed-in'))->json('signIn');
+    $this->postJson(route('switch-back'));
+    switchTo($writer);
+    $second = $this->getJson(route('account.signed-in'))->json('signIn');
+
+    expect($first)->toBeString()->not->toBeEmpty()
+        ->and($second)->toBeString()->not->toBe($first);
 });

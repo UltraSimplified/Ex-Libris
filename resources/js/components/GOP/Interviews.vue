@@ -4,6 +4,7 @@ import { ref } from 'vue';
 import BylineName from '@/components/GOP/BylineName.vue';
 import ExcerptText from '@/components/GOP/ExcerptText.vue';
 import FeatureCard from '@/components/GOP/FeatureCard.vue';
+import OfficeEditLink from '@/components/GOP/OfficeEditLink.vue';
 import { articleUrl, tagUrl } from '@/lib/features';
 import type { Article } from '@/types/global';
 
@@ -128,13 +129,23 @@ function trackScrolled(): void {
 
                         <!-- Text takes the rest -->
                         <div class="min-w-0 min-[1160px]:flex-1">
-                            <Link
-                                v-if="article.tag"
-                                :href="tagUrl(article)"
-                                class="relative z-10 mt-4 inline-block rounded-sm bg-tarmac px-4 py-2 text-sm font-bold text-white uppercase hover:bg-hivis hover:text-tarmac min-[1160px]:mt-0 md:text-xs"
+                            <div
+                                v-if="article.tag || page.props.auth?.office"
+                                class="mt-4 flex items-center gap-3 min-[1160px]:mt-0"
                             >
-                                {{ article.tag.tag }}
-                            </Link>
+                                <Link
+                                    v-if="article.tag"
+                                    :href="tagUrl(article)"
+                                    class="relative z-10 inline-block rounded-sm bg-tarmac px-4 py-2 text-sm font-bold text-white uppercase hover:bg-hivis hover:text-tarmac md:text-xs"
+                                >
+                                    {{ article.tag.tag }}
+                                </Link>
+                                <OfficeEditLink
+                                    resource="features"
+                                    :resource-id="article.id"
+                                    class="relative z-10"
+                                />
+                            </div>
 
                             <h1
                                 class="mt-5 pr-20 text-3xl tracking-tight md:text-3xl"

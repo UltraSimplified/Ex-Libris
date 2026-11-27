@@ -2,6 +2,7 @@
 import { usePage, Link } from '@inertiajs/vue3';
 import BylineName from '@/components/GOP/BylineName.vue';
 import ExcerptText from '@/components/GOP/ExcerptText.vue';
+import OfficeEditLink from '@/components/GOP/OfficeEditLink.vue';
 import { articleUrl, tagUrl } from '@/lib/features';
 import type { Article } from '@/types/global';
 
@@ -11,7 +12,8 @@ import type { Article } from '@/types/global';
  *
  * The whole card is a way into the feature: the link on the title is
  * stretched over it, and the category is lifted above that link so it
- * still goes to the features filed under it.
+ * still goes to the features filed under it, as is the Office's pencil
+ * beside it for the office's own accounts.
  */
 interface Props {
     feature: Article;
@@ -32,13 +34,23 @@ const page = usePage();
             :alt="props.feature.cover_alt_text"
             class="rounded"
         />
-        <Link
-            v-if="props.feature.tag"
-            :href="tagUrl(props.feature)"
-            class="relative z-10 mt-4 inline-block rounded-sm bg-tarmac px-4 py-2 text-sm font-bold text-white uppercase hover:bg-hivis hover:text-tarmac md:text-xs"
+        <div
+            v-if="props.feature.tag || page.props.auth?.office"
+            class="mt-4 flex items-center gap-3"
         >
-            {{ props.feature.tag.tag }}
-        </Link>
+            <Link
+                v-if="props.feature.tag"
+                :href="tagUrl(props.feature)"
+                class="relative z-10 inline-block rounded-sm bg-tarmac px-4 py-2 text-sm font-bold text-white uppercase hover:bg-hivis hover:text-tarmac md:text-xs"
+            >
+                {{ props.feature.tag.tag }}
+            </Link>
+            <OfficeEditLink
+                resource="features"
+                :resource-id="props.feature.id"
+                class="relative z-10"
+            />
+        </div>
         <h1 class="mt-5 text-2xl tracking-tight">
             <Link
                 :href="articleUrl(props.feature)"

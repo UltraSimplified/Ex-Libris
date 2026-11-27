@@ -5,6 +5,7 @@ import Advert from '@/components/GOP/Advert.vue';
 import BylineName from '@/components/GOP/BylineName.vue';
 import ListingAdvert from '@/components/GOP/ListingAdvert.vue';
 import ListingRow from '@/components/GOP/ListingRow.vue';
+import OfficeEditLink from '@/components/GOP/OfficeEditLink.vue';
 import UserAvatar from '@/components/UserAvatar.vue';
 import { useAdvertLineUp } from '@/composables/useAdvertLineUp';
 import { useFeatureReading } from '@/composables/useFeatureReading';
@@ -153,11 +154,23 @@ useFeatureReading(
                     class="w-full md:max-w-[726px]"
                     :class="{ 'is-draft': props.feature.status === 'draft' }"
                 >
-                    <span
-                        v-if="props.feature.tag"
-                        class="pl-2 font-din text-[10px] tracking-[.25em] uppercase"
-                        >{{ props.feature.tag.tag }}</span
-                    >
+                    <!--
+                        The Office's pencil, for the office's own accounts,
+                        though not in the Office's own preview of the page,
+                        where it would open the editor inside the frame.
+                    -->
+                    <div class="flex items-center gap-3">
+                        <span
+                            v-if="props.feature.tag"
+                            class="pl-2 font-din text-[10px] tracking-[.25em] uppercase"
+                            >{{ props.feature.tag.tag }}</span
+                        >
+                        <OfficeEditLink
+                            v-if="!props.preview"
+                            resource="features"
+                            :resource-id="props.feature.id"
+                        />
+                    </div>
                     <!--
                         At 60px a word of 14 letters or so is wider than a
                         phone, so a word that long is hyphenated, or broken

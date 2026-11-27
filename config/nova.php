@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\HoldOfficeWhileSwitched;
 use Illuminate\Http\Middleware\CheckResponseForModifications;
 use Laravel\Nova\Actions\ActionResource;
 use Laravel\Nova\Http\Middleware\Authenticate;
@@ -108,6 +109,8 @@ return [
         Authenticate::class,
         // \Laravel\Nova\Http\Middleware\AuthenticateSession::class,
         // \Laravel\Nova\Http\Middleware\EnsureEmailIsVerified::class,
+        // Ahead of Authorize, whose 403 would take an open form with it.
+        HoldOfficeWhileSwitched::class,
         Authorize::class,
     ],
 

@@ -41,6 +41,10 @@ return Application::configure(basePath: dirname(__DIR__))
             $embeds->group(base_path('routes/embed.php'));
 
             Route::middleware('calendar')->group(base_path('routes/calendar.php'));
+
+            Route::middleware(config('nova.api_middleware', []))
+                ->prefix('nova-vendor')
+                ->group(base_path('routes/office.php'));
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
